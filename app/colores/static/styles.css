@@ -1,0 +1,7 @@
+.color-swatch {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    border-radius: 50%; 
+    border: 1px solid #ccc;
+}

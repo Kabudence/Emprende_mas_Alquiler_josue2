@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Negocio{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Información del Negocio</h1>
+
+<!-- {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %} -->
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="{{ url_for('negocios.guardar') }}" method="POST">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="nombre_negocio" class="form-label">Nombre del Negocio</label>
+                    <input type="text" class="form-control" id="nombre_negocio" name="nombre_negocio" value="{{ negocio.nombre_negocio if negocio else '' }}" placeholder="Ingrese el nombre del negocio" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="ruc" class="form-label">RUC</label>
+                    <input type="text" class="form-control" id="ruc" name="ruc" value="{{ negocio.ruc if negocio else '' }}" placeholder="Ingrese el RUC" required>
+                </div>
+            </div>
+
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="razon_social" class="form-label">Razón Social</label>
+                    <input type="text" class="form-control" id="razon_social" name="razon_social" value="{{ negocio.razon_social if negocio else '' }}" placeholder="Ingrese la razón social" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="telefono" class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono" value="{{ negocio.telefono if negocio else '' }}" placeholder="Ingrese el teléfono" required>
+                </div>
+            </div>
+
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label for="direccion" class="form-label">Dirección</label>
+                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{ negocio.direccion if negocio else '' }}" placeholder="Ingrese la dirección completa" required>
+                </div>
+            </div>
+
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="departamento" class="form-label">Departamento</label>
+                    <input type="text" class="form-control" id="departamento" name="departamento" value="{{ negocio.departamento if negocio else '' }}" placeholder="Ingrese el departamento" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="provincia" class="form-label">Provincia</label>
+                    <input type="text" class="form-control" id="provincia" name="provincia" value="{{ negocio.provincia if negocio else '' }}" placeholder="Ingrese la provincia" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="distrito" class="form-label">Distrito</label>
+                    <input type="text" class="form-control" id="distrito" name="distrito" value="{{ negocio.distrito if negocio else '' }}" placeholder="Ingrese el distrito" required>
+                </div>
+            </div>
+
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label for="rubro_id" class="form-label">Rubro</label>
+                    {% if not negocio %}
+  
+                    <select class="form-select" id="rubro_id" name="rubro_id" required>
+                        <option value="">Seleccione un rubro</option>
+                        {% for rubro in rubros %}
+                        <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+    
+                    <input type="text" class="form-control" value="{{ negocio.rubro.nombre }}" disabled>
+                    {% endif %}
+                </div>
+            </div>
+
+      
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+# Entornos virtuales
+venv/
+.env
+
+# Archivos de caché y configuraciones de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs y bases de datos locales
+*.log
+*.sqlite3
+
+# Configuraciones de IDEs/editores
+.idea/
+.vscode/
+
+# Node.js (si usas npm/webpack para el front-end)
+node_modules/
