@@ -1,4 +1,4 @@
-# Proyecto Emprene mas
+# Proyecto Emprende mas
 
 ## Instrucciones
 
