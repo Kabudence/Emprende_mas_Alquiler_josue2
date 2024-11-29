@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
-from ..models import Tamanio, Categoria  # Asegúrate de tener el modelo Categoria
+from flask_login import login_required, current_user
+from ..models import Tamanio, Categoria, Negocio
 from ..database import db
 from . import tamanios
 
@@ -20,7 +20,17 @@ def index():
 @tamanios.route('/crear', methods=['GET'])
 @login_required
 def crear():
-    categorias = Categoria.query.all()
+    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+
+    if not negocio:
+        flash('No se encontró un negocio asociado al usuario.', 'danger')
+        return redirect(url_for('tamanios.index'))
+
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id).all()
+
+    if not categorias:
+        flash('No hay categorías disponibles para el rubro de su negocio.', 'warning')
+
     return render_template('tamanios/crear_tamanio.html', categorias=categorias)
 
 @tamanios.route('/crear', methods=['POST'])
@@ -50,8 +60,17 @@ def guardar():
 @login_required
 def editar(id):
     tamanio = Tamanio.query.get_or_404(id)
-    categorias = Categoria.query.all()
+    
+    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+
+    if not negocio:
+        flash('No se encontró un negocio asociado al usuario.', 'danger')
+        return redirect(url_for('tamanios.index'))
+
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id).all()
+
     return render_template('tamanios/editar_tamanio.html', tamanio=tamanio, categorias=categorias)
+
 
 @tamanios.route('/editar/<int:id>', methods=['POST'])
 @login_required

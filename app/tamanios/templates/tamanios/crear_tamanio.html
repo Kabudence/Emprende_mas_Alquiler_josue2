@@ -18,6 +18,8 @@
                     <option selected disabled>Seleccione una categoría</option>
                     {% for categoria in categorias %}
                         <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                    {% else %}
+                        <option disabled>No hay categorías disponibles</option>
                     {% endfor %}
                 </select>
             </div>
