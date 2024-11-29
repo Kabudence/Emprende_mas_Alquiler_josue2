@@ -3,11 +3,11 @@
 {% block title %}Crear Producto{% endblock %}
 
 {% block content %}
-<h1 class="h3 my-4 text-underline">Crear un Nuevo Producto</h1>
+<h1 class="h3 my-4">Crear un Nuevo Producto</h1>
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form action="{{ url_for('productos.crear') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ url_for('productos.crear') }}" method="POST" enctype="multipart/form-data" id="form-crear-producto">
             <div class="mb-3">
                 <label for="nombre" class="form-label">Nombre del Producto</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre del producto" required>
@@ -22,7 +22,7 @@
             </div>
             <div class="mb-3">
                 <label for="categoria" class="form-label">Categoría</label>
-                <select class="form-select" id="categoria" name="categoria_id" onchange="loadSizes()" required>
+                <select class="form-select" id="categoria" name="categoria_id" required>
                     <option selected disabled>Seleccione una categoría</option>
                     {% for categoria in categorias %}
                     <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
@@ -32,9 +32,60 @@
 
             <h3>Atributos</h3>
             <div id="attributes-container">
-                <!-- Tamaños y variantes dinámicos se añadirán aquí -->
+                {% for sizeIndex in range(4) %}
+                <div class="card mb-4 border rounded">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Tamaño {{ sizeIndex + 1 }}</strong>
+                        <button type="button" class="btn btn-outline-primary toggle-card" data-index="{{ sizeIndex }}">Habilitar</button>
+                    </div>
+                    <div class="card-body" id="card-body-{{ sizeIndex }}" style="display: none;">
+                        <div class="mb-3">
+                            <label for="size-{{ sizeIndex }}" class="form-label">Tamaño</label>
+                            <select class="form-select size-select" id="size-{{ sizeIndex }}" name="size_{{ sizeIndex + 1 }}">
+                                <option selected disabled>Seleccione un tamaño</option>
+                                <!-- Las opciones de tamaños se agregarán dinámicamente -->
+                            </select>
+                        </div>
+                        <h5>Colores y Variantes</h5>
+                        <div class="row gx-3" id="variant-container-{{ sizeIndex }}">
+                            {% for variantIndex in range(3) %}
+                            <div class="col-md-4">
+                                <div class="border p-3 rounded position-relative variant-container" id="variant-{{ sizeIndex + 1 }}-{{ variantIndex + 1 }}" style="display: none;">
+                                    <button type="button" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 toggle-variant" data-size-index="{{ sizeIndex + 1 }}" data-variant-index="{{ variantIndex + 1 }}" title="Eliminar Variante">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                    <input type="hidden" name="variant_{{ sizeIndex + 1 }}_{{ variantIndex + 1 }}_status" value="inactive">
+                                    <div class="mb-2">
+                                        <label class="form-label">Color</label>
+                                        <select class="form-select variant-field" name="color_{{ sizeIndex + 1 }}_{{ variantIndex + 1 }}">
+                                            <option selected disabled>Seleccione un color</option>
+                                            {% for color in colores %}
+                                            <option value="{{ color.id }}" style="background-color:{{ color.hexadecimal }};">{{ color.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Stock</label>
+                                        <input type="number" class="form-control variant-field" name="stock_{{ sizeIndex + 1 }}_{{ variantIndex + 1 }}" placeholder="Stock">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Imagen</label>
+                                        <input type="file" class="form-control file-input variant-field" name="image_{{ sizeIndex + 1 }}_{{ variantIndex + 1 }}" accept="image/*">
+                                        <div class="mt-2 text-center">
+                                            <img id="preview-{{ sizeIndex + 1 }}-{{ variantIndex + 1 }}" class="img-fluid d-none" style="max-height: 150px;" alt="Vista previa">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-outline-secondary add-variant" data-size-index="{{ sizeIndex }}">Agregar Variante</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-            <button type="button" class="btn btn-primary mb-3" onclick="addSize()">Agregar Tamaño</button>
 
             <div class="text-end">
                 <button type="submit" class="btn btn-success">Registrar Producto</button>
@@ -43,127 +94,125 @@
     </div>
 </div>
 
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalLabel">Vista Previa de Imagen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body d-flex justify-content-center">
-                <img id="modalImage" src="" class="img-fluid" alt="Vista Previa">
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-    let sizes = [];
-    let availableSizes = {};
-    const availableColors = JSON.parse('{{ colores|tojson }}');
-
-    function loadSizes() {
-        const categoriaId = document.getElementById('categoria').value;
-
+document.addEventListener('DOMContentLoaded', () => {
+    const categoriaSelect = document.getElementById('categoria');
+    
+    // Función para obtener los tamaños de la categoría seleccionada
+    function cargarTamanios(categoriaId) {
+        const tamanioSelects = document.querySelectorAll('.size-select');
         fetch(`/productos/tamanios_por_categoria/${categoriaId}`)
             .then(response => response.json())
-            .then(data => {
-                availableSizes = data.reduce((acc, item) => {
-                    acc[item.id] = item.nombre;
-                    return acc;
-                }, {});
-                sizes = [];
-                renderSizes();
+            .then(tamanios => {
+                tamanioSelects.forEach(select => {
+                    // Limpiar opciones anteriores
+                    select.innerHTML = '<option selected disabled>Seleccione un tamaño</option>';
+                    // Agregar nuevos tamaños
+                    tamanios.forEach(tamanio => {
+                        const option = document.createElement('option');
+                        option.value = tamanio.id;
+                        option.textContent = tamanio.nombre;
+                        select.appendChild(option);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar tamaños:', error);
             });
     }
 
-    function addSize() {
-        sizes.push({ size: '', variants: [] });
-        renderSizes();
+    // Actualizar tamaños cuando se seleccione una categoría
+    categoriaSelect.addEventListener('change', () => {
+        const categoriaId = categoriaSelect.value;
+        cargarTamanios(categoriaId);
+    });
+
+    // Inicialización con la primera categoría si ya está seleccionada
+    if (categoriaSelect.value) {
+        cargarTamanios(categoriaSelect.value);
     }
 
-    function removeSize(index) {
-        sizes.splice(index, 1);
-        renderSizes();
-    }
-
-    function updateSize(index, value) {
-        sizes[index].size = value;
-    }
-
-    function addVariant(sizeIndex) {
-        if (sizes[sizeIndex].variants.length >= 3) {
-            alert('Solo se permiten 3 variantes por tamaño.');
-            return;
-        }
-        sizes[sizeIndex].variants.push({ color: '', stock: '', image: '' });
-        renderSizes();
-    }
-
-    function removeVariant(sizeIndex, variantIndex) {
-        sizes[sizeIndex].variants.splice(variantIndex, 1);
-        renderSizes();
-    }
-
-    function updateVariant(sizeIndex, variantIndex, field, value) {
-        sizes[sizeIndex].variants[variantIndex][field] = value;
-    }
-
-    function renderSizes() {
-        const container = document.getElementById('attributes-container');
-        container.innerHTML = '';
-
-        sizes.forEach((size, sizeIndex) => {
-            const sizeBlock = document.createElement('div');
-            sizeBlock.className = 'mb-4 p-3 border rounded';
-            sizeBlock.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <h4>Tamaño</h4>
-                    <button type="button" class="btn-close" aria-label="Close" onclick="removeSize(${sizeIndex})"></button>
-                </div>
-                <div class="mb-3">
-                    <select class="form-select" name="size_${sizeIndex + 1}" onchange="updateSize(${sizeIndex}, this.value)" required>
-                        <option selected disabled>Seleccione un tamaño</option>
-                        ${Object.entries(availableSizes).map(([id, name]) => `
-                            <option value="${id}" ${size.size === id ? 'selected' : ''}>${name}</option>
-                        `).join('')}
-                    </select>
-                </div>
-                <h5>Colores y Variantes</h5>
-                <div id="variants-${sizeIndex}" class="row gx-3">
-                </div>
-                <button type="button" class="btn btn-secondary mt-2" onclick="addVariant(${sizeIndex})">Agregar Variante</button>
-            `;
-            const variantsContainer = sizeBlock.querySelector(`#variants-${sizeIndex}`);
-            size.variants.forEach((variant, variantIndex) => {
-                const variantBlock = document.createElement('div');
-                variantBlock.className = 'col-md-4 p-2';
-                variantBlock.innerHTML = `
-                    <div class="border rounded p-2">
-                        <button type="button" class="btn-close float-end" aria-label="Close" onclick="removeVariant(${sizeIndex}, ${variantIndex})"></button>
-                        <div class="mb-2">
-                            <label class="form-label">Color:</label>
-                            <select class="form-select" name="color_${sizeIndex + 1}_${variantIndex + 1}" onchange="updateVariant(${sizeIndex}, ${variantIndex}, 'color', this.value)" required>
-                                <option selected disabled>Seleccione un color</option>
-                                ${availableColors.map(color => `
-                                    <option value="${color.id}" ${variant.color === color.id ? 'selected' : ''}>${color.nombre}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label">Stock:</label>
-                            <input type="number" class="form-control" name="stock_${sizeIndex + 1}_${variantIndex + 1}" placeholder="Stock" value="${variant.stock || ''}" onchange="updateVariant(${sizeIndex}, ${variantIndex}, 'stock', this.value)" required>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label">Imagen:</label>
-                            <input type="file" class="form-control" name="image_${sizeIndex + 1}_${variantIndex + 1}" accept="image/*">
-                        </div>
-                    </div>
-                `;
-                variantsContainer.appendChild(variantBlock);
-            });
-            container.appendChild(sizeBlock);
+    // Lógica para habilitar/deshabilitar tarjetas
+    document.querySelectorAll('.toggle-card').forEach(button => {
+        button.addEventListener('click', () => {
+            const index = button.dataset.index;
+            const cardBody = document.getElementById(`card-body-${index}`);
+            const isHidden = cardBody.style.display === 'none';
+            cardBody.style.display = isHidden ? 'block' : 'none';
+            button.innerHTML = isHidden 
+                ? '<i class="fas fa-check-circle"></i> Deshabilitar'
+                : '<i class="fas fa-times-circle"></i> Habilitar';
         });
-    }
+    });
+
+    // Lógica para agregar variantes
+    document.querySelectorAll('.add-variant').forEach(button => {
+        button.addEventListener('click', () => {
+            const sizeIndex = button.dataset.sizeIndex;
+            const variantContainer = document.getElementById(`variant-container-${sizeIndex}`);
+            const hiddenVariants = variantContainer.querySelectorAll('.variant-container[style="display: none;"]');
+            
+            if (hiddenVariants.length > 0) {
+                hiddenVariants[0].style.display = 'block';
+                hiddenVariants[0].querySelector('input[type="hidden"]').value = 'active'; // Cambiar estado a activo
+            }
+        });
+    });
+
+    // Previsualización de imágenes
+    document.querySelectorAll('.file-input').forEach(input => {
+        input.addEventListener('change', event => {
+            const previewId = `preview-${input.name.split('_').slice(1).join('-')}`;
+            const preview = document.getElementById(previewId);
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.classList.add('d-none');
+            }
+        });
+    });
+
+    // Eliminar variantes
+    document.querySelectorAll('.toggle-variant').forEach(button => {
+        button.addEventListener('click', () => {
+            const sizeIndex = button.dataset.sizeIndex;
+            const variantIndex = button.dataset.variantIndex;
+            const variant = document.getElementById(`variant-${sizeIndex}-${variantIndex}`);
+            variant.style.display = 'none';
+            variant.querySelector('input[type="hidden"]').value = 'inactive'; // Cambiar estado a inactivo
+        });
+    });
+
+    // Validar el formulario
+    document.getElementById('form-crear-producto').addEventListener('submit', (event) => {
+        let valid = true;
+        const activeVariants = [];
+
+        // Recorre las variantes visibles y valida los campos
+        document.querySelectorAll('.variant-container').forEach(container => {
+            if (container.style.display !== 'none') {
+                const fields = container.querySelectorAll('.variant-field');
+                fields.forEach(field => {
+                    if (!field.value) {
+                        valid = false;
+                    }
+                });
+            }
+        });
+
+        if (!valid) {
+            alert('Por favor complete todos los campos de las variantes activas.');
+            event.preventDefault();
+        }
+    });
+});
 </script>
+
 {% endblock %}
