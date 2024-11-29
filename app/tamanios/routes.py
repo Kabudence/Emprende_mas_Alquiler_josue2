@@ -8,13 +8,20 @@ from . import tamanios
 @tamanios.route('/')
 @login_required
 def index():
+    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+
+    if not negocio:
+        flash('No se encontró un negocio asociado al usuario.', 'danger')
+        return redirect(url_for('tamanios.index'))
+    
     busqueda = request.args.get('busqueda', '')
     if busqueda:
-        tamanios_lista = Tamanio.query.filter(Tamanio.nombre.like(f'%{busqueda}%')).all()
+        tamanios_lista = Tamanio.query.filter(Tamanio.nombre.like(f'%{busqueda}%'), Tamanio.categoria.has(rubro_id=negocio.rubro_id)).all()
     else:
-        tamanios_lista = Tamanio.query.all()
-    
+        tamanios_lista = Tamanio.query.filter(Tamanio.categoria.has(rubro_id=negocio.rubro_id)).all()
+
     return render_template('tamanios/index.html', tamanios=tamanios_lista, busqueda=busqueda)
+
 
 # Crear tamaños
 @tamanios.route('/crear', methods=['GET'])

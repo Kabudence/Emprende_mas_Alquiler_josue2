@@ -10,7 +10,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form action="{{ url_for('colores.guardar') }}" method="POST">
+        <form action="{{ url_for('colores.guardar') }}" method="POST" onsubmit="return validarFormulario()">
             <div class="mb-3">
                 <label for="nombre" class="form-label">Nombre del Color</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre del color" required>
@@ -21,7 +21,7 @@
                     <div class="color-picker mr-20"></div>
                     <input type="text" class="form-control" id="hexadecimal" name="hexadecimal" placeholder="#FF0000" required>
                 </div>
-                
+                <div id="hexadecimalError" style="color: red; display: none;">El código hexadecimal no es válido. Asegúrate de que empiece con "#" y tenga 6 caracteres hexadecimales.</div>
             </div>
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">
@@ -33,6 +33,7 @@
 </div>
 
 <script>
+    //Paleta de colores
     const pickr = Pickr.create({
         el: '.color-picker',
         default: '#FF0000',
@@ -47,16 +48,31 @@
             }
         }
     });
-    
+
     pickr.on('save', (color) => {
         const hexColor = color.toHEXA().toString();
         document.getElementById('hexadecimal').value = hexColor;
     });
-    
+
     pickr.on('change', (color) => {
         const hexColor = color.toHEXA().toString();
         document.getElementById('hexadecimal').value = hexColor;
     });
+
+    // Validar si el código hexadecimal es válido
+    function validarFormulario() {
+        const hexadecimal = document.getElementById('hexadecimal').value;
+        const regexHex = /^#[0-9A-Fa-f]{6}$/;
+        const errorMessage = document.getElementById('hexadecimalError');
+
+        if (!regexHex.test(hexadecimal)) {
+            errorMessage.style.display = 'block';
+            return false;
+        } else {
+            errorMessage.style.display = 'none';
+            return true;
+        }
+    }
 </script>
 
 {% endblock %}
