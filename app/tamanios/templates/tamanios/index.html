@@ -7,51 +7,95 @@
 
 <div class="row mb-4 align-items-center">
     <div class="col-md-6">
-        <form action="/tamanios" method="GET" class="d-flex shadow p-2 rounded">
-            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar tamaño..." aria-label="Buscar tamaño">
+        <form action="{{ url_for('tamanios.index') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar tamaño..." value="{{ busqueda }}" aria-label="Buscar tamaño">
             <button type="submit" class="btn btn-outline-secondary">
                 <i class="fas fa-search"></i>
             </button>
         </form>
     </div>
     <div class="col-md-6 text-end">
-        <a href="/tamanios/nuevo" class="btn btn-outline-primary shadow-sm">
+        <a href="{{ url_for('tamanios.crear') }}" class="btn btn-outline-primary shadow-sm">
             <i class="fas fa-plus-circle"></i> Agregar Tamaño
         </a>
     </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-bordered table-hover align-middle shadow-sm">
-        <thead class="table-dark text-center">
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tamanio in tamanios %}
-            <tr class="text-center">
-                <td><strong>{{ tamanio.id }}</strong></td>
-                <td>{{ tamanio.nombre }}</td>
-                <td>{{ tamanio.categoria.nombre }}</td>
-                <td>
-                    <a href="#" class="btn btn-outline-info btn-sm me-1">
-                        <i class="fas fa-eye"></i> 
-                    </a>
-                    <a href="/tamanios/editar/{{ tamanio.id }}" class="btn btn-outline-warning btn-sm me-1">
-                        <i class="fas fa-edit"></i> 
-                    </a>
-                    <a href="/tamanios/eliminar/{{ tamanio.id }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este tamaño?');">
-                        <i class="fas fa-trash-alt"></i> 
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+{% if tamanios %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tamanio in tamanios %}
+                <tr class="text-center">
+                    <td><strong>{{ tamanio.id }}</strong></td>
+                    <td>{{ tamanio.nombre }}</td>
+                    <td>{{ tamanio.categoria.nombre }}</td>
+                    <td>
+                        <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ tamanio.id }}">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ url_for('tamanios.editar', id=tamanio.id) }}" class="btn btn-outline-warning btn-sm me-1">
+                            <i class="fas fa-edit"></i> 
+                        </a>
+                        <a href="#" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ tamanio.id }}">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+
+                        <!-- Modal para ver detalles del tamaño -->
+                        <div class="modal fade" id="viewModal{{ tamanio.id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ tamanio.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 style="width: 100%;" class="modal-title" id="viewModalLabel{{ tamanio.id }}">Detalles del Tamaño: {{ tamanio.nombre }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>ID:</strong> {{ tamanio.id }}</p>
+                                        <p><strong>Nombre:</strong> {{ tamanio.nombre }}</p>
+                                        <p><strong>Categoría:</strong> {{ tamanio.categoria.nombre }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal de confirmación para eliminar tamaño -->
+                        <div class="modal fade" id="deleteModal{{ tamanio.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ tamanio.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 style="width: 100%;" class="text-center" id="deleteModalLabel{{ tamanio.id }}">Confirmar Eliminación</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        ¿Estás seguro de eliminar el tamaño <strong>{{ tamanio.nombre }}</strong>?
+                                    </div>
+                                    <div class="modal-footer  d-flex justify-content-center">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form id="deleteForm{{ tamanio.id }}" method="POST" action="{{ url_for('tamanios.eliminar', id=tamanio.id) }}">
+                                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info text-center" role="alert">
+        No se encontraron tamaños que coincidan con tu búsqueda.
+    </div>
+{% endif %}
 
 {% endblock %}

@@ -7,8 +7,9 @@
 
 <div class="row mb-4 align-items-center">
     <div class="col-md-6">
-        <form action="#" method="GET" class="d-flex shadow p-2 rounded">
-            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar color..." aria-label="Buscar color">
+        <form action="{{ url_for('colores.index') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar color..."
+                value="{{ busqueda }}" aria-label="Buscar color">
             <button type="submit" class="btn btn-outline-secondary">
                 <i class="fas fa-search"></i>
             </button>
@@ -21,41 +22,88 @@
     </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-bordered table-hover align-middle shadow-sm">
-        <thead class="table-dark text-center">
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Color</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for color in colores %}
-            <tr class="text-center">
-                <td><strong>{{ color.id }}</strong></td>
-                <td>{{ color.nombre }}</td>
-                <td>
-                    <span class="d-inline-block rounded-circle shadow-sm border border-dark" 
-                          style="width: 40px; height: 40px; background-color: {{ color.hexadecimal }};">
-                    </span>
-                </td>
-                <td>
-                    <a href="#" class="btn btn-outline-info btn-sm me-1">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a href="#" class="btn btn-outline-warning btn-sm me-1">
-                        <i class="fas fa-edit"></i> 
-                    </a>
-                    <a href="#" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este color?');">
-                        <i class="fas fa-trash-alt"></i>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+{% if colores %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Color</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for color in colores %}
+                <tr class="text-center">
+                    <td><strong>{{ color.id }}</strong></td>
+                    <td>{{ color.nombre }}</td>
+                    <td>
+                        <span class="d-inline-block rounded-circle shadow-sm border border-dark" 
+                            style="width: 40px; height: 40px; background-color: {{ color.hexadecimal }};">
+                        </span>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ color.id }}">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ url_for('colores.editar', id=color.id) }}" class="btn btn-outline-warning btn-sm me-1">
+                            <i class="fas fa-edit"></i> 
+                        </a>
+                        <a href="#" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ color.id }}">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+
+                        <!-- Modal para ver detalles del color -->
+                        <div class="modal fade" id="viewModal{{ color.id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ color.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 style="width: 100%;" class="modal-title" id="viewModalLabel{{ color.id }}">Detalles del Color: {{ color.nombre }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body d-flex justify-content-center flex-wrap">
+                                        <div class="mb-3" style="width: 100px; height: 100px; background-color: {{ color.hexadecimal }}; border-radius: 50%;"></div>
+                                        <div style="width: 100%;">
+                                            <p><strong>ID:</strong> {{ color.id }}</p>
+                                            <p><strong>Nombre:</strong> {{ color.nombre }}</p>
+                                            <p><strong>Hexadecimal:</strong> {{ color.hexadecimal }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal de confirmación para eliminar color -->
+                        <div class="modal fade" id="deleteModal{{ color.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ color.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 style="width: 100%;" class="text-center" id="deleteModalLabel{{ color.id }}">Confirmar Eliminación</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        ¿Estás seguro de eliminar el color <strong>{{ color.nombre }}</strong>?
+                                    </div>
+                                    <div class="modal-footer  d-flex justify-content-center">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form id="deleteForm{{ color.id }}" method="POST" action="{{ url_for('colores.eliminar', id=color.id) }}">
+                                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info text-center" role="alert">
+        No se encontraron colores que coincidan con tu búsqueda.
+    </div>
+{% endif %}
 
 {% endblock %}

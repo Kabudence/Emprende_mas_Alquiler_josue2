@@ -1,31 +1,30 @@
 {% extends 'base.html' %}
 
-{% block title %}Crear Color{% endblock %}
+{% block title %}Editar Color{% endblock %}
 
 {% block content %}
-<h1 class="h3 my-4 text-underline">Crear un Nuevo Color</h1>
+<h1 class="h3 my-4 text-underline">Editar Color</h1>
 
 <link href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form action="{{ url_for('colores.guardar') }}" method="POST">
+        <form action="{{ url_for('colores.actualizar', id=color.id) }}" method="POST">
             <div class="mb-3">
                 <label for="nombre" class="form-label">Nombre del Color</label>
-                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre del color" required>
+                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ color.nombre }}" placeholder="Ingrese el nombre del color" required>
             </div>
             <div class="mb-3">
                 <label for="hexadecimal" class="form-label">Código Hexadecimal</label>
                 <div class="d-flex">
                     <div class="color-picker mr-20"></div>
-                    <input type="text" class="form-control" id="hexadecimal" name="hexadecimal" placeholder="#FF0000" required>
+                    <input type="text" class="form-control" id="hexadecimal" name="hexadecimal" value="{{ color.hexadecimal }}" placeholder="#FF0000" required>
                 </div>
-                
             </div>
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Guardar
+                    <i class="fas fa-save"></i> Guardar Cambios
                 </button>
             </div>
         </form>
@@ -35,7 +34,7 @@
 <script>
     const pickr = Pickr.create({
         el: '.color-picker',
-        default: '#FF0000',
+        default: '{{ color.hexadecimal }}',
         theme: 'classic',
         components: {
             preview: true,
