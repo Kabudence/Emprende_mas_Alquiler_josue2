@@ -18,6 +18,17 @@ def guardar():
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
 
     try:
+        # Obtener el nombre del rubro ingresado
+        rubro_nombre = request.form['rubro_nombre'].strip()
+        rubro = Rubro.query.filter_by(nombre=rubro_nombre).first()
+
+        # Crear el rubro si no existe
+        if not rubro:
+            rubro = Rubro(nombre=rubro_nombre)
+            db.session.add(rubro)
+            db.session.commit()  # Guardar para asignar ID al rubro
+
+        # Actualizar o crear el negocio
         if negocio:
             negocio.nombre_negocio = request.form['nombre_negocio']
             negocio.ruc = request.form['ruc']
@@ -27,6 +38,7 @@ def guardar():
             negocio.departamento = request.form['departamento']
             negocio.provincia = request.form['provincia']
             negocio.distrito = request.form['distrito']
+            negocio.rubro_id = rubro.id
             flash('Negocio actualizado exitosamente.', 'success')
         else:
             nuevo_negocio = Negocio(
@@ -38,7 +50,7 @@ def guardar():
                 departamento=request.form['departamento'],
                 provincia=request.form['provincia'],
                 distrito=request.form['distrito'],
-                rubro_id=request.form['rubro_id'],
+                rubro_id=rubro.id,
                 usuario_id=current_user.id
             )
             db.session.add(nuevo_negocio)
