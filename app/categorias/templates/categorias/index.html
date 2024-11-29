@@ -7,18 +7,19 @@
 
 <div class="row mb-4 align-items-center">
     <div class="col-md-6">
-        <form action="/categorias" method="GET" class="d-flex shadow p-2 rounded">
-            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar categoría..." aria-label="Buscar categoría">
-            <button type="submit" class="btn btn-outline-secondary">
+        <form action="{{ url_for('categorias.index') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" class="form-control me-2" name="buscar" placeholder="Buscar categorías..." value="{{ query }}" aria-label="Buscar categorías">
+            <button class="btn btn-outline-secondary" type="submit">
                 <i class="fas fa-search"></i>
             </button>
         </form>
     </div>
     <div class="col-md-6 text-end">
-        <a href="#" class="btn btn-outline-primary shadow-sm">
+        <a href="{{ url_for('categorias.crear') }}" class="btn btn-outline-primary shadow-sm">
             <i class="fas fa-plus-circle"></i> Agregar Categoría
         </a>
     </div>
+    
 </div>
 
 <div class="table-responsive">
@@ -38,16 +39,52 @@
                 <td>{{ categoria.nombre }}</td>
                 <td>{{ categoria.rubro.nombre }}</td>
                 <td>
-                    <a href="#" class="btn btn-outline-info btn-sm me-1">
+                    <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ categoria.id }}">
                         <i class="fas fa-eye"></i>
                     </a>
-                    <a href="#" class="btn btn-outline-warning btn-sm me-1">
+                    <a href="{{ url_for('categorias.actualizar', id=categoria.id) }}" class="btn btn-outline-warning btn-sm me-1">
                         <i class="fas fa-edit"></i> 
                     </a>
-                    <a href="#" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta categoría?');">
+                    <a href="#" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ categoria.id }}">
                         <i class="fas fa-trash-alt"></i>
                     </a>
-                    
+
+                    <!-- Modal para ver detalles de la categoría -->
+                    <div class="modal fade" id="viewModal{{ categoria.id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ categoria.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 style="width: 100%;" class="modal-title" id="viewModalLabel{{ categoria.id }}">Detalles de la Categoría: {{ categoria.nombre }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>ID:</strong> {{ categoria.id }}</p>
+                                    <p><strong>Nombre:</strong> {{ categoria.nombre }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal de confirmación para eliminar categoría -->
+                    <div class="modal fade" id="deleteModal{{ categoria.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ categoria.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 style="width: 100%;" class="text-center" id="deleteModalLabel{{ categoria.id }}">Confirmar Eliminación</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ¿Estás seguro de eliminar la categoría <strong>{{ categoria.nombre }}</strong>?
+                                </div>
+                                <div class="modal-footer d-flex justify-content-center">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <form id="deleteForm{{ categoria.id }}" method="POST" action="{{ url_for('categorias.eliminar', id=categoria.id) }}">
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

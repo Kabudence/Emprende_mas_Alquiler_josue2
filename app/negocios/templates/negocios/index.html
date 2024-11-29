@@ -69,19 +69,10 @@
 
             <div class="row mb-3">
                 <div class="col-md-12">
-                    <label for="rubro_id" class="form-label">Rubro</label>
-                    {% if not negocio %}
-  
-                    <select class="form-select" id="rubro_id" name="rubro_id" required>
-                        <option value="">Seleccione un rubro</option>
-                        {% for rubro in rubros %}
-                        <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                    {% else %}
-    
-                    <input type="text" class="form-control" value="{{ negocio.rubro.nombre }}" disabled>
-                    {% endif %}
+                    <label for="rubro_nombre" class="form-label">Rubro</label>
+                    <input type="text" class="form-control" id="rubro_nombre" name="rubro_nombre" 
+                           value="{{ negocio.rubro.nombre if negocio and negocio.rubro else '' }}" 
+                           placeholder="Ingrese el rubro" required>
                 </div>
             </div>
 

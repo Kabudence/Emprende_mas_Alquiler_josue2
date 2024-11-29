@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Categoría{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Crear una Nueva Categoría</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="{{ url_for('categorias.crear') }}" method="POST">
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre de la Categoría</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre de la categoría" required>
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
