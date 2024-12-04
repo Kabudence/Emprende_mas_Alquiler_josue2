@@ -9,6 +9,7 @@ from .categorias import categorias as categorias_blueprint
 from .negocios import negocios as negocios_blueprint
 from .colores import colores as colores_blueprint
 from .tamanios import tamanios as tamanios_blueprint
+from .feedbacks import feedbacks as feedbacks_blueprint
 import os
 
 login_manager = LoginManager()
@@ -39,5 +40,6 @@ def create_app():
     app.register_blueprint(negocios_blueprint, url_prefix='/negocios')
     app.register_blueprint(colores_blueprint, url_prefix='/colores')
     app.register_blueprint(tamanios_blueprint, url_prefix='/tamanios')
+    app.register_blueprint(feedbacks_blueprint, url_prefix='/feedbacks')
 
     return app

@@ -87,3 +87,19 @@ class DetalleVenta(db.Model):
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Numeric(10, 2), nullable=False)
     subtotal = db.Column(db.Numeric(10, 2), nullable=False)
+
+class Feedback(db.Model):
+    __tablename__ = 'feedback'
+    id = db.Column(db.Integer, primary_key=True)
+    asunto = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)
+    imagen1 = db.Column(db.String(255), nullable=True)
+    imagen2 = db.Column(db.String(255), nullable=True)
+    categoria_feedback_id = db.Column(db.Integer, db.ForeignKey('categoria_feedback.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+
+class CategoriaFeedback(db.Model):
+    __tablename__ = 'categoria_feedback'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    feedbacks = db.relationship('Feedback', backref=db.backref('categoria_feedback', lazy=True))
