@@ -103,3 +103,15 @@ class CategoriaFeedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     feedbacks = db.relationship('Feedback', backref=db.backref('categoria_feedback', lazy=True))
+
+class Servicio(db.Model):
+    __tablename__ = 'servicios'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_servicio = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)
+    precio = db.Column(db.Numeric(10, 2), nullable=False)
+    precio_oferta = db.Column(db.Numeric(10, 2), nullable=True)
+    imagen = db.Column(db.String(255), nullable=True)
+    rubro_id = db.Column(db.Integer, db.ForeignKey('rubros.id'), nullable=False)
+    
+    rubro = db.relationship('Rubro', backref=db.backref('servicios', lazy=True))

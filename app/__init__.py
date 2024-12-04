@@ -10,6 +10,7 @@ from .negocios import negocios as negocios_blueprint
 from .colores import colores as colores_blueprint
 from .tamanios import tamanios as tamanios_blueprint
 from .feedbacks import feedbacks as feedbacks_blueprint
+from .servicios import servicios as servicios_blueprint
 import os
 
 login_manager = LoginManager()
@@ -36,6 +37,7 @@ def create_app():
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
     app.register_blueprint(main_blueprint)
     app.register_blueprint(productos_blueprint, url_prefix='/productos')
+    app.register_blueprint(servicios_blueprint, url_prefix='/servicios')
     app.register_blueprint(categorias_blueprint, url_prefix='/categorias')
     app.register_blueprint(negocios_blueprint, url_prefix='/negocios')
     app.register_blueprint(colores_blueprint, url_prefix='/colores')
