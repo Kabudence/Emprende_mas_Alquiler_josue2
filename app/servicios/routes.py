@@ -1,8 +1,18 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+import os
+import uuid
 from ..models import Servicio, Negocio
 from ..database import db
 from . import servicios
+
+# Configura la carpeta de carga 
+UPLOAD_FOLDER = 'app/static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Mostrar todos los servicios
 @servicios.route('/')
@@ -45,12 +55,24 @@ def guardar():
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
     precio_oferta = request.form.get('precio_oferta')
+    archivo_imagen = request.files.get('imagen')
 
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
 
     if not negocio:
         flash('No se encontró un negocio asociado al usuario.', 'danger')
         return redirect(url_for('servicios.index'))
+
+    if archivo_imagen and allowed_file(archivo_imagen.filename):
+        # Generar un nombre único para la imagen
+        unique_filename = f"{uuid.uuid4().hex}_{secure_filename(archivo_imagen.filename)}"
+        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
+        archivo_imagen.save(filepath)
+        imagen_nombre = unique_filename
+    else:
+        imagen_nombre = None 
 
     rubro_id = negocio.rubro_id
 
@@ -59,7 +81,8 @@ def guardar():
         descripcion=descripcion,
         precio=precio,
         precio_oferta=precio_oferta,
-        rubro_id=rubro_id
+        rubro_id=rubro_id,
+        imagen=imagen_nombre
     )
     db.session.add(nuevo_servicio)
     db.session.commit()
@@ -93,6 +116,8 @@ def actualizar(id):
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
     precio_oferta = request.form.get('precio_oferta')
+    archivo_imagen = request.files.get('imagen')
+
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
 
     if not negocio:
@@ -107,11 +132,16 @@ def actualizar(id):
     servicio.precio_oferta = precio_oferta
     servicio.rubro_id = rubro_id
 
+    if archivo_imagen and allowed_file(archivo_imagen.filename):
+        unique_filename = f"{uuid.uuid4().hex}_{secure_filename(archivo_imagen.filename)}"
+        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+        archivo_imagen.save(filepath)
+        servicio.imagen = unique_filename 
+
     db.session.commit()
 
     flash('Servicio actualizado con éxito', 'success')
     return redirect(url_for('servicios.index'))
-
 
 
 # Eliminar servicio
