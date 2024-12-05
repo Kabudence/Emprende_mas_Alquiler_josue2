@@ -6,7 +6,105 @@
 <h1 class="h3 my-4 text-underline">Gestión de Servicios</h1>
 
 <div class="row mb-4 align-items-center">
-    <div></div>
+    <div class="col-md-6">
+        <form action="{{ url_for('servicios.index') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar servicio..." value="{{ busqueda }}" aria-label="Buscar servicio">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('servicios.crear') }}" class="btn btn-outline-primary shadow-sm">
+            <i class="fas fa-plus-circle"></i> Agregar Servicio
+        </a>
+    </div>
 </div>
+
+{% if servicios %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Servicio</th>
+                    <th>Descripción</th>
+                    <th>Precio</th>
+                    <th>Precio de Oferta</th>
+                    <th>Rubro</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servicio in servicios %}
+                <tr class="text-center">
+                    <td><strong>{{ servicio.id }}</strong></td>
+                    <td>{{ servicio.nombre_servicio }}</td>
+                    <td>{{ servicio.descripcion }}</td>
+                    <td>{{ servicio.precio | round(2) }}</td>
+                    <td>{{ servicio.precio_oferta | round(2) }}</td>
+                    <td>{{ servicio.rubro.nombre }}</td>
+                    <td>
+                        <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ servicio.id }}">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ url_for('servicios.editar', id=servicio.id) }}" class="btn btn-outline-warning btn-sm me-1">
+                            <i class="fas fa-edit"></i> 
+                        </a>
+                        <a href="#" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ servicio.id }}">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+
+                        <!-- Modal para ver detalles del servicio -->
+                        <div class="modal fade" id="viewModal{{ servicio.id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ servicio.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 style="width: 100%;" class="modal-title" id="viewModalLabel{{ servicio.id }}">Detalles del Servicio: {{ servicio.nombre_servicio }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>ID:</strong> {{ servicio.id }}</p>
+                                        <p><strong>Nombre del Servicio:</strong> {{ servicio.nombre_servicio }}</p>
+                                        <p><strong>Descripción:</strong> {{ servicio.descripcion }}</p>
+                                        <p><strong>Precio:</strong> {{ servicio.precio | round(2) }}</p>
+                                        <p><strong>Precio de Oferta:</strong> {{ servicio.precio_oferta | round(2) }}</p>
+                                        <p><strong>Rubro:</strong> {{ servicio.rubro.nombre }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal de confirmación para eliminar servicio -->
+                        <div class="modal fade" id="deleteModal{{ servicio.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ servicio.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 style="width: 100%;" class="text-center" id="deleteModalLabel{{ servicio.id }}">Confirmar Eliminación</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        ¿Estás seguro de eliminar el servicio <strong>{{ servicio.nombre_servicio }}</strong>?
+                                    </div>
+                                    <div class="modal-footer d-flex justify-content-center">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form id="deleteForm{{ servicio.id }}" method="POST" action="{{ url_for('servicios.eliminar', id=servicio.id) }}">
+                                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info text-center" role="alert">
+        No se encontraron servicios que coincidan con tu búsqueda.
+    </div>
+{% endif %}
 
 {% endblock %}

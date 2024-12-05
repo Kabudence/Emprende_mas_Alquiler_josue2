@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Servicio{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Editar Servicio</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="{{ url_for('servicios.actualizar', id=servicio.id) }}" method="POST">
+            <div class="mb-3">
+                <label for="nombre_servicio" class="form-label">Nombre del Servicio</label>
+                <input type="text" class="form-control" id="nombre_servicio" name="nombre_servicio" value="{{ servicio.nombre_servicio }}" placeholder="Ingrese el nombre del servicio" required>
+            </div>
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" placeholder="Ingrese la descripción" required>{{ servicio.descripcion }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="precio" class="form-label">Precio</label>
+                <input type="number" class="form-control" id="precio" name="precio" value="{{ servicio.precio }}" placeholder="Ingrese el precio" required step="0.01" min="0">
+            </div>
+            <div class="mb-3">
+                <label for="precio_oferta" class="form-label">Precio de Oferta</label>
+                <input type="number" class="form-control" id="precio_oferta" name="precio_oferta" value="{{ servicio.precio_oferta }}" placeholder="Ingrese el precio de oferta" step="0.01" min="0">
+            </div>
+            <div class="mb-3">
+                <label for="rubro" class="form-label">Rubro</label>
+                <input type="text" class="form-control" id="rubro" value="{{ rubro.nombre }}" disabled>
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
