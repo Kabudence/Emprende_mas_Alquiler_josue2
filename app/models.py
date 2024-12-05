@@ -51,7 +51,6 @@ class Producto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text, nullable=True)
-    precio = db.Column(db.Numeric(10, 2), nullable=False)
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=False)
     producto_detalles = db.relationship('ProductoDetalle', backref=db.backref('producto', lazy=True))
 
@@ -70,6 +69,8 @@ class ProductoDetalle(db.Model):
     tamanio_id = db.Column(db.Integer, db.ForeignKey('tamanios.id'), nullable=False)
     stock = db.Column(db.Integer, nullable=False)
     imagen = db.Column(db.String(255), nullable=True)
+    precio = db.Column(db.Numeric(10, 2), nullable=False)
+    capacidad = db.Column(db.String(100), nullable=True)
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
