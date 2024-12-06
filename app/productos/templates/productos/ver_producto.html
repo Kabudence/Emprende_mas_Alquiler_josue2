@@ -9,59 +9,109 @@
 <div class="card shadow-sm">
     <div class="container mt-5">
         <div class="row">
-          <div class="col-md-6">
-            <div class="product-images">
-              {% if producto.producto_detalles %}
-                <img id="mainImage" src="{{ url_for('static', filename='uploads/' + producto.producto_detalles[0].imagen) }}" class="img-fluid mb-4" alt="Imagen del producto" style="width: 100%; max-width: 300px; height: auto;">
-              {% else %}
-                <p>No hay imágenes disponibles.</p>
-              {% endif %}
-              
-              <div class="product-thumbnails">
-                {% for detalle in producto.producto_detalles %}
-                  {% if detalle.imagen %}
-                    <img src="{{ url_for('static', filename='uploads/' + detalle.imagen) }}" class="img-thumbnail" alt="Detalle del producto" style="width: 100px; margin-right: 10px; cursor: pointer;" onclick="changeMainImage(this)">
-                  {% endif %}
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-6">
-            <h2>{{ producto.nombre }}</h2>
-            <p><strong>Descripción:</strong> {{ producto.descripcion if producto.descripcion else "No disponible." }}</p>
-            <p><strong>Precio:</strong> S/. {{ producto.precio }}</p>
-            
-            <div class="mt-4">
-              <h5>Colores disponibles:</h5>
-              <div class="d-flex flex-wrap justify-content-start">
-                {% for detalle in producto.producto_detalles %}
-                  <div class="mr-2 mb-2">
-                    <div class="color-box" style="background-color: {{ detalle.color.hexadecimal }}; width: 50px; height: 50px; border-radius: 50%;"></div>
-                  </div>
-                {% endfor %}
-              </div>
-            </div>
-            
-            <div class="mt-4">
-              <h5>Tamaños disponibles:</h5>
-              <ul>
-                {% for detalle in producto.producto_detalles %}
-                  <li>{{ detalle.tamanio.nombre }} - Stock: {{ detalle.stock }} unidades</li>
-                {% endfor %}
-              </ul>
+            <div class="col-md-6">
+                <div class="product-images">
+                    {% if producto.producto_detalles %}
+                        <img id="mainImage" src="{{ url_for('static', filename='uploads/' + producto.producto_detalles[0].imagen) }}" class="img-fluid mb-4" alt="Imagen del producto" style="width: 100%; max-width: 300px; height: auto;">
+                    {% else %}
+                        <p>No hay imágenes disponibles.</p>
+                    {% endif %}
+                    
+                    <div class="product-thumbnails">
+                        {% for detalle in producto.producto_detalles %}
+                            {% if detalle.imagen %}
+                                <img src="{{ url_for('static', filename='uploads/' + detalle.imagen) }}" class="img-thumbnail" alt="Detalle del producto" style="width: 100px; margin-right: 10px; cursor: pointer;" onclick="changeMainImage(this)">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
 
-          </div>
+            <div class="col-md-6">
+                <h2>{{ producto.nombre }}</h2>
+                <p><strong>Descripción:</strong> {{ producto.descripcion if producto.descripcion else "No disponible." }}</p>
+                
+                <div class="mt-4">
+                    <h5>Seleccione Color:</h5>
+                    <select id="colorSelect" class="form-select mb-3" onchange="updateProductDetails()">
+                        <option selected disabled>Seleccione un color</option>
+                        {% for detalle in producto.producto_detalles %}
+                            <option value="{{ detalle.color.nombre }}" data-color="{{ detalle.color.hexadecimal }}">{{ detalle.color.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>Seleccione Capacidad:</h5>
+                    <select id="capacitySelect" class="form-select mb-3" onchange="updateProductDetails()">
+                        <option selected disabled>Seleccione una capacidad</option>
+                        {% for detalle in producto.producto_detalles %}
+                            <option value="{{ detalle.capacidad }}">{{ detalle.capacidad }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mt-4">
+                    <h5 id="priceHeader">Precio: S/. <span id="priceDisplay">-</span></h5>
+                    <h5 id="stockHeader">Stock: <span id="stockDisplay">-</span> unidades</h5>
+                </div>
+            </div>
         </div>
-      </div>
+    </div>
 </div>
-<script>
-    function changeMainImage(thumbnail) {
-      const mainImage = document.getElementById("mainImage");
-      mainImage.src = thumbnail.src;
-    }
-  </script>
-  
-{% endblock %}
 
+<script>
+    const productDetails = [
+        {% for detalle in producto.producto_detalles %}
+        {
+            color: "{{ detalle.color.nombre }}",
+            capacidad: "{{ detalle.capacidad }}",
+            precio: "{{ detalle.precio }}",
+            stock: "{{ detalle.stock }}",
+            tamanio: "{{ detalle.tamanio.nombre }}",
+            imagen: "{{ url_for('static', filename='uploads/' + detalle.imagen) }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    function changeMainImage(thumbnail) {
+        const mainImage = document.getElementById("mainImage");
+        mainImage.src = thumbnail.src;
+    }
+
+    function updateProductDetails() {
+        const colorSelect = document.getElementById("colorSelect");
+        const capacitySelect = document.getElementById("capacitySelect");
+        const priceDisplay = document.getElementById("priceDisplay");
+        const stockDisplay = document.getElementById("stockDisplay");
+        const mainImage = document.getElementById("mainImage");
+
+        if (colorSelect.value) {
+            const selectedColor = colorSelect.value;
+            for (const detail of productDetails) {
+                if (detail.color === selectedColor) {
+                    mainImage.src = detail.imagen;
+                    break;
+                }
+            }
+        }
+
+        if (colorSelect.value && capacitySelect.value) {
+            const selectedColor = colorSelect.value;
+            const selectedCapacity = capacitySelect.value;
+
+            for (const detail of productDetails) {
+                if (detail.color === selectedColor && detail.capacidad === selectedCapacity) {
+                    priceDisplay.innerText = detail.precio;
+                    stockDisplay.innerText = detail.stock;
+                    return;
+                }
+            }
+
+            priceDisplay.innerText = "-";
+            stockDisplay.innerText = "-";
+        }
+    }
+</script>
+
+{% endblock %}
