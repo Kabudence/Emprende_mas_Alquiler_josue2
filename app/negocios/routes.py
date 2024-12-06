@@ -50,7 +50,7 @@ def guardar():
             negocio.provincia = request.form['provincia']
             negocio.distrito = request.form['distrito']
             negocio.rubro_id = rubro.id
-            flash('Negocio actualizado exitosamente.', 'success')
+            # flash('Negocio actualizado exitosamente.', 'success')
         else:
             nuevo_negocio = Negocio(
                 nombre_negocio=request.form['nombre_negocio'],
@@ -65,7 +65,7 @@ def guardar():
                 usuario_id=current_user.id
             )
             db.session.add(nuevo_negocio)
-            flash('Negocio registrado exitosamente.', 'success')
+            # flash('Negocio registrado exitosamente.', 'success')
 
         # Actualizar datos del usuario
         usuario.nombre_usuario = request.form['nombre_usuario']
@@ -75,10 +75,10 @@ def guardar():
             usuario.password = request.form['password']
         db.session.commit()
 
-        flash('Datos del usuario actualizados exitosamente.', 'success')
+        # flash('Datos del usuario actualizados exitosamente.', 'success')
         
     except Exception as e:
         db.session.rollback()
-        flash(f'Ocurrió un error al guardar los datos: {str(e)}', 'danger')
+        # flash(f'Ocurrió un error al guardar los datos: {str(e)}', 'danger')
 
     return redirect(url_for('negocios.index'))
