@@ -9,24 +9,35 @@ from . import negocios
 def index():
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
     rubros = Rubro.query.all()
-    return render_template('negocios/index.html', negocio=negocio, rubros=rubros)
+    usuario = current_user
+    return render_template('negocios/index.html', negocio=negocio, rubros=rubros, usuario=usuario)
 
 
 @negocios.route('/guardar', methods=['POST'])
 @login_required
 def guardar():
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+    usuario = current_user
 
     try:
-        # Obtener el nombre del rubro ingresado
-        rubro_nombre = request.form['rubro_nombre'].strip()
-        rubro = Rubro.query.filter_by(nombre=rubro_nombre).first()
+        # Obtener el ID del rubro seleccionado y el valor del nuevo rubro
+        rubro_id = request.form.get('rubro_id')
+        nuevo_rubro = request.form.get('nuevo_rubro', '').strip()
 
-        # Crear el rubro si no existe
+        # Determinar el rubro a usar
+        if rubro_id == "nuevo" and nuevo_rubro:
+            # Crear el nuevo rubro si no existe
+            rubro = Rubro.query.filter_by(nombre=nuevo_rubro).first()
+            if not rubro:
+                rubro = Rubro(nombre=nuevo_rubro)
+                db.session.add(rubro)
+                db.session.commit()  # Guardar para asignar el ID
+        else:
+            # Usar el rubro existente seleccionado
+            rubro = Rubro.query.get(rubro_id)
+
         if not rubro:
-            rubro = Rubro(nombre=rubro_nombre)
-            db.session.add(rubro)
-            db.session.commit()  # Guardar para asignar ID al rubro
+            raise ValueError("Debe seleccionar un rubro válido o agregar uno nuevo.")
 
         # Actualizar o crear el negocio
         if negocio:
@@ -56,7 +67,16 @@ def guardar():
             db.session.add(nuevo_negocio)
             flash('Negocio registrado exitosamente.', 'success')
 
+        # Actualizar datos del usuario
+        usuario.nombre_usuario = request.form['nombre_usuario']
+        usuario.username = request.form['username']
+        usuario.email = request.form['email']
+        if request.form['password']:
+            usuario.password = request.form['password']
         db.session.commit()
+
+        flash('Datos del usuario actualizados exitosamente.', 'success')
+        
     except Exception as e:
         db.session.rollback()
         flash(f'Ocurrió un error al guardar los datos: {str(e)}', 'danger')

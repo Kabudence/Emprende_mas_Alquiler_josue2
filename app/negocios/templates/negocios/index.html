@@ -3,80 +3,106 @@
 {% block title %}Gestión de Negocio{% endblock %}
 
 {% block content %}
-<h1 class="h3 my-4 text-underline">Información del Negocio</h1>
-
-<!-- {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %} -->
+<h1 class="h3 my-4 text-underline">Información del Negocio y Usuario</h1>
 
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="{{ url_for('negocios.guardar') }}" method="POST">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="nombre_negocio" class="form-label">Nombre del Negocio</label>
-                    <input type="text" class="form-control" id="nombre_negocio" name="nombre_negocio" value="{{ negocio.nombre_negocio if negocio else '' }}" placeholder="Ingrese el nombre del negocio" required>
+            
+            <!-- Fieldset para datos del negocio -->
+            <fieldset class="mb-4">
+                <legend>Datos del Negocio</legend>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="nombre_negocio" class="form-label">Nombre del Negocio</label>
+                        <input type="text" class="form-control" id="nombre_negocio" name="nombre_negocio" value="{{ negocio.nombre_negocio if negocio else '' }}" placeholder="Ingrese el nombre del negocio" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="ruc" class="form-label">RUC</label>
+                        <input type="text" class="form-control" id="ruc" name="ruc" value="{{ negocio.ruc if negocio else '' }}" placeholder="Ingrese el RUC" required>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label for="ruc" class="form-label">RUC</label>
-                    <input type="text" class="form-control" id="ruc" name="ruc" value="{{ negocio.ruc if negocio else '' }}" placeholder="Ingrese el RUC" required>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="razon_social" class="form-label">Razón Social</label>
+                        <input type="text" class="form-control" id="razon_social" name="razon_social" value="{{ negocio.razon_social if negocio else '' }}" placeholder="Ingrese la razón social" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono" name="telefono" value="{{ negocio.telefono if negocio else '' }}" placeholder="Ingrese el teléfono" required>
+                    </div>
                 </div>
-            </div>
 
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="razon_social" class="form-label">Razón Social</label>
-                    <input type="text" class="form-control" id="razon_social" name="razon_social" value="{{ negocio.razon_social if negocio else '' }}" placeholder="Ingrese la razón social" required>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" class="form-control" id="direccion" name="direccion" value="{{ negocio.direccion if negocio else '' }}" placeholder="Ingrese la dirección completa" required>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label for="telefono" class="form-label">Teléfono</label>
-                    <input type="text" class="form-control" id="telefono" name="telefono" value="{{ negocio.telefono if negocio else '' }}" placeholder="Ingrese el teléfono" required>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="departamento" class="form-label">Departamento</label>
+                        <input type="text" class="form-control" id="departamento" name="departamento" value="{{ negocio.departamento if negocio else '' }}" placeholder="Ingrese el departamento" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="provincia" class="form-label">Provincia</label>
+                        <input type="text" class="form-control" id="provincia" name="provincia" value="{{ negocio.provincia if negocio else '' }}" placeholder="Ingrese la provincia" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="distrito" class="form-label">Distrito</label>
+                        <input type="text" class="form-control" id="distrito" name="distrito" value="{{ negocio.distrito if negocio else '' }}" placeholder="Ingrese el distrito" required>
+                    </div>
                 </div>
-            </div>
 
-
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    <label for="direccion" class="form-label">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{ negocio.direccion if negocio else '' }}" placeholder="Ingrese la dirección completa" required>
+                <!-- Selector de rubro con opción para agregar -->
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="rubro_id" class="form-label">Rubro</label>
+                        <select class="form-select mb-2" id="rubro_id" name="rubro_id" onchange="toggleNuevoRubro()" required>
+                            <option value="" disabled selected>Seleccione un rubro</option>
+                            {% for rubro in rubros %}
+                                <option value="{{ rubro.id }}" {% if negocio and negocio.rubro_id == rubro.id %}selected{% endif %}>
+                                    {{ rubro.nombre }}
+                                </option>
+                            {% endfor %}
+                            <option value="nuevo">Agregar nuevo rubro</option>
+                        </select>
+                        <input type="text" class="form-control d-none" id="nuevo_rubro" name="nuevo_rubro" placeholder="Ingrese un nuevo rubro">
+                    </div>
                 </div>
-            </div>
+            </fieldset>
 
+            <!-- Fieldset para datos del usuario -->
+            <fieldset>
+                <legend>Datos del Usuario</legend>
 
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label for="departamento" class="form-label">Departamento</label>
-                    <input type="text" class="form-control" id="departamento" name="departamento" value="{{ negocio.departamento if negocio else '' }}" placeholder="Ingrese el departamento" required>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="nombre_usuario" class="form-label">Nombre Completo</label>
+                        <input type="text" class="form-control" id="nombre_usuario" name="nombre_usuario" value="{{ current_user.nombre_usuario }}" placeholder="Ingrese su nombre completo" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" placeholder="Ingrese su nombre de usuario" required>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label for="provincia" class="form-label">Provincia</label>
-                    <input type="text" class="form-control" id="provincia" name="provincia" value="{{ negocio.provincia if negocio else '' }}" placeholder="Ingrese la provincia" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="distrito" class="form-label">Distrito</label>
-                    <input type="text" class="form-control" id="distrito" name="distrito" value="{{ negocio.distrito if negocio else '' }}" placeholder="Ingrese el distrito" required>
-                </div>
-            </div>
 
-
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    <label for="rubro_nombre" class="form-label">Rubro</label>
-                    <input type="text" class="form-control" id="rubro_nombre" name="rubro_nombre" 
-                           value="{{ negocio.rubro.nombre if negocio and negocio.rubro else '' }}" 
-                           placeholder="Ingrese el rubro" required>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" placeholder="Ingrese su correo electrónico" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña">
+                    </div>
                 </div>
-            </div>
+            </fieldset>
 
-      
+            <!-- Botón de enviar -->
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Guardar
@@ -85,4 +111,19 @@
         </form>
     </div>
 </div>
+
+<script>
+    function toggleNuevoRubro() {
+        const rubroSelect = document.getElementById('rubro_id');
+        const nuevoRubroInput = document.getElementById('nuevo_rubro');
+        if (rubroSelect.value === 'nuevo') {
+            nuevoRubroInput.classList.remove('d-none');
+            nuevoRubroInput.setAttribute('required', 'required');
+        } else {
+            nuevoRubroInput.classList.add('d-none');
+            nuevoRubroInput.removeAttribute('required');
+        }
+    }
+</script>
+
 {% endblock %}
