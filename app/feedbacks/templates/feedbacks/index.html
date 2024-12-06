@@ -6,7 +6,40 @@
 <h1 class="h3 my-4 text-underline">Gestión de Feedbacks</h1>
 
 <div class="row mb-4 align-items-center">
-    <div></div>
+    <div class="col-md-6">
+        <!-- Formulario de búsqueda -->
+        <form action="{{ url_for('feedbacks.index') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" class="form-control me-2" name="buscar" placeholder="Buscar feedbacks..." value="{{ query }}" aria-label="Buscar feedbacks">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle shadow-sm">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>ID</th>
+                <th>Asunto</th>
+                <th>Descripción</th>
+                <th>Usuario</th>
+                <th>Categoría</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feedback in feedbacks %}
+            <tr class="text-center">
+                <td><strong>{{ feedback.id }}</strong></td>
+                <td>{{ feedback.asunto }}</td>
+                <td>{{ feedback.descripcion }}</td>
+                <td>{{ feedback.usuario.nombre_usuario }}</td>  <!-- Nombre del usuario que dejó el feedback -->
+                <td>{{ feedback.categoria_feedback.nombre }}</td>  <!-- Nombre de la categoría del feedback -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 {% endblock %}
