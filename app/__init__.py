@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from .database import db
@@ -14,6 +14,13 @@ from .servicios import servicios as servicios_blueprint
 import os
 
 login_manager = LoginManager()
+
+def check_negocio():
+    excluded_paths = ['/negocios/', '/negocios/guardar']
+    if request.blueprint != 'auth' and request.path not in excluded_paths:
+        from app.models import Negocio
+        if not Negocio.query.first():
+            return redirect(url_for('negocios.index'))
 
 def create_app():
     app = Flask(__name__)
@@ -43,5 +50,10 @@ def create_app():
     app.register_blueprint(colores_blueprint, url_prefix='/colores')
     app.register_blueprint(tamanios_blueprint, url_prefix='/tamanios')
     app.register_blueprint(feedbacks_blueprint, url_prefix='/feedbacks')
+    
+    @app.before_request
+    def before_request():
+        if request.blueprint != 'auth':
+            return check_negocio()
 
     return app
