@@ -7,32 +7,22 @@ from . import categorias
 @categorias.route('/')
 @login_required
 def index():
-    # Obtener el negocio asociado al usuario logueado
-    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
-
     # Capturar el parámetro de búsqueda
-    query = request.args.get('buscar', '')  # Si no se pasa 'q', el valor será una cadena vacía
+    query = request.args.get('buscar', '')  # Si no se pasa 'buscar', será una cadena vacía
 
-    if negocio:
-        # Filtrar las categorías asociadas al rubro del negocio
-        categorias_lista = Categoria.query.filter(
-            Categoria.rubro_id == negocio.rubro_id, 
-            Categoria.nombre.ilike(f'%{query}%')  # Filtrar por nombre usando ILIKE (case-insensitive)
-        ).all()
-    else:
-        categorias_lista = []
+    # Filtrar categorías basadas en el término de búsqueda
+    categorias_lista = Categoria.query.filter(
+        Categoria.nombre.ilike(f'%{query}%')  # Filtrar por nombre usando ILIKE (case-insensitive)
+    ).all()
 
-    # Pasar el término de búsqueda a la plantilla
     return render_template('categorias/index.html', categorias=categorias_lista, query=query)
 
 @categorias.route('/crear', methods=['GET', 'POST'])
 @login_required
 def crear():
-    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
-
     if request.method == 'POST':
         nombre = request.form.get('nombre')
-        rubro_id = negocio.rubro_id if negocio else None
+        rubro_id = request.form.get('rubro_id')
 
         if nombre and rubro_id:
             nueva_categoria = Categoria(nombre=nombre, rubro_id=rubro_id)
@@ -43,7 +33,9 @@ def crear():
         else:
             flash('Error al crear la categoría. Verifique los datos ingresados.', 'danger')
 
-    return render_template('categorias/crear_categoria.html')
+    # Obtener todos los rubros para mostrarlos en el formulario
+    rubros = Rubro.query.all()
+    return render_template('categorias/crear_categoria.html', rubros=rubros)
 
 
 @categorias.route('/actualizar/<int:id>', methods=['GET', 'POST'])
