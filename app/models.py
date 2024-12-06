@@ -9,7 +9,6 @@ class Usuario(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     tipo_usuario = db.Column(db.String(20), nullable=False)
-    # Relación con Feedback
     feedbacks = db.relationship('Feedback', backref=db.backref('usuario', lazy=True))
 
 class Rubro(db.Model):
