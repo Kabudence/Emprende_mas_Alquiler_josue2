@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Servicio{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Crear Servicio</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="{{ url_for('servicios.guardar') }}" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="nombre_servicio" class="form-label">Nombre del Servicio</label>
+                <input type="text" class="form-control" id="nombre_servicio" name="nombre_servicio" placeholder="Ingrese el nombre del servicio" required>
+            </div>
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" placeholder="Ingrese la descripción" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="precio" class="form-label">Precio</label>
+                <input type="number" class="form-control" id="precio" name="precio" placeholder="Ingrese el precio" required step="0.01" min="0">
+            </div>
+            <div class="mb-3">
+                <label for="precio_oferta" class="form-label">Precio de Oferta</label>
+                <input type="number" class="form-control" id="precio_oferta" name="precio_oferta" placeholder="Ingrese el precio de oferta" step="0.01" min="0">
+            </div>
+            <div class="mb-3">
+                <label for="rubro" class="form-label">Rubro</label>
+                <input type="text" class="form-control" id="rubro" value="{{ rubro.nombre }}" disabled>
+            </div>
+            <div class="mb-3">
+                <label for="imagen" class="form-label">Imagen del Servicio</label>
+                <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*" onchange="previewImage(event)">
+                <small class="form-text text-muted">Sube una imagen representativa para el servicio (formatos admitidos: JPG, PNG).</small>
+            </div>
+
+            <!-- Vista previa de la imagen -->
+            <div class="mb-3">
+                <label class="form-label">Vista previa de la Imagen:</label>
+                <br>
+                <img id="imagePreview" src="#" alt="Vista previa" style="max-width: 100%; max-height: 200px; display: none;">
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Función para previsualizar la imagen seleccionada
+    function previewImage(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function() {
+            const imagePreview = document.getElementById('imagePreview');
+            imagePreview.src = reader.result;
+            imagePreview.style.display = 'block';
+        }
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+
+{% endblock %}

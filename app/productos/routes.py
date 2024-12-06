@@ -3,7 +3,7 @@ import uuid
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required
-from ..models import Producto, Categoria, ProductoDetalle, Tamanio, Color
+from ..models import Producto, Categoria, ProductoDetalle, Tamanio, Color, Negocio
 from ..database import db
 from . import productos
 
@@ -26,19 +26,17 @@ def crear():
         try:
             # Datos principales del producto
             nombre = request.form.get('nombre')
-            precio = request.form.get('precio')
             descripcion = request.form.get('descripcion')
             categoria_id = request.form.get('categoria_id')
 
             # Validación de campos obligatorios
-            if not all([nombre, precio, categoria_id]):
+            if not all([nombre, categoria_id]):
                 flash('Por favor, complete todos los campos obligatorios.', 'danger')
                 return redirect(url_for('productos.crear'))
 
             # Crear el producto principal
             nuevo_producto = Producto(
                 nombre=nombre,
-                precio=precio,
                 descripcion=descripcion,
                 categoria_id=categoria_id
             )
@@ -60,15 +58,10 @@ def crear():
                         'status': status
                     })
 
-            print("Estado de variantes:", variantes_estado)  # Esto mostrará el estado en la consola del servidor
-
-
             # Iterar por tamaños y variantes habilitados
             for tamanio_index in range(1, max_tamanios + 1):
                 tamanio_id = request.form.get(f'size_{tamanio_index}')
                 
-                print("El tamanio_id es GAAA: ",tamanio_id)
-
                 # Si no hay tamaño definido, pasar al siguiente
                 if not tamanio_id:
                     continue
@@ -79,19 +72,13 @@ def crear():
                     if variant_status != 'active':
                         continue
 
-                    color_name = f'color_{tamanio_index}_{variante_index}'
-                    stock_name = f'stock_{tamanio_index}_{variante_index}'
-                    image_name = f'image_{tamanio_index}_{variante_index}'
-
                     # Obtener datos de la variante habilitada
                     color_id = request.form.get(f'color_{tamanio_index}_{variante_index}')
-                    print(f"Evaluando el color con name='{color_name}', valor={color_id}")
                     stock = request.form.get(f'stock_{tamanio_index}_{variante_index}')
-                    print(f"Evaluando el stock con name='{stock_name}', valor={stock}")
+                    precio = request.form.get(f'precio_{tamanio_index}_{variante_index}')
+                    capacidad = request.form.get(f'capacidad_{tamanio_index}_{variante_index}')
                     image_file = request.files.get(f'image_{tamanio_index}_{variante_index}')
                     
-                    
-
                     if not (color_id and stock):  # Si faltan datos, ignorar la variante
                         flash(f'Falta información en la variante {variante_index} del tamaño {tamanio_index}.', 'warning')
                         continue
@@ -112,6 +99,8 @@ def crear():
                         tamanio_id=tamanio_id,
                         color_id=color_id,
                         stock=int(stock),
+                        precio=precio,
+                        capacidad=capacidad,
                         imagen=filename
                     )
                     db.session.add(detalle)
@@ -126,8 +115,14 @@ def crear():
             flash(f'Error al crear el producto: {e}', 'danger')
             return redirect(url_for('productos.crear'))
 
+    negocio_actual = Negocio.query.first()
+    
+    if not negocio_actual:
+        flash('No se encontró un negocio en la base de datos','danger')
+        return redirect(url_for('productos.index'))
+
     # Cargar datos para el formulario
-    categorias = Categoria.query.all()
+    categorias = Categoria.query.filter_by(rubro_id=negocio_actual.rubro_id).all()
     colores = Color.query.all()
 
     colores_serializables = [{'id': color.id, 'nombre': color.nombre, 'hexadecimal': color.hexadecimal} for color in colores]
