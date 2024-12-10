@@ -114,5 +114,7 @@ class Servicio(db.Model):
     precio = db.Column(db.Numeric(10, 2), nullable=False)
     precio_oferta = db.Column(db.Numeric(10, 2), nullable=True)
     imagen = db.Column(db.String(255), nullable=True)
+    telefono = db.Column(db.String(20), nullable=True)
+    correo = db.Column(db.String(255), nullable=True)
     rubro_id = db.Column(db.Integer, db.ForeignKey('rubros.id'), nullable=False)
     rubro = db.relationship('Rubro', backref=db.backref('servicios', lazy=True))

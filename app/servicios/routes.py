@@ -11,6 +11,7 @@ from . import servicios
 UPLOAD_FOLDER = 'app/static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -26,12 +27,14 @@ def index():
     
     busqueda = request.args.get('busqueda', '')
     if busqueda:
-        servicios_lista = Servicio.query.filter(Servicio.nombre_servicio.like(f'%{busqueda}%'), Servicio.rubro_id == negocio.rubro_id).all()
+        servicios_lista = Servicio.query.filter(
+            Servicio.nombre_servicio.like(f'%{busqueda}%'), 
+            Servicio.rubro_id == negocio.rubro_id
+        ).all()
     else:
         servicios_lista = Servicio.query.filter(Servicio.rubro_id == negocio.rubro_id).all()
 
     return render_template('servicios/index.html', servicios=servicios_lista, busqueda=busqueda)
-
 
 # Crear servicio
 @servicios.route('/crear', methods=['GET'])
@@ -47,7 +50,6 @@ def crear():
 
     return render_template('servicios/crear_servicio.html', rubro=rubro)
 
-
 @servicios.route('/crear', methods=['POST'])
 @login_required
 def guardar():
@@ -55,6 +57,8 @@ def guardar():
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
     precio_oferta = request.form.get('precio_oferta')
+    telefono = request.form.get('telefono')
+    correo = request.form.get('correo')
     archivo_imagen = request.files.get('imagen')
 
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
@@ -67,8 +71,6 @@ def guardar():
         # Generar un nombre único para la imagen
         unique_filename = f"{uuid.uuid4().hex}_{secure_filename(archivo_imagen.filename)}"
         filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
-        if not os.path.exists(UPLOAD_FOLDER):
-            os.makedirs(UPLOAD_FOLDER)
         archivo_imagen.save(filepath)
         imagen_nombre = unique_filename
     else:
@@ -81,6 +83,8 @@ def guardar():
         descripcion=descripcion,
         precio=precio,
         precio_oferta=precio_oferta,
+        telefono=telefono,
+        correo=correo,
         rubro_id=rubro_id,
         imagen=imagen_nombre
     )
@@ -89,7 +93,6 @@ def guardar():
 
     flash('Servicio creado con éxito', 'success')
     return redirect(url_for('servicios.index'))
-
 
 # Editar servicio
 @servicios.route('/editar/<int:id>', methods=['GET'])
@@ -107,7 +110,6 @@ def editar(id):
 
     return render_template('servicios/editar_servicio.html', servicio=servicio, rubro=rubro)
 
-
 @servicios.route('/editar/<int:id>', methods=['POST'])
 @login_required
 def actualizar(id):
@@ -116,6 +118,8 @@ def actualizar(id):
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
     precio_oferta = request.form.get('precio_oferta')
+    telefono = request.form.get('telefono')
+    correo = request.form.get('correo')
     archivo_imagen = request.files.get('imagen')
 
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
@@ -130,6 +134,8 @@ def actualizar(id):
     servicio.descripcion = descripcion
     servicio.precio = precio
     servicio.precio_oferta = precio_oferta
+    servicio.telefono = telefono
+    servicio.correo = correo
     servicio.rubro_id = rubro_id
 
     if archivo_imagen and allowed_file(archivo_imagen.filename):
@@ -142,7 +148,6 @@ def actualizar(id):
 
     flash('Servicio actualizado con éxito', 'success')
     return redirect(url_for('servicios.index'))
-
 
 # Eliminar servicio
 @servicios.route('/eliminar/<int:id>', methods=['POST'])

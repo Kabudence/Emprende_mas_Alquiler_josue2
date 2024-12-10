@@ -29,9 +29,10 @@
                     <th>ID</th>
                     <th>Nombre del Servicio</th>
                     <th>Descripción</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
                     <th>Precio</th>
                     <th>Precio de Oferta</th>
-                    <th>Rubro</th>
                     <th>Imagen</th>
                     <th>Acciones</th>
                 </tr>
@@ -42,9 +43,10 @@
                     <td><strong>{{ servicio.id }}</strong></td>
                     <td>{{ servicio.nombre_servicio }}</td>
                     <td>{{ servicio.descripcion }}</td>
-                    <td>{{ servicio.precio | round(2) }}</td>
-                    <td>{{ servicio.precio_oferta | round(2) }}</td>
-                    <td>{{ servicio.rubro.nombre }}</td>
+                    <td>{{ servicio.telefono }}</td>
+                    <td>{{ servicio.correo }}</td>
+                    <td>S/.{{ servicio.precio | round(2) }}</td>
+                    <td>S/.{{ servicio.precio_oferta | round(2) }}</td>
                     <td>
                         {% if servicio.imagen %}
                             <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre_servicio }}" class="img-thumbnail" style="max-width: 100px; height: auto;">
@@ -68,7 +70,7 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 style="width: 100%;" class="modal-title" id="viewModalLabel{{ servicio.id }}">Detalles del Servicio: {{ servicio.nombre_servicio }}</h5>
+                                        <h5 style="width: 100%;" class="text-center" class="modal-title" id="viewModalLabel{{ servicio.id }}">Detalles del Servicio: {{ servicio.nombre_servicio }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
@@ -77,12 +79,11 @@
                                         {% else %}
                                             <span>No disponible</span>
                                         {% endif %}
-                                        <p><strong>ID:</strong> {{ servicio.id }}</p>
-                                        <p><strong>Nombre del Servicio:</strong> {{ servicio.nombre_servicio }}</p>
                                         <p><strong>Descripción:</strong> {{ servicio.descripcion }}</p>
-                                        <p><strong>Precio:</strong> {{ servicio.precio | round(2) }}</p>
-                                        <p><strong>Precio de Oferta:</strong> {{ servicio.precio_oferta | round(2) }}</p>
-                                        <p><strong>Rubro:</strong> {{ servicio.rubro.nombre }}</p>
+                                        <p><strong>Teléfono:</strong> {{ servicio.telefono }}</p>
+                                        <p><strong>Correo:</strong> {{ servicio.correo }}</p>
+                                        <p><strong>Precio:</strong> S/.{{ servicio.precio | round(2) }}</p>
+                                        <p><strong>Precio de Oferta:</strong> S/.{{ servicio.precio_oferta | round(2) }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -93,7 +94,7 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 style="width: 100%;" class="text-center" id="deleteModalLabel{{ servicio.id }}">Confirmar Eliminación</h5>
+                                        <h5 class="text-center" id="deleteModalLabel{{ servicio.id }}">Confirmar Eliminación</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
