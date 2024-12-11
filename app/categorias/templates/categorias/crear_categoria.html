@@ -12,15 +12,24 @@
                 <label for="nombre" class="form-label">Nombre de la Categoría</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre de la categoría" required>
             </div>
+
+            <!-- El rubro está bloqueado y se llena automáticamente -->
             <div class="mb-3">
-                <label for="rubro_id" class="form-label">Seleccione un Rubro</label>
-                <select class="form-select" id="rubro_id" name="rubro_id" required>
-                    <option value="" selected disabled>Seleccione un rubro...</option>
-                    {% for rubro in rubros %}
-                        <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
+                <label for="rubro_id" class="form-label">Rubro</label>
+                <input type="text" class="form-control" id="rubro_id" name="rubro_id" value="{{ negocio.rubro.nombre }}" disabled>
+            </div>
+
+            <!-- Selector de tipo de categoría -->
+            <div class="mb-3">
+                <label for="tipo_categoria_id" class="form-label">Seleccione el Tipo de Categoría</label>
+                <select class="form-select" id="tipo_categoria_id" name="tipo_categoria_id" required>
+                    <option value="" selected disabled>Seleccione un tipo de categoría...</option>
+                    {% for tipo in tipos_categoria %}
+                        <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
                     {% endfor %}
                 </select>
             </div>
+
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Guardar

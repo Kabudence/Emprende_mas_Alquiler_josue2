@@ -11,17 +11,17 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="product-images">
-                    {% if producto.producto_detalles %}
-                        <img id="mainImage" src="{{ url_for('static', filename='uploads/' + producto.producto_detalles[0].imagen) }}" class="img-fluid mb-4" alt="Imagen del producto" style="width: 100%; max-width: 300px; height: auto;">
+                    {% if producto.detalles %}
+                        <!-- Mostrar la imagen principal (la primera de la lista) -->
+                        <img id="mainImage" src="{{ url_for('static', filename='uploads/' + producto.detalles[0].imagen) }}" class="img-fluid mb-4" alt="Imagen del producto" style="width: 100%; max-width: 300px; height: auto;">
                     {% else %}
                         <p>No hay imágenes disponibles.</p>
                     {% endif %}
                     
                     <div class="product-thumbnails">
-                        {% for detalle in producto.producto_detalles %}
-                            {% if detalle.imagen %}
-                                <img src="{{ url_for('static', filename='uploads/' + detalle.imagen) }}" class="img-thumbnail" alt="Detalle del producto" style="width: 100px; margin-right: 10px; cursor: pointer;" onclick="changeMainImage(this)">
-                            {% endif %}
+                        {% for detalle in producto.detalles %}
+                            <!-- Mostrar miniaturas de imágenes de colores únicos -->
+                            <img src="{{ url_for('static', filename='uploads/' + detalle.imagen) }}" class="img-thumbnail" alt="Detalle del producto" style="width: 100px; margin-right: 10px; cursor: pointer;" onclick="changeMainImage(this)">
                         {% endfor %}
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                     <h5>Seleccione Color:</h5>
                     <select id="colorSelect" class="form-select mb-3" onchange="updateProductDetails()">
                         <option selected disabled>Seleccione un color</option>
-                        {% for detalle in producto.producto_detalles %}
+                        {% for detalle in producto.detalles %}
                             <option value="{{ detalle.color.nombre }}" data-color="{{ detalle.color.hexadecimal }}">{{ detalle.color.nombre }}</option>
                         {% endfor %}
                     </select>
@@ -43,11 +43,8 @@
                 
                 <div class="mt-4">
                     <h5>Seleccione Capacidad:</h5>
-                    <select id="capacitySelect" class="form-select mb-3" onchange="updateProductDetails()">
+                    <select id="capacitySelect" class="form-select mb-3" onchange="updatePriceAndStock()">
                         <option selected disabled>Seleccione una capacidad</option>
-                        {% for detalle in producto.producto_detalles %}
-                            <option value="{{ detalle.capacidad }}">{{ detalle.capacidad }}</option>
-                        {% endfor %}
                     </select>
                 </div>
 
@@ -61,56 +58,54 @@
 </div>
 
 <script>
-    const productDetails = [
-        {% for detalle in producto.producto_detalles %}
-        {
-            color: "{{ detalle.color.nombre }}",
-            capacidad: "{{ detalle.capacidad }}",
-            precio: "{{ detalle.precio }}",
-            stock: "{{ detalle.stock }}",
-            tamanio: "{{ detalle.tamanio.nombre }}",
-            imagen: "{{ url_for('static', filename='uploads/' + detalle.imagen) }}"
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
+    let capacidades = {};  // Para almacenar las capacidades con precio y stock
 
-    function changeMainImage(thumbnail) {
-        const mainImage = document.getElementById("mainImage");
-        mainImage.src = thumbnail.src;
-    }
-
-    function updateProductDetails() {
+    async function updateProductDetails() {
         const colorSelect = document.getElementById("colorSelect");
         const capacitySelect = document.getElementById("capacitySelect");
+
+        // Llamamos a la nueva ruta para obtener las capacidades basadas en el color
+        const response = await fetch(`/productos/capacidades/{{ producto.id }}?color=${colorSelect.value}`);
+        capacidades = await response.json();
+
+        // Limpiamos las capacidades previas y agregamos las nuevas capacidades
+        capacitySelect.innerHTML = '<option selected disabled>Seleccione una capacidad</option>';
+        for (const capacidad in capacidades) {
+            const option = document.createElement("option");
+            option.value = capacidad;
+            option.innerText = capacidad;
+            capacitySelect.appendChild(option);
+        }
+
+        // Reiniciamos precio y stock
+        document.getElementById("priceDisplay").innerText = "-";
+        document.getElementById("stockDisplay").innerText = "-";
+
+        // Habilitamos el selector de capacidad si se ha seleccionado un color
+        if (colorSelect.value) {
+            capacitySelect.disabled = false;
+        } else {
+            capacitySelect.disabled = true;
+        }
+    }
+
+    function updatePriceAndStock() {
+        const colorSelect = document.getElementById("colorSelect");
+        const capacitySelect = document.getElementById("capacitySelect");
+
+        const selectedCapacity = capacitySelect.value;
         const priceDisplay = document.getElementById("priceDisplay");
         const stockDisplay = document.getElementById("stockDisplay");
-        const mainImage = document.getElementById("mainImage");
 
-        if (colorSelect.value) {
-            const selectedColor = colorSelect.value;
-            for (const detail of productDetails) {
-                if (detail.color === selectedColor) {
-                    mainImage.src = detail.imagen;
-                    break;
-                }
-            }
+        if (selectedCapacity && capacidades[selectedCapacity]) {
+            const { precio, stock } = capacidades[selectedCapacity];
+            priceDisplay.innerText = precio ? precio : "-";
+            stockDisplay.innerText = stock ? stock : "-";
         }
+    }
 
-        if (colorSelect.value && capacitySelect.value) {
-            const selectedColor = colorSelect.value;
-            const selectedCapacity = capacitySelect.value;
-
-            for (const detail of productDetails) {
-                if (detail.color === selectedColor && detail.capacidad === selectedCapacity) {
-                    priceDisplay.innerText = detail.precio;
-                    stockDisplay.innerText = detail.stock;
-                    return;
-                }
-            }
-
-            priceDisplay.innerText = "-";
-            stockDisplay.innerText = "-";
-        }
+    function changeMainImage(image) {
+        document.getElementById("mainImage").src = image.src;
     }
 </script>
 

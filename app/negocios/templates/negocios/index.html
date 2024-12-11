@@ -15,8 +15,8 @@
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="nombre_negocio" class="form-label">Nombre del Negocio</label>
-                        <input type="text" class="form-control" id="nombre_negocio" name="nombre_negocio" value="{{ negocio.nombre_negocio if negocio else '' }}" placeholder="Ingrese el nombre del negocio" required>
+                        <label for="nombre" class="form-label">Nombre del Negocio</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ negocio.nombre if negocio else '' }}" placeholder="Ingrese el nombre del negocio" required>
                     </div>
                     <div class="col-md-6">
                         <label for="ruc" class="form-label">RUC</label>
@@ -61,7 +61,7 @@
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label for="rubro_id" class="form-label">Rubro</label>
-                        <select class="form-select mb-2" id="rubro_id" name="rubro_id" onchange="toggleNuevoRubro()" required>
+                        <select class="form-select mb-2" id="rubro_id" name="rubro_id" {% if negocio %}disabled{% endif %} required>
                             <option value="" disabled selected>Seleccione un rubro</option>
                             {% for rubro in rubros %}
                                 <option value="{{ rubro.id }}" {% if negocio and negocio.rubro_id == rubro.id %}selected{% endif %}>
@@ -81,8 +81,8 @@
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="nombre_usuario" class="form-label">Nombre Completo</label>
-                        <input type="text" class="form-control" id="nombre_usuario" name="nombre_usuario" value="{{ current_user.nombre_usuario }}" placeholder="Ingrese su nombre completo" required>
+                        <label for="nombre" class="form-label">Nombre Completo</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ current_user.nombre }}" placeholder="Ingrese su nombre completo" required>
                     </div>
                     <div class="col-md-6">
                         <label for="username" class="form-label">Nombre de Usuario</label>

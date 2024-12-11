@@ -11,6 +11,7 @@ from .colores import colores as colores_blueprint
 from .tamanios import tamanios as tamanios_blueprint
 from .feedbacks import feedbacks as feedbacks_blueprint
 from .servicios import servicios as servicios_blueprint
+from .politicas_restricciones import politicas_restricciones as politicas_restricciones_blueprint
 import os
 
 login_manager = LoginManager()
@@ -50,6 +51,7 @@ def create_app():
     app.register_blueprint(colores_blueprint, url_prefix='/colores')
     app.register_blueprint(tamanios_blueprint, url_prefix='/tamanios')
     app.register_blueprint(feedbacks_blueprint, url_prefix='/feedbacks')
+    app.register_blueprint(politicas_restricciones_blueprint, url_prefix='/politicas_restricciones')
     
     @app.before_request
     def before_request():

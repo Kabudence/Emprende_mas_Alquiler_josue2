@@ -7,12 +7,18 @@
 
 <div class="row mb-4 align-items-center">
     <div class="col-md-6">
-        <!-- Formulario de búsqueda -->
+        <!-- Formulario de búsqueda y filtro -->
         <form action="{{ url_for('feedbacks.index') }}" method="GET" class="d-flex shadow p-2 rounded">
             <input type="text" class="form-control me-2" name="buscar" placeholder="Buscar feedbacks..." value="{{ query }}" aria-label="Buscar feedbacks">
-            <button class="btn btn-outline-secondary" type="submit">
+            <button class="btn btn-outline-secondary me-2" type="submit">
                 <i class="fas fa-search"></i>
             </button>
+            <select name="categoria_feedback_id" class="form-select" onchange="this.form.submit()">
+                <option value="" {% if not categoria_feedback_id %}selected{% endif %}>Todas las Categorías</option>
+                {% for categoria_feedback in categoria_feedback_lista %}
+                <option value="{{ categoria_feedback.id }}" {% if categoria_feedback.id == categoria_feedback_id|int %}selected{% endif %}>{{ categoria_feedback.nombre }}</option>
+                {% endfor %}
+            </select>
         </form>
     </div>
 </div>
@@ -35,7 +41,7 @@
                 <td><strong>{{ feedback.id }}</strong></td>
                 <td>{{ feedback.asunto }}</td>
                 <td>{{ feedback.descripcion }}</td>
-                <td>{{ feedback.usuario.nombre_usuario }}</td>  <!-- Nombre del usuario que dejó el feedback -->
+                <td>{{ feedback.usuario.nombre }}</td>  <!-- Nombre del usuario que dejó el feedback -->
                 <td>{{ feedback.categoria_feedback.nombre }}</td>  <!-- Nombre de la categoría del feedback -->
                 <td>
                     <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ feedback.id }}">
@@ -47,13 +53,13 @@
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h5 class="modal-title w-100" id="viewModalLabel{{ feedback.id }}">
-                                        Detalles del Feedback: {{ feedback.asunto }}
+                                        Detalles del Feedback
                                     </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                                 </div>
                     
                                 <div class="modal-body text-start">
-                                    <p><strong>Usuario:</strong> {{ feedback.usuario.nombre_usuario }}</p>
+                                    <p><strong>Usuario:</strong> {{ feedback.usuario.nombre }}</p>
                                     <p><strong>Asunto:</strong> {{ feedback.asunto }}</p>
                                     <p><strong>Descripción:</strong> {{ feedback.descripcion }}</p>
                                     <p><strong>Categoría:</strong> {{ feedback.categoria_feedback.nombre }}</p>

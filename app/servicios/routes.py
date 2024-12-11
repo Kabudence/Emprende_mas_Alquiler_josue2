@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 import os
 import uuid
-from ..models import Servicio, Negocio
+from ..models import Servicio, Negocio, Categoria
 from ..database import db
 from . import servicios
 
@@ -15,26 +15,25 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Mostrar todos los servicios
 @servicios.route('/')
 @login_required
 def index():
-    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+    # Obtener el primer negocio de la base de datos
+    negocio = Negocio.query.first()
 
     if not negocio:
-        flash('No se encontró un negocio asociado al usuario.', 'danger')
+        flash('No se encontró un negocio.', 'danger')
         return redirect(url_for('servicios.index'))
     
-    busqueda = request.args.get('busqueda', '')
-    if busqueda:
-        servicios_lista = Servicio.query.filter(
-            Servicio.nombre_servicio.like(f'%{busqueda}%'), 
-            Servicio.rubro_id == negocio.rubro_id
-        ).all()
-    else:
-        servicios_lista = Servicio.query.filter(Servicio.rubro_id == negocio.rubro_id).all()
+    # Obtener las categorías del negocio, filtradas por rubro y tipo_id (servicios)
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id, tipo_id=2).all()
+    
+    # Obtener los servicios asociados a las categorías obtenidas
+    servicios_lista = Servicio.query.filter(Servicio.categoria_id.in_([categoria.id for categoria in categorias])).all()
 
-    return render_template('servicios/index.html', servicios=servicios_lista, busqueda=busqueda)
+    return render_template('servicios/index.html', servicios=servicios_lista)
+
+
 
 # Crear servicio
 @servicios.route('/crear', methods=['GET'])
@@ -46,19 +45,21 @@ def crear():
         flash('No se encontró un negocio asociado al usuario.', 'danger')
         return redirect(url_for('servicios.index'))
 
-    rubro = negocio.rubro
+    # Obtener las categorías del rubro con tipo_id = 2 (servicios)
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id, tipo_id=2).all()
 
-    return render_template('servicios/crear_servicio.html', rubro=rubro)
+    return render_template('servicios/crear_servicio.html', categorias=categorias)
 
 @servicios.route('/crear', methods=['POST'])
 @login_required
 def guardar():
-    nombre_servicio = request.form['nombre_servicio']
+    nombre = request.form['nombre']
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
     precio_oferta = request.form.get('precio_oferta')
     telefono = request.form.get('telefono')
     correo = request.form.get('correo')
+    categoria_id = request.form.get('categoria_id')
     archivo_imagen = request.files.get('imagen')
 
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
@@ -74,18 +75,16 @@ def guardar():
         archivo_imagen.save(filepath)
         imagen_nombre = unique_filename
     else:
-        imagen_nombre = None 
-
-    rubro_id = negocio.rubro_id
+        imagen_nombre = None
 
     nuevo_servicio = Servicio(
-        nombre_servicio=nombre_servicio,
+        nombre=nombre,
         descripcion=descripcion,
         precio=precio,
         precio_oferta=precio_oferta,
         telefono=telefono,
         correo=correo,
-        rubro_id=rubro_id,
+        categoria_id=categoria_id,
         imagen=imagen_nombre
     )
     db.session.add(nuevo_servicio)
@@ -106,20 +105,22 @@ def editar(id):
         flash('No se encontró un negocio asociado al usuario.', 'danger')
         return redirect(url_for('servicios.index'))
 
-    rubro = negocio.rubro 
+    # Obtener las categorías del rubro con tipo_id = 2 (servicios)
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id, tipo_id=2).all()
 
-    return render_template('servicios/editar_servicio.html', servicio=servicio, rubro=rubro)
+    return render_template('servicios/editar_servicio.html', servicio=servicio, categorias=categorias)
 
 @servicios.route('/editar/<int:id>', methods=['POST'])
 @login_required
 def actualizar(id):
     servicio = Servicio.query.get_or_404(id)
-    nombre_servicio = request.form.get('nombre_servicio')
+    nombre = request.form.get('nombre')
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
     precio_oferta = request.form.get('precio_oferta')
     telefono = request.form.get('telefono')
     correo = request.form.get('correo')
+    categoria_id = request.form.get('categoria_id')
     archivo_imagen = request.files.get('imagen')
 
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
@@ -128,15 +129,13 @@ def actualizar(id):
         flash('No se encontró un negocio asociado al usuario.', 'danger')
         return redirect(url_for('servicios.index'))
 
-    rubro_id = negocio.rubro_id
-
-    servicio.nombre_servicio = nombre_servicio
+    servicio.nombre = nombre
     servicio.descripcion = descripcion
     servicio.precio = precio
     servicio.precio_oferta = precio_oferta
     servicio.telefono = telefono
     servicio.correo = correo
-    servicio.rubro_id = rubro_id
+    servicio.categoria_id = categoria_id
 
     if archivo_imagen and allowed_file(archivo_imagen.filename):
         unique_filename = f"{uuid.uuid4().hex}_{secure_filename(archivo_imagen.filename)}"

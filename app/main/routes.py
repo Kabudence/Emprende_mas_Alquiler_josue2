@@ -5,5 +5,5 @@ from . import main
 @main.route('/')
 @login_required 
 def dashboard():
-    return render_template('dashboard.html', nombre=current_user.nombre_usuario)
+    return render_template('dashboard.html', nombre=current_user.nombre)
 

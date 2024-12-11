@@ -4,6 +4,9 @@ from ..models import Tamanio, Categoria, Negocio
 from ..database import db
 from . import tamanios
 
+# Variable global para tipo_id
+TIPO_PRODUCTO = 1
+
 # Mostrar todos los tamaños
 @tamanios.route('/')
 @login_required
@@ -16,9 +19,9 @@ def index():
     
     busqueda = request.args.get('busqueda', '')
     if busqueda:
-        tamanios_lista = Tamanio.query.filter(Tamanio.nombre.like(f'%{busqueda}%'), Tamanio.categoria.has(rubro_id=negocio.rubro_id)).all()
+        tamanios_lista = Tamanio.query.filter(Tamanio.nombre.like(f'%{busqueda}%'), Tamanio.categoria.has(rubro_id=negocio.rubro_id), Tamanio.categoria.has(tipo_id=TIPO_PRODUCTO)).all()
     else:
-        tamanios_lista = Tamanio.query.filter(Tamanio.categoria.has(rubro_id=negocio.rubro_id)).all()
+        tamanios_lista = Tamanio.query.filter(Tamanio.categoria.has(rubro_id=negocio.rubro_id), Tamanio.categoria.has(tipo_id=TIPO_PRODUCTO)).all()
 
     return render_template('tamanios/index.html', tamanios=tamanios_lista, busqueda=busqueda)
 
@@ -33,12 +36,14 @@ def crear():
         flash('No se encontró un negocio asociado al usuario.', 'danger')
         return redirect(url_for('tamanios.index'))
 
-    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id).all()
+    # Filtrar categorías por tipo_id = 1 (productos)
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id, tipo_id=TIPO_PRODUCTO).all()
 
     if not categorias:
         flash('No hay categorías disponibles para el rubro de su negocio.', 'warning')
 
     return render_template('tamanios/crear_tamanio.html', categorias=categorias)
+
 
 @tamanios.route('/crear', methods=['POST'])
 @login_required
@@ -51,8 +56,8 @@ def guardar():
         return redirect(url_for('tamanios.crear'))
 
     categoria = Categoria.query.get(categoria_id)
-    if not categoria:
-        flash('La categoría seleccionada no existe.', 'danger')
+    if not categoria or categoria.tipo_id != TIPO_PRODUCTO:
+        flash('La categoría seleccionada no existe o no es un tipo de producto válido.', 'danger')
         return redirect(url_for('tamanios.crear'))
 
     nuevo_tamanio = Tamanio(nombre=nombre, categoria_id=categoria_id)
@@ -74,7 +79,8 @@ def editar(id):
         flash('No se encontró un negocio asociado al usuario.', 'danger')
         return redirect(url_for('tamanios.index'))
 
-    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id).all()
+    # Filtrar categorías por tipo_id = 1 (productos)
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id, tipo_id=TIPO_PRODUCTO).all()
 
     return render_template('tamanios/editar_tamanio.html', tamanio=tamanio, categorias=categorias)
 
@@ -86,8 +92,8 @@ def actualizar(id):
     nombre = request.form.get('nombre')
     categoria_id = request.form.get('categoria_id')
 
-    if not categoria_id or not Categoria.query.get(categoria_id):
-        flash('Debe seleccionar una categoría válida.', 'danger')
+    if not categoria_id or not Categoria.query.get(categoria_id) or Categoria.query.get(categoria_id).tipo_id != TIPO_PRODUCTO:
+        flash('Debe seleccionar una categoría válida o no es un tipo de producto válido.', 'danger')
         return redirect(url_for('tamanios.editar', id=id))
     
     tamanio.nombre = nombre

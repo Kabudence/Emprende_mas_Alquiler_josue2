@@ -1,47 +1,62 @@
--- Insertar un usuario (dueño del negocio)
-INSERT INTO usuarios (nombre_usuario, username, email, password, tipo_usuario)
+-- Insertar la tabla tipos_categoria
+INSERT INTO tipos_categoria (nombre) 
 VALUES 
-('Juan Pérez', 'juanperez', 'juan@correo.com', 'hashed_password_here', 'business_owner');
+('Producto'),
+('Servicio');
 
-INSERT INTO usuarios (nombre_usuario, username, email, password, tipo_usuario)
+-- Insertar usuarios
+INSERT INTO usuarios (nombre, username, email, password, tipo_usuario)
 VALUES 
+('Juan Pérez', 'juanperez', 'juan@correo.com', 'hashed_password_here', 'business_owner'),
 ('Carlos García', 'carlosgarcia', 'carlos@correo.com', 'hashed_password_here', 'cliente'),
 ('Ana Martínez', 'anamartinez', 'ana@correo.com', 'hashed_password_here', 'cliente');
 
+-- Insertar rubros
 INSERT INTO rubros (nombre) 
 VALUES 
 ('Tecnología'),
 ('Electrodomésticos'),
 ('Ropa y moda');
 
-INSERT INTO negocios (nombre_negocio, ruc, razon_social, direccion, telefono, departamento, provincia, distrito, rubro_id, usuario_id)
+-- Insertar negocios
+INSERT INTO negocios (nombre, ruc, razon_social, direccion, telefono, departamento, provincia, distrito, rubro_id, usuario_id)
 VALUES 
-('ElectroStore', '12345678901', 'ElectroStore S.A.C.', 'Av. Siempre Viva 123', '999999999', 'Lima', 'Lima', 'Miraflores', 1, 1);  -- Asume que el rubro 'Tecnología' tiene id 1 y el usuario tiene id 1
+('ElectroStore', '12345678901', 'ElectroStore S.A.C.', 'Av. Siempre Viva 123', '999999999', 'Lima', 'Lima', 'Miraflores', 1, 1);
 
-INSERT INTO categorias (nombre, rubro_id) 
+-- Insertar categorías
+INSERT INTO categorias (nombre, rubro_id, tipo_id) 
 VALUES 
-('Laptops', 1),
-('Smartphones', 1), 
-('Refrigeradores', 2),
-('Lavadoras', 2),
-('Ropa de Mujer', 3),
-('Ropa de Hombre', 3);
+-- Tecnología
+('Laptops', 1, 1),  -- Producto
+('Soporte Técnico', 1, 2),  -- Servicio
 
+-- Electrodomésticos
+('Refrigeradores', 2, 1),  -- Producto
+('Instalación de Electrodomésticos', 2, 2),  -- Servicio
+
+-- Ropa y moda
+('Ropa de Mujer', 3, 1),  -- Producto
+('Asesoría de Estilo', 3, 2);  -- Servicio
+
+-- Insertar tamaños
 INSERT INTO tamanios (nombre, categoria_id)
 VALUES 
-('Pequeño', 1),  -- Laptops
-('Mediano', 1),  -- Laptops
-('Grande', 2),  -- Smartphones
-('Extra Grande', 2),  -- Smartphones
-('Chico', 3),  -- Refrigeradores
-('Grande', 3),  -- Refrigeradores
-('Mediano', 4),  -- Lavadoras
-('Grande', 4),  -- Lavadoras
-('S', 5),  -- Ropa de Mujer
-('M', 5),  -- Ropa de Mujer
-('L', 6),  -- Ropa de Hombre
-('XL', 6);  -- Ropa de Hombre
+-- Tecnología
+('Pequeño', 1),
+('Mediano', 1),
+('Grande', 1),
 
+-- Electrodomésticos
+('Chico', 2),
+('Mediano', 2),
+('Grande', 2),
+
+-- Ropa y moda
+('S', 3),
+('M', 3),
+('L', 3);
+
+-- Insertar colores
 INSERT INTO colores (nombre, hexadecimal) 
 VALUES 
 ('Rojo', '#FF0000'),

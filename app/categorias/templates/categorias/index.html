@@ -28,7 +28,7 @@
             <tr>
                 <th>ID</th>
                 <th>Nombre</th>
-                <th>Rubro</th>
+                <th>Tipo</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -37,7 +37,7 @@
             <tr class="text-center">
                 <td><strong>{{ categoria.id }}</strong></td>
                 <td>{{ categoria.nombre }}</td>
-                <td>{{ categoria.rubro.nombre }}</td>
+                <td>{{ categoria.tipo_categorias.nombre }}</td>
                 <td>
                     <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ categoria.id }}">
                         <i class="fas fa-eye"></i>
@@ -60,6 +60,7 @@
                                 <div class="modal-body">
                                     <p><strong>ID:</strong> {{ categoria.id }}</p>
                                     <p><strong>Nombre:</strong> {{ categoria.nombre }}</p>
+                                    <p><strong>Tipo:</strong> {{ categoria.tipo_categorias.nombre }}</p> <!-- Ahora es categoria.tipo_categoria.nombre -->
                                 </div>
                             </div>
                         </div>

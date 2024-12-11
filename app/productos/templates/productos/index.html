@@ -43,13 +43,61 @@
                     <a href="/productos/editar/{{ producto.id }}" class="btn btn-outline-warning btn-sm me-1">
                         <i class="fas fa-edit"></i> 
                     </a>
-                    <a href="/productos/eliminar/{{ producto.id }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este producto?');">
-                        <i class="fas fa-trash-alt"></i> 
-                    </a>
+                    <button class="btn btn-outline-danger btn-sm" onclick="confirmarEliminacion({{ producto.id }})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmarEliminacion(id) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción no se puede deshacer.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/productos/eliminar/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire(
+                            'Eliminado',
+                            data.message,
+                            'success'
+                        ).then(() => {
+                            location.reload();  // Recarga la página para reflejar los cambios
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error',
+                            data.message,
+                            'error'
+                        );
+                    }
+                })
+                .catch(error => {
+                    Swal.fire(
+                        'Error',
+                        'Ocurrió un error inesperado.',
+                        'error'
+                    );
+                });
+            }
+        });
+    }
+</script>
 {% endblock %}

@@ -9,8 +9,8 @@
     <div class="card-body">
         <form action="{{ url_for('servicios.guardar') }}" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-                <label for="nombre_servicio" class="form-label">Nombre del Servicio</label>
-                <input type="text" class="form-control" id="nombre_servicio" name="nombre_servicio" placeholder="Ingrese el nombre del servicio" required>
+                <label for="nombre" class="form-label">Nombre del Servicio</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre del servicio" required>
             </div>
             <div class="mb-3">
                 <label for="descripcion" class="form-label">Descripción</label>
@@ -31,6 +31,15 @@
             <div class="mb-3">
                 <label for="correo" class="form-label">Correo</label>
                 <input type="email" class="form-control" id="correo" name="correo" placeholder="Ingrese el correo" required>
+            </div>
+            <div class="mb-3">
+                <label for="categoria_id" class="form-label">Categoría del Servicio</label>
+                <select class="form-control" id="categoria_id" name="categoria_id" required>
+                    <option value="">Seleccione una categoría</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="mb-3">
                 <label for="imagen" class="form-label">Imagen del Servicio</label>

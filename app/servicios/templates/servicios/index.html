@@ -41,7 +41,7 @@
                 {% for servicio in servicios %}
                 <tr class="text-center">
                     <td><strong>{{ servicio.id }}</strong></td>
-                    <td>{{ servicio.nombre_servicio }}</td>
+                    <td>{{ servicio.nombre }}</td>
                     <td>{{ servicio.descripcion }}</td>
                     <td>{{ servicio.telefono }}</td>
                     <td>{{ servicio.correo }}</td>
@@ -49,7 +49,7 @@
                     <td>S/.{{ servicio.precio_oferta | round(2) }}</td>
                     <td>
                         {% if servicio.imagen %}
-                            <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre_servicio }}" class="img-thumbnail" style="max-width: 100px; height: auto;">
+                            <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre }}" class="img-thumbnail" style="max-width: 100px; height: auto;">
                         {% else %}
                             <span>No disponible</span>
                         {% endif %}
@@ -70,12 +70,12 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 style="width: 100%;" class="text-center" class="modal-title" id="viewModalLabel{{ servicio.id }}">Detalles del Servicio: {{ servicio.nombre_servicio }}</h5>
+                                        <h5 style="width: 100%;" class="text-center" class="modal-title" id="viewModalLabel{{ servicio.id }}">Detalles del Servicio</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
                                         {% if servicio.imagen %}
-                                            <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre_servicio }}" class="img-fluid mt-3">
+                                            <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre }}" class="img-fluid mt-3">
                                         {% else %}
                                             <span>No disponible</span>
                                         {% endif %}
@@ -98,7 +98,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        ¿Estás seguro de eliminar el servicio <strong>{{ servicio.nombre_servicio }}</strong>?
+                                        ¿Estás seguro de eliminar el servicio <strong>{{ servicio.nombre }}</strong>?
                                     </div>
                                     <div class="modal-footer d-flex justify-content-center">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

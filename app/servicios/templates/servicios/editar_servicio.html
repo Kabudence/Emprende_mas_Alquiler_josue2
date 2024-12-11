@@ -9,8 +9,8 @@
     <div class="card-body">
         <form action="{{ url_for('servicios.actualizar', id=servicio.id) }}" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-                <label for="nombre_servicio" class="form-label">Nombre del Servicio</label>
-                <input type="text" class="form-control" id="nombre_servicio" name="nombre_servicio" value="{{ servicio.nombre_servicio }}" placeholder="Ingrese el nombre del servicio" required>
+                <label for="nombre" class="form-label">Nombre del Servicio</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ servicio.nombre }}" placeholder="Ingrese el nombre del servicio" required>
             </div>
             <div class="mb-3">
                 <label for="descripcion" class="form-label">Descripción</label>
@@ -32,9 +32,16 @@
                 <label for="correo" class="form-label">Correo</label>
                 <input type="email" class="form-control" id="correo" name="correo" value="{{ servicio.correo }}" placeholder="Ingrese el correo" required>
             </div>
+
+            <!-- Selección de categoría -->
             <div class="mb-3">
-                <label for="rubro" class="form-label">Rubro</label>
-                <input type="text" class="form-control" id="rubro" value="{{ rubro.nombre }}" disabled>
+                <label for="categoria_id" class="form-label">Categoría</label>
+                <select class="form-control" id="categoria_id" name="categoria_id" required>
+                    <option value="">Selecciona una categoría</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if categoria.id == servicio.categoria_id %}selected{% endif %}>{{ categoria.nombre }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Imagen Actual -->
@@ -49,12 +56,14 @@
                 <p>No hay imagen cargada.</p>
             </div>
             {% endif %}
+
             <!-- Campo de Imagen -->
             <div class="mb-3">
                 <label for="imagen" class="form-label">Nueva Imagen del Servicio</label>
                 <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*" onchange="previewImage(event)">
                 <small class="form-text text-muted">Sube una nueva imagen representativa para el servicio (formatos admitidos: JPG, PNG).</small>
             </div>
+
             <!-- Vista previa de la nueva imagen -->
             <div class="mb-3">
                 <label class="form-label">Vista previa de la Imagen:</label>
@@ -90,5 +99,3 @@
 </script>
 
 {% endblock %}
-
-

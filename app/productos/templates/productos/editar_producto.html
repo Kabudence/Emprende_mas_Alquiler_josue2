@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Producto{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4">Editar Producto</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="{{ url_for('productos.editar_producto', producto_id=producto.id) }}" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="nombre" class="fw-bold">Nombre del Producto</label>
+                <input type="text" class="form-control" value="{{ producto.nombre }}" id="nombre" name="nombre" placeholder="Ingrese el nombre del producto" required>
+            </div>
+            <div class="mb-3">
+                <label for="descripcion" class="fw-bold">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Ingrese la descripción del producto">{{ producto.descripcion }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="categoria" class="fw-bold">Categoría</label>
+                <select class="form-select" id="categoria" name="categoria_id" required onchange="actualizarTamanios()">
+                    <option selected disabled>Seleccione una categoría</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if categoria.id == producto.categoria_id %}selected{% endif %}>
+                            {{ categoria.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <h3>Variantes</h3>
+            <div class="row row-cols-1 row-cols-md-2" id="attributes-container">
+                {% for producto_detalle in detalles %}
+                    <div class="col mb-4" id="variant-{{ producto_detalle.id }}">
+                        <div class="card border p-3 rounded shadow-sm">
+                            <!-- Tamaño -->
+                            <div class="mb-3">
+                                <label for="size_{{ producto_detalle.id }}" class="fw-bold">Tamaño</label>
+                                <select class="form-select" name="size_{{ producto_detalle.id }}" required id="size_{{ producto_detalle.id }}" onchange="actualizarColor({{ producto_detalle.id }})">
+                                    <option selected disabled>Seleccione un tamaño</option>
+                                    {% for tamanio in tamanios %}
+                                        <option value="{{ tamanio.id }}" {% if tamanio.id == producto_detalle.tamanio_id %}selected{% endif %}>
+                                            {{ tamanio.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Color -->
+                            <div class="d-flex align-items-center mt-2">
+                                <label for="color_{{ producto_detalle.id }}" class="fw-bold">Color</label>
+                                <select class="form-select variant-field mx-2" name="color_{{ producto_detalle.id }}" onchange="document.getElementById('colorPreview_{{ producto_detalle.id }}').style.backgroundColor = this.options[this.selectedIndex].getAttribute('data-bg')">
+                                    <option selected disabled>Seleccione un color</option>
+                                    {% for color in colores %}
+                                        <option value="{{ color.id }}" data-bg="{{ color.hexadecimal }}" {% if color.id == producto_detalle.color_id %}selected{% endif %}>
+                                            {{ color.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div id="colorPreview_{{ producto_detalle.id }}" class="rounded-circle" style="width: 30px; height: 30px; border: 1px solid #000; background-color: {{ colores[producto_detalle.color_id-1].hexadecimal }}">
+                                </div>
+                            </div>
+
+                            <!-- Stock y Precio -->
+                            <div class="row mb-3 mt-3">
+                                <div class="col-6">
+                                    <label for="stock_{{ producto_detalle.id }}" class="fw-bold">Stock</label>
+                                    <input type="number" class="form-control" name="stock_{{ producto_detalle.id }}" value="{{ producto_detalle.stock }}" placeholder="Stock" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="precio_{{ producto_detalle.id }}" class="fw-bold">Precio</label>
+                                    <input type="number" step="0.01" class="form-control" name="precio_{{ producto_detalle.id }}" value="{{ producto_detalle.precio }}" placeholder="Precio" required>
+                                </div>
+                            </div>
+
+                            <!-- Capacidad -->
+                            <div class="mb-3">
+                                <label for="capacidad_{{ producto_detalle.id }}" class="fw-bold">Capacidad</label>
+                                <input type="text" class="form-control" name="capacidad_{{ producto_detalle.id }}" value="{{ producto_detalle.capacidad }}" placeholder="Capacidad" required>
+                            </div>
+
+                            <!-- Imagen con previsualización -->
+                            <div class="mb-3">
+                                <label for="image_{{ producto_detalle.id }}" class="fw-bold">Imagen</label>
+                                <input type="file" class="form-control" name="image_{{ producto_detalle.id }}" accept="image/*" onchange="previewImage(this, {{ producto_detalle.id }})">
+                                {% if producto_detalle.imagen %}
+                                    <div class="mt-2 text-center">
+                                        <img src="{{ url_for('static', filename='uploads/' + producto_detalle.imagen) }}" class="img-fluid" style="max-height: 150px;" alt="Imagen Variante" id="preview-image-{{ producto_detalle.id }}">
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">Actualizar Producto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Función para actualizar los tamaños cuando cambia la categoría
+    function actualizarTamanios() {
+        const categoriaId = document.getElementById('categoria').value;
+        fetch(`/productos/tamanios_por_categoria/${categoriaId}`)
+            .then(response => response.json())
+            .then(data => {
+                const selectElements = document.querySelectorAll('[id^="size_"]');
+                selectElements.forEach(select => {
+                    const selectId = select.id.split('_')[1];
+                    select.innerHTML = '<option selected disabled>Seleccione un tamaño</option>';
+                    data.forEach(tamanio => {
+                        const option = document.createElement('option');
+                        option.value = tamanio.id;
+                        option.textContent = tamanio.nombre;
+                        if (selectId == tamanio.id) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                });
+            });
+    }
+
+    // Función para cambiar la previsualización de la imagen
+    function previewImage(input, id) {
+        var imgPreview = document.getElementById("preview-image-" + id);
+        var file = input.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                imgPreview.src = e.target.result;
+                imgPreview.classList.remove('d-none');
+            }
+            reader.readAsDataURL(file);
+        } else {
+            imgPreview.classList.add('d-none');
+        }
+    }
+</script>
+
+{% endblock %}

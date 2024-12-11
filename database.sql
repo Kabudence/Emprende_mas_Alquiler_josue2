@@ -6,7 +6,7 @@ USE emprende_mas;
 
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_usuario VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     username VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS rubros (
 
 CREATE TABLE IF NOT EXISTS negocios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_negocio VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     ruc VARCHAR(11) NOT NULL,
     razon_social VARCHAR(100) NOT NULL,
     direccion VARCHAR(255) NOT NULL,

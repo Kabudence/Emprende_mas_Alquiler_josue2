@@ -1,31 +1,40 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from ..models import Categoria, Negocio, Rubro
+from ..models import Categoria, Negocio, Rubro, TipoCategoria
 from ..database import db
 from . import categorias
 
 @categorias.route('/')
 @login_required
 def index():
-    # Capturar el parámetro de búsqueda
-    query = request.args.get('buscar', '')  # Si no se pasa 'buscar', será una cadena vacía
-
-    # Filtrar categorías basadas en el término de búsqueda
-    categorias_lista = Categoria.query.filter(
-        Categoria.nombre.ilike(f'%{query}%')  # Filtrar por nombre usando ILIKE (case-insensitive)
-    ).all()
+    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+    
+    if negocio:
+        rubro_id = negocio.rubro_id
+        
+        query = request.args.get('buscar', '')
+        
+        categorias_lista = Categoria.query.filter(
+            Categoria.rubro_id == rubro_id,
+            Categoria.nombre.ilike(f'%{query}%')
+        ).all()
+    else:
+        categorias_lista = []
 
     return render_template('categorias/index.html', categorias=categorias_lista, query=query)
 
 @categorias.route('/crear', methods=['GET', 'POST'])
 @login_required
 def crear():
+    # Obtener el negocio asociado al usuario
+    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+
     if request.method == 'POST':
         nombre = request.form.get('nombre')
-        rubro_id = request.form.get('rubro_id')
+        tipo_categoria_id = request.form.get('tipo_categoria_id')
 
-        if nombre and rubro_id:
-            nueva_categoria = Categoria(nombre=nombre, rubro_id=rubro_id)
+        if negocio and nombre and tipo_categoria_id:
+            nueva_categoria = Categoria(nombre=nombre, rubro_id=negocio.rubro_id, tipo_id=tipo_categoria_id)
             db.session.add(nueva_categoria)
             db.session.commit()
             flash('Categoría creada con éxito.', 'success')
@@ -33,9 +42,12 @@ def crear():
         else:
             flash('Error al crear la categoría. Verifique los datos ingresados.', 'danger')
 
-    # Obtener todos los rubros para mostrarlos en el formulario
+    # Obtener todos los rubros y tipos de categorías
     rubros = Rubro.query.all()
-    return render_template('categorias/crear_categoria.html', rubros=rubros)
+    tipos_categoria = TipoCategoria.query.all()  # Traer los tipos de categoría disponibles
+
+    return render_template('categorias/crear_categoria.html', rubros=rubros, tipos_categoria=tipos_categoria, negocio=negocio)
+
 
 
 @categorias.route('/actualizar/<int:id>', methods=['GET', 'POST'])
