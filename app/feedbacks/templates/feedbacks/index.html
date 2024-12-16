@@ -41,13 +41,14 @@
                 <td><strong>{{ feedback.id }}</strong></td>
                 <td>{{ feedback.asunto }}</td>
                 <td>{{ feedback.descripcion }}</td>
-                <td>{{ feedback.usuario.nombre }}</td>  <!-- Nombre del usuario que dejó el feedback -->
+                <td>{{ feedback.usuario.nombre }}</td>
                 <td>{{ feedback.categoria_feedback.nombre }}</td>  <!-- Nombre de la categoría del feedback -->
                 <td>
                     <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ feedback.id }}">
                         <i class="fas fa-eye"></i>
                     </a>
 
+                    <!-- Modal -->
                     <div class="modal fade" id="viewModal{{ feedback.id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ feedback.id }}" aria-hidden="true">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">

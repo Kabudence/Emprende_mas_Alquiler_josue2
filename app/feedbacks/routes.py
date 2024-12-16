@@ -9,20 +9,27 @@ from . import feedbacks
 def index():
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
     categoria_feedback_lista = CategoriaFeedback.query.all()
-
     if negocio:
         categorias_negocio = Categoria.query.filter_by(rubro_id=negocio.rubro_id).all()
         categoria_ids = [categoria.id for categoria in categorias_negocio]
-        feedbacks_lista = Feedback.query.join(CategoriaFeedback).filter(CategoriaFeedback.id.in_(categoria_ids)).all()
+        feedbacks_query = Feedback.query.join(CategoriaFeedback).filter(CategoriaFeedback.id.in_(categoria_ids))
     else:
-        feedbacks_lista = []
+        feedbacks_query = Feedback.query.filter(False)
 
-    categoria_feedback_id = request.args.get('categoria_feedback_id')
+    categoria_feedback_id = request.args.get('categoria_feedback_id', type=int)
     if categoria_feedback_id:
-        feedbacks_lista = [feedback for feedback in feedbacks_lista if feedback.categoria_feedback_id == int(categoria_feedback_id)]
+        feedbacks_query = feedbacks_query.filter(Feedback.categoria_id == categoria_feedback_id)
 
     query = request.args.get('buscar', '')
     if query:
-        feedbacks_lista = [feedback for feedback in feedbacks_lista if query.lower() in feedback.asunto.lower()]
+        feedbacks_query = feedbacks_query.filter(Feedback.asunto.ilike(f'%{query}%'))
 
-    return render_template('feedbacks/index.html', feedbacks=feedbacks_lista, query=query, categoria_feedback_lista=categoria_feedback_lista, categoria_feedback_id=categoria_feedback_id)
+    feedbacks_lista = feedbacks_query.all()
+
+    return render_template(
+        'feedbacks/index.html',
+        feedbacks=feedbacks_lista,
+        query=query,
+        categoria_feedback_lista=categoria_feedback_lista,
+        categoria_feedback_id=categoria_feedback_id
+    )

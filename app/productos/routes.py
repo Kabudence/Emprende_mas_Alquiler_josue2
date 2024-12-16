@@ -23,8 +23,11 @@ def index():
         flash('No se encontró un negocio asociado al usuario.', 'danger')
         return redirect(url_for('productos.index'))
 
-    # Filtrar productos por rubro del negocio
-    productos_query = Producto.query.filter_by(categoria_id=Categoria.query.filter_by(rubro_id=negocio.rubro_id).first().id)
+    # Filtrar productos por todas las categorías dentro del rubro del negocio
+    categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id).all()
+    categoria_ids = [categoria.id for categoria in categorias]
+
+    productos_query = Producto.query.filter(Producto.categoria_id.in_(categoria_ids))
 
     # Búsqueda por nombre del producto
     if busqueda:
@@ -193,7 +196,9 @@ def obtener_capacidades(id):
 def editar_producto(producto_id):
     producto = Producto.query.get_or_404(producto_id)
     negocio_actual = Negocio.query.first()
-    categorias = Categoria.query.filter_by(rubro_id=negocio_actual.rubro_id).all()
+    # Filtrar las categorías de acuerdo al rubro del negocio y tipo_id = 1
+    categorias = Categoria.query.filter_by(rubro_id=negocio_actual.rubro_id, tipo_id=1).all()
+
     tamanios = Tamanio.query.filter_by(categoria_id=producto.categoria_id).all()
     colores = Color.query.all()
 
