@@ -1,0 +1,39 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Crear Rubro{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="my-4">Crear Rubro</h1>
+  <form action="{{ url_for('admin.crear') }}" method="POST">
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <!-- Campo de Fecha: se muestra pero no es editable -->
+    <div class="mb-3">
+      <label for="fecha" class="form-label">Fecha</label>
+      <input type="text" class="form-control" id="fecha" name="fecha" value="{{ now }}" disabled>
+      <!-- Campo oculto para enviar la fecha -->
+      <input type="hidden" name="fecha" value="{{ now }}">
+    </div>
+    <!-- Campo de Nombre -->
+    <div class="mb-3">
+      <label for="nombre" class="form-label">Nombre del Rubro</label>
+      <input type="text" class="form-control" id="nombre" name="nombre" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="descripcion" class="form-label">Descripción</label>
+      <textarea class="form-control" id="descripcion" name="descripcion" rows="4"></textarea>
+    </div>
+    <!-- Selector de Estado -->
+    <div class="mb-3">
+      <label for="estado" class="form-label">Estado</label>
+      <select class="form-select" id="estado" name="estado" required>
+        <option value="activo" selected>Activo</option>
+        <option value="inactivo">Inactivo</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Crear</button>
+  </form>
+</div>
+{% endblock %}

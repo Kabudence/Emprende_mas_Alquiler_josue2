@@ -1,0 +1,149 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Consultar Usuarios{% endblock %}
+
+{% block content %}
+<h2>Listado de Usuarios</h2>
+
+<!-- Tabla para mostrar los usuarios -->
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            
+            <th>Nombre</th>
+            <th>DNI</th>
+            <th>Correo</th>
+            <th>Foto DNI</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+           
+            <td>{{ usuario.nombre }}</td>
+            <td>{{ usuario.dni }}</td>
+            <td>{{ usuario.email }}</td>
+            <td>
+                {% if usuario.foto_dni_frontal %}
+                    <img src="{{ url_for('static', filename='uploads/dni_usuarios/' + usuario.foto_dni_frontal) }}" alt="DNI Frontal" class="img-thumbnail" style="max-width: 50px;">
+                {% else %}
+                    No disponible
+                {% endif %}
+                {% if usuario.foto_dni_posterior %}
+                    <img src="{{ url_for('static', filename='uploads/dni_usuarios/' + usuario.foto_dni_posterior) }}" alt="DNI Posterior" class="img-thumbnail" style="max-width: 50px;">
+                {% else %}
+                    No disponible
+                {% endif %}
+            </td>
+            <td>
+                <!-- Botón para abrir el modal -->
+                <button class="btn btn-info btn-sm" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#consultarUsuarioModal"
+                       
+                        data-nombre="{{ usuario.nombre }}"
+                        data-dni="{{ usuario.dni }}"
+                        data-email="{{ usuario.email }}"
+                        data-celular="{{ usuario.celular }}"
+                        data-username="{{ usuario.username }}"
+                        data-tipo-usuario="{{ usuario.tipo_usuario.nombre_tipo }}"
+                        data-foto-frontal="{{ url_for('static', filename='uploads/dni/' + (usuario.foto_dni_frontal or 'default.png')) }}"
+                        data-foto-posterior="{{ url_for('static', filename='uploads/dni/' + (usuario.foto_dni_posterior or 'default.png')) }}">
+                    Consultar
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal para mostrar los detalles del usuario -->
+<div class="modal fade" id="consultarUsuarioModal" tabindex="-1" aria-labelledby="consultarUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Modal grande -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="consultarUsuarioModalLabel">Detalles del Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="detalleUsuarioForm">
+                    <div class="row">
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="modal-nombre" class="form-label">Nombre</label>
+                            <input type="text" id="modal-nombre" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="modal-dni" class="form-label">DNI</label>
+                            <input type="text" id="modal-dni" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modal-email" class="form-label">Correo</label>
+                            <input type="email" id="modal-email" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="modal-celular" class="form-label">Celular</label>
+                            <input type="text" id="modal-celular" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modal-username" class="form-label">Username</label>
+                            <input type="text" id="modal-username" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="modal-tipo-usuario" class="form-label">Tipo de Usuario</label>
+                            <input type="text" id="modal-tipo-usuario" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Foto DNI Frontal</label>
+                            <img id="modal-foto-frontal" src="#" class="img-thumbnail" style="max-width: 200px; display: none;">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Foto DNI Posterior</label>
+                            <img id="modal-foto-posterior" src="#" class="img-thumbnail" style="max-width: 200px; display: none;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Volver</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('consultarUsuarioModal');
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            
+            document.getElementById('modal-nombre').value = button.getAttribute('data-nombre');
+            document.getElementById('modal-dni').value = button.getAttribute('data-dni');
+            document.getElementById('modal-email').value = button.getAttribute('data-email');
+            document.getElementById('modal-celular').value = button.getAttribute('data-celular') || 'No registrado';
+            document.getElementById('modal-username').value = button.getAttribute('data-username');
+            document.getElementById('modal-tipo-usuario').value = button.getAttribute('data-tipo-usuario');
+
+            document.getElementById('modal-foto-frontal').src = button.getAttribute('data-foto-frontal');
+            document.getElementById('modal-foto-frontal').style.display = 'block';
+            document.getElementById('modal-foto-posterior').src = button.getAttribute('data-foto-posterior');
+            document.getElementById('modal-foto-posterior').style.display = 'block';
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Actualizar Categoría{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Actualizar Categoría</h1>
+
+<form action="{{ url_for('admin.categorias_actualizar', id=categoria.id) }}" method="POST" class="shadow p-4 rounded">
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre de la Categoría</label>
+        <input 
+            type="text" 
+            id="nombre" 
+            name="nombre" 
+            class="form-control" 
+            value="{{ categoria.nombre }}" 
+            required>
+    </div>
+
+    <div class="mb-3">
+        <label for="rubro" class="form-label">Rubro</label>
+        <select id="rubro" name="rubro_id" class="form-select" required>
+            {% for rubro in rubros %}
+            <option value="{{ rubro.id }}" {% if rubro.id == categoria.rubro_id %}selected{% endif %}>
+                {{ rubro.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <a href="{{ url_for('admin.categorias_index') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+
+{% endblock %}

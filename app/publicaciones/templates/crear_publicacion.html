@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Nueva Publicación{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Crear Nueva Publicación</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <label>Fecha de Compra</label>
+            <input type="date" class="form-control" name="fecha_compra" required>
+        </div>
+        <div class="mb-3">
+            <label>Nombre de la Publicación</label>
+            <input type="text" class="form-control" name="nombre_publicacion" required>
+        </div>
+        <div class="mb-3">
+            <label>Cliente</label>
+            <select class="form-control" name="cliente_id" required>
+                <option value="">Selecciona un cliente</option>
+                {% for cliente in clientes %}
+                <option value="{{ cliente.id }}">{{ cliente.nombre_completo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Productos</label>
+            <textarea class="form-control" name="productos" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label>Foto 1</label>
+            <input type="file" class="form-control" name="foto_uno" id="foto_uno" accept="image/*" required>
+            <div class="mt-2">
+                <img id="preview_foto_uno" src="#" alt="Vista previa foto 1" class="img-thumbnail" style="max-width: 350px; display: none;">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label>Foto 2 (Opcional)</label>
+            <input type="file" class="form-control" name="foto_dos" id="foto_dos" accept="image/*">
+            <div class="mt-2">
+                <img id="preview_foto_dos" src="#" alt="Vista previa foto 2" class="img-thumbnail" style="max-width: 350px; display: none;">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('foto_uno').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('preview_foto_uno');
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+});
+document.getElementById('foto_dos').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('preview_foto_dos');
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

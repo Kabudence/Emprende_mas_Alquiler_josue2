@@ -1,0 +1,62 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Registrar Usuario{% endblock %}
+
+{% block content %}
+<h2>Registrar Dueño de Tienda</h2>
+<form method="POST" action="{{ url_for('admin.registrar_usuario') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre del Usuario</label>
+        <input type="text" name="nombre" class="form-control" id="nombre" required>
+    </div>
+    <div class="mb-3">
+        <label for="dni" class="form-label">DNI</label>
+        <input type="text" name="dni" class="form-control" id="dni" maxlength="8" required>
+    </div>
+    <div class="mb-3">
+        <label for="foto_dni_frontal" class="form-label">Foto del DNI (Frontal)</label>
+        <input type="file" name="foto_dni_frontal" class="form-control" id="foto_dni_frontal" accept="image/*" required onchange="previewImage(event, 'preview_frontal')">
+        <img id="preview_frontal" src="#" alt="Vista previa del DNI frontal" class="img-thumbnail mt-2" style="display: none; max-width: 200px;">
+    </div>
+    <div class="mb-3">
+        <label for="foto_dni_posterior" class="form-label">Foto del DNI (Posterior)</label>
+        <input type="file" name="foto_dni_posterior" class="form-control" id="foto_dni_posterior" accept="image/*" required onchange="previewImage(event, 'preview_posterior')">
+        <img id="preview_posterior" src="#" alt="Vista previa del DNI posterior" class="img-thumbnail mt-2" style="display: none; max-width: 200px;">
+    </div>
+    <div class="mb-3">
+        <label for="correo" class="form-label">Correo Electrónico</label>
+        <input type="email" name="correo" class="form-control" id="correo" required>
+    </div>
+    <div class="mb-3">
+        <label for="celular" class="form-label">Celular</label>
+        <input type="text" name="celular" class="form-control" id="celular" pattern="\d{9}" maxlength="9" placeholder="Ej: 987654321" required>
+        <div class="form-text">Debe contener 9 dígitos numéricos.</div>
+    </div>
+    <div class="mb-3">
+        <label for="contrasena" class="form-label">Contraseña</label>
+        <input type="password" name="contrasena" class="form-control" id="contrasena" required>
+    </div>
+    <div class="mb-3">
+        <label for="id_tipo_usuario">Tipo de Usuario:</label>
+        <select name="id_tipo_usuario" id="id_tipo_usuario" required>
+            <option value="1">Administrador</option>
+            <option value="2">Dueño de Tienda</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Registrar Usuario</button>
+    <a href="{{ url_for('admin.consultar_usuario', user_id=3)}}" class="btn btn-secondary">Ver Listado de Usuarios</a>
+</form>
+
+<script>
+    function previewImage(event, previewId) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const preview = document.getElementById(previewId);
+            preview.src = reader.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
+{% endblock %}

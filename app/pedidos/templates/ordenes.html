@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Órdenes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Lista de Órdenes</h2>
+
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Forma de Pago</th>
+                <th>Estado</th>
+                <th>Total (S/)</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for orden in ordenes %}
+            <tr>
+                <td>{{ orden[0] }}</td>
+                <td>{{ orden[1] }}</td>
+                <td>{{ orden[2] }}</td>
+                <td>{{ orden[3] }}</td>
+                <td>
+                    {% if orden[4] == 'Pagado' %}
+                        <span class="badge bg-success">{{ orden[4] }}</span>
+                    {% elif orden[4] == 'Pendiente' %}
+                        <span class="badge bg-warning text-dark">{{ orden[4] }}</span>
+                    {% else %}
+                        <span class="badge bg-danger">{{ orden[4] }}</span>
+                    {% endif %}
+                </td>
+                <td><strong>S/ {{ orden[5] }}</strong></td>
+                <td>
+                    <button class="btn btn-info btn-sm" onclick="cargarOrden('{{ orden[0] }}')">Ver Orden</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para Ver Orden -->
+<div class="modal fade" id="modalOrden" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de la Orden</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>ID Orden:</strong> <span id="orden_id"></span></p>
+                <p><strong>Cliente:</strong> <span id="cliente"></span></p>
+                <p><strong>Fecha:</strong> <span id="fecha"></span></p>
+                <p><strong>Forma de Pago:</strong> <span id="forma_pago"></span></p>
+                <p><strong>Estado:</strong> <span id="estado"></span></p>
+                <p><strong>Sucursal de Recogida:</strong> <span id="sucursal"></span></p>
+                <p id="campo_distrito"><strong>Distrito de Envío:</strong> <span id="distrito"></span></p>
+                <p id="campo_comision_culqui"><strong>Comisión Culqui:</strong> <span id="comision_culqui"></span></p>
+                <h5>Productos</h5>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tamaño</th>
+                            <th>Color</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista_productos"></tbody>
+                </table>
+                <h5>Resumen</h5>
+                <p><strong>Subtotal:</strong> <span id="subtotal"></span></p>
+                <p id="campo_costo_envio"><strong>Costo de Envío:</strong> <span id="costo_envio"></span></p>
+                <p id="comision_culqui_row" style="display: none;"><strong>Comisión Culqui:</strong> <span id="comision_culqui"></span></p>
+                <p><strong>Total:</strong> <span id="total"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function cargarOrden(ordenId) {
+        fetch(`/pedidos/get_orden/${ordenId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+
+                function setTextContent(id, value) {
+                    let element = document.getElementById(id);
+                    if (element) element.textContent = value;
+                }
+
+                setTextContent("orden_id", data.orden.id);
+setTextContent("cliente", data.orden.nombre_completo);
+// Para la fecha, parsea con new Date(...) si quieres formatearla
+setTextContent("fecha", new Date(data.orden.fecha).toLocaleString());
+setTextContent("forma_pago", data.orden.forma_pago);
+setTextContent("estado", data.orden.estado);
+setTextContent("sucursal", data.orden.sucursal);
+
+// Si el backend llama "subtotal" y "total" a estos campos:
+setTextContent("subtotal", `S/ ${parseFloat(data.orden.subtotal).toFixed(2)}`);
+setTextContent("total", `S/ ${parseFloat(data.orden.total).toFixed(2)}`);
+
+                let campoCostoEnvio = document.getElementById("campo_costo_envio");
+                let campoComisionCulqui = document.getElementById("campo_comision_culqui");
+                let campoDistrito = document.getElementById("campo_distrito");
+                let campoSucursal = document.getElementById("sucursal").parentElement;
+
+                if (data.orden.forma_pago === "Tarjeta" || data.orden.forma_pago === "Yape") {
+    setTextContent("costo_envio", `S/ ${parseFloat(data.orden.costo_envio).toFixed(2)}`);
+    setTextContent("comision_culqui", `S/ ${parseFloat(data.orden.comision_culqui).toFixed(2)}`);
+    setTextContent("distrito", data.orden.distrito);
+
+    campoCostoEnvio.style.display = "block";
+    campoComisionCulqui.style.display = "block";
+    campoDistrito.style.display = "block";
+    campoSucursal.style.display = "none";
+} else {
+    campoCostoEnvio.style.display = "none";
+    campoComisionCulqui.style.display = "none";
+    campoDistrito.style.display = "none";
+    campoSucursal.style.display = "block";
+}
+
+                let lista = document.getElementById("lista_productos");
+                lista.innerHTML = "";
+                data.productos.forEach((producto) => {
+    let row = `<tr>
+        <td>${producto.nombre}</td>
+        <td>${producto.tamaño || '-'}</td>
+        <td>${producto.color || '-'}</td>
+        <td>S/ ${producto.precio}</td>
+        <td>${producto.cantidad}</td>
+        <td>S/ ${producto.total}</td>
+    </tr>`;
+    lista.innerHTML += row;
+});
+
+
+                let modal = new bootstrap.Modal(document.getElementById("modalOrden"));
+                modal.show();
+            })
+            .catch(error => {
+                console.error("Error al cargar la orden:", error);
+                alert("Ocurrió un error al obtener los datos de la orden.");
+            });
+    }
+
+
+
+    
+</script>
+{% endblock %}

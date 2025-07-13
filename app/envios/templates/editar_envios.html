@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Editar Envío{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="mt-4">Editar Envío #{{ envio.id }}</h1>
+  
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <form method="POST" action="{{ url_for('envios.editar', envio_id=envio.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3">
+      <label for="sucursal" class="form-label">Sucursal:</label>
+      <select name="sucursal" id="sucursal" class="form-select" required>
+        <option value="">Seleccione una sucursal</option>
+        {% for s in sucursales %}
+          <option value="{{ s.ID }}" {% if s.ID == envio.sucursal.ID %}selected{% endif %}>{{ s.NombreSucursal}}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="departamento" class="form-label">Departamento:</label>
+      <select name="departamento" id="departamento" class="form-select" required>
+        <option value="">Seleccione un departamento</option>
+        {% for d in departamentos %}
+          <option value="{{ d.id }}" {% if d.id == envio.departamento_id %}selected{% endif %}>{{ d.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="provincia" class="form-label">Provincia:</label>
+      <select name="provincia" id="provincia" class="form-select" required>
+        <option value="">Seleccione una provincia</option>
+        <!-- Se cargarán vía AJAX -->
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="distrito" class="form-label">Distrito:</label>
+      <select name="distrito" id="distrito" class="form-select" required>
+        <option value="">Seleccione un distrito</option>
+        <!-- Se cargarán vía AJAX -->
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="costo" class="form-label">Costo de Envío:</label>
+      <input type="number" step="0.01" name="costo" id="costo" class="form-control" value="{{ envio.costo }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="estado" class="form-label">Estado:</label>
+        <select name="estado" id="estado" class="form-select" required>
+          <option value="activo" {% if envio.estado == 'activo' %}selected{% endif %}>Activo</option>
+          <option value="inactivo" {% if envio.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+        </select>
+      </div>
+      
+
+    <button type="submit" class="btn btn-primary">Actualizar</button>
+  </form>
+</div>
+
+<script>
+    function cargarProvincias(deptoId, provinciaActual) {
+      if (deptoId) {
+        // Construir la URL usando 0 como valor dummy y luego reemplazarlo
+        var urlProvincias = '{{ url_for("envios.get_provincias", departamento_id=0) }}'.replace('0', deptoId);
+        $.get(urlProvincias, function(data) {
+          var provinciaSelect = $('#provincia');
+          provinciaSelect.empty();
+          provinciaSelect.append('<option value="">Seleccione una provincia</option>');
+          $.each(data, function(index, provincia) {
+            var selected = (provincia.id == provinciaActual) ? 'selected' : '';
+            provinciaSelect.append('<option value="' + provincia.id + '" ' + selected + '>' + provincia.nombre + '</option>');
+          });
+          // Cargar distritos basados en la provincia actual (si se tiene)
+          cargarDistritos(provinciaActual, "{{ envio.distrito_id }}");
+        });
+      } else {
+        $('#provincia').empty().append('<option value="">Seleccione una provincia</option>');
+      }
+    }
+  
+    function cargarDistritos(provId, distritoActual) {
+      if (provId) {
+        var urlDistritos = '{{ url_for("envios.get_distritos", provincia_id=0) }}'.replace('0', provId);
+        $.get(urlDistritos, function(data) {
+          var distritoSelect = $('#distrito');
+          distritoSelect.empty();
+          distritoSelect.append('<option value="">Seleccione un distrito</option>');
+          $.each(data, function(index, distrito) {
+            var selected = (distrito.id == distritoActual) ? 'selected' : '';
+            distritoSelect.append('<option value="' + distrito.id + '" ' + selected + '>' + distrito.nombre + '</option>');
+          });
+        });
+      } else {
+        $('#distrito').empty().append('<option value="">Seleccione un distrito</option>');
+      }
+    }
+  
+    // Al cargar el documento, se precargan las provincias y distritos según el departamento actual
+    $(document).ready(function() {
+      var deptoId = $('#departamento').val();
+      var provinciaActual = "{{ envio.provincia_id }}";
+      if (deptoId) {
+        cargarProvincias(deptoId, provinciaActual);
+      }
+    });
+  
+    // Al cambiar el departamento, se recargan las provincias y se reinician los distritos
+    $('#departamento').on('change', function() {
+      var deptoId = $(this).val();
+      cargarProvincias(deptoId, '');
+      $('#distrito').empty().append('<option value="">Seleccione un distrito</option>');
+    });
+  
+    // Al cambiar la provincia, se recargan los distritos
+    $('#provincia').on('change', function() {
+      var provId = $(this).val();
+      cargarDistritos(provId, '');
+    });
+  </script>
+  {% endblock %}

@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Editar Empresa' if empresa else 'Crear Empresa' }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos para el formulario */
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .form-card {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .color-group {
+        display: flex;
+        gap: 20px;
+    }
+
+    .color-picker {
+        flex: 1;
+    }
+
+    .form-control {
+        box-sizing: border-box;
+    }
+
+    .btn {
+        background-color: #007bff;
+        color: #fff;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
+    }
+
+    .current-image img {
+        max-width: 100px;
+        margin-top: 10px;
+    }
+
+    .preview-image img {
+        max-width: 150px;
+        margin-top: 10px;
+    }
+</style>
+
+<div class="container">
+    <div class="form-card">
+        <h1 class="form-title text-center">{{ 'Editar Empresa' if empresa else 'Crear Empresa' }}</h1>
+        
+        <form action="" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if empresa %}
+    {% set negocio_actual = empresa.negocio %}
+{% else %}
+    {% set negocio_actual = negocio %}
+{% endif %}
+
+<div class="form-group">
+    <label>Negocio Asociado</label>
+    <input type="text" class="form-control" 
+           value="{{ negocio_actual.nombre if negocio_actual else 'No asignado' }}" 
+           readonly>
+    <input type="hidden" name="idNegocio" value="{{ negocio_actual.id if negocio_actual else '' }}">
+</div>
+
+            <div class="form-group">
+                <label for="mision">Misión</label>
+                <textarea id="mision" name="mision" class="form-control" rows="4">{{ empresa.Mision if empresa else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="vision">Visión</label>
+                <textarea id="vision" name="vision" class="form-control" rows="4">{{ empresa.Vision if empresa else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="objetivos">Objetivos</label>
+                <textarea id="objetivos" name="objetivos" class="form-control" rows="4">{{ empresa.Objetivos if empresa else '' }}</textarea>
+            </div>
+
+            <!-- Color Inputs -->
+            <div class="form-group color-group">
+                <div class="color-picker">
+                    <label for="color-prim-picker">Color Primario</label>
+                    <input type="color" name="color_prim" id="color-prim-picker" class="form-control" value="{{ color.Nombre_hexadecimal_principal if color else '#000000' }}">
+                </div>
+                <div class="color-picker">
+                    <label for="color-sec-picker">Color Secundario</label>
+                    <input type="color" name="color_sec" id="color-sec-picker" class="form-control" value="{{ color.Nombre_hexadecimal_secundario if color else '#000000' }}">
+                </div>
+            </div>
+
+            <!-- Input hidden para color hexadecimal -->
+            <input type="hidden" name="color_hexadecimal_prim" id="color-prim-hex" value="{{ color.Nombre_hexadecimal_principal if color else '#000000' }}">
+            <input type="hidden" name="color_hexadecimal_sec" id="color-sec-hex" value="{{ color.Nombre_hexadecimal_secundario if color else '#000000' }}">
+            
+
+            <!-- Redes Sociales -->
+            <div class="form-group">
+                <label for="facebook_url">URL de Facebook</label>
+                <input type="url" name="facebook_url" class="form-control" value="{{ redes_sociales[0].url_red if redes_sociales|length > 0 else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="instagram_url">URL de Instagram</label>
+                <input type="url" name="instagram_url" class="form-control" value="{{ redes_sociales[1].url_red if redes_sociales|length > 1 else '' }}">
+            </div>
+
+            <!-- Videos -->
+            <div class="form-group">
+                <label for="youtube_url_1">URL de YouTube 1</label>
+                <input type="url" name="youtube_url_1" class="form-control" value="{{ videos[0].url if videos|length > 0 else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="youtube_url_2">URL de TikTok</label>
+                <input type="url" name="youtube_url_2" class="form-control" value="{{ videos[1].url if videos|length > 1 else '' }}">
+            </div>
+
+            <!-- Logo and Icon Uploads -->
+            <!-- Logo -->
+            <div class="form-group">
+                <label for="logo-input">Logo</label>
+                <input type="file" name="logo" id="logo-input" class="form-control" accept="image/*">
+                {% if empresa and empresa.imagenes %}
+                    {% for imagen in empresa.imagenes if imagen.tipo_imagen == 'logo' %}
+                        <div class="current-image">
+                            <p>Imagen actual:</p>
+                            <img src="{{ url_for('static', filename='uploads/infoempresa/' + imagen.filename) }}" alt="Logo actual">
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <div class="preview-image" id="logo-preview"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="icono-input">Ícono</label>
+                <input type="file" name="icono" id="icono-input" class="form-control" accept="image/*">
+                {% if empresa and empresa.imagenes %}
+                    {% for imagen in empresa.imagenes if imagen.tipo_imagen == 'icono' %}
+                        <div class="current-image">
+                            <p>Imagen actual:</p>
+                            <img src="{{ url_for('static', filename='uploads/infoempresa/' + imagen.filename) }}" alt="Ícono actual">
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <div class="preview-image" id="icono-preview"></div>
+            </div>
+
+            <div class="form-group text-center">
+                <input type="submit" value="Guardar" class="btn btn-primary">
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Update hexadecimal field when a color is picked
+    document.getElementById('color-prim-picker').addEventListener('input', function() {
+        document.getElementById('color-prim-hex').value = this.value.toUpperCase();
+    });
+    document.getElementById('color-sec-picker').addEventListener('input', function() {
+        document.getElementById('color-sec-hex').value = this.value.toUpperCase();
+    });
+
+    // Preview image function
+    function previewImage(input, previewElementId) {
+        const previewElement = document.getElementById(previewElementId);
+        previewElement.innerHTML = ""; // Clear previous image
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                previewElement.appendChild(img);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Add events for logo and icon preview
+    document.getElementById('logo-input').addEventListener('change', function() {
+        previewImage(this, 'logo-preview');
+    });
+    document.getElementById('icono-input').addEventListener('change', function() {
+        previewImage(this, 'icono-preview');
+    });
+</script>
+
+{% endblock %}

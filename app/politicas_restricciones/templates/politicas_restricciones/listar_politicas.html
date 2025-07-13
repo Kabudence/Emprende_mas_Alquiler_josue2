@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Listado de Políticas Internas{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Listado de Políticas Internas</h1>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <form action="{{ url_for('politicas_restricciones.listar') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar política..."
+                   value="{{ busqueda }}" aria-label="Buscar política">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('politicas_restricciones.crear') }}" class="btn btn-outline-primary shadow-sm">
+            <i class="fas fa-plus-circle"></i> Crear Nueva Política
+        </a>
+    </div>
+</div>
+
+{% if politicas %}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle shadow-sm">
+        <thead class="table-dark text-center">
+            <tr>
+                <th> ID </th>    
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Fecha de Creación</th>
+                <th>Fecha de Implementación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for politica in politicas %}
+            <tr class="text-center">
+                <td>{{politica.id}}</td>
+                <td>{{ politica.nombre_politica }}</td>
+                <td>{{ politica.descripcion }}</td>
+                <td>{{ politica.fecha_creacion }}</td>
+                <td>{{ politica.fecha_implementacion }}</td>
+                <td>
+                    <a href="{{ url_for('politicas_restricciones.editar', id=politica.id) }}" class="btn btn-outline-warning btn-sm me-1">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ url_for('politicas_restricciones.eliminar', id=politica.id) }}" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    <div class="alert alert-info text-center" role="alert">
+        No se encontraron políticas internas disponibles.
+    </div>
+{% endif %}
+{% endblock %}

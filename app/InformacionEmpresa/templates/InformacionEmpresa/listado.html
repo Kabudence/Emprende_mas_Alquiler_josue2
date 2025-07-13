@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Listado de Empresas{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4">Listado de Empresas</h1>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <form action="{{ url_for('informacion_empresa.listar_empresas') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar empresa..."
+                   value="{{ busqueda if busqueda }}" aria-label="Buscar empresa">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        {% if empresas|length == 0 %}
+          <a href="{{ url_for('informacion_empresa.crear_empresa') }}" class="btn btn-outline-primary shadow-sm">
+              <i class="fas fa-plus-circle"></i> Crear Nueva Empresa
+          </a>
+        {% else %}
+          <!-- Si ya existe alguna empresa, puedes mostrar un mensaje o dejar el espacio vacío -->
+          <span class="badge bg-secondary">Ya se ha registrado una empresa.</span>
+        {% endif %}
+    </div>
+</div>
+
+{% if empresas %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th class="px-4 py-3">Tienda</th>
+                <th class="px-4 py-3">Logo</th>
+                <th class="px-4 py-3">Ícono</th>
+                <th class="px-4 py-3">Misión</th>
+                <th class="px-4 py-3">Visión</th>
+                <th class="px-4 py-3">Color Principal</th>
+                <th class="px-4 py-3">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empresa in empresas %}
+            <tr>
+                <td class="px-4 py-3">
+                    <strong>{{ empresa.negocio.nombre }}</strong>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    {% set logo = empresa.imagenes|selectattr('tipo_imagen', 'equalto', 'logo')|first %}
+                    {% if logo and logo.filename %}
+                        <img src="{{ url_for('static', filename='uploads/infoempresa/' + logo.filename) }}" 
+                             alt="Logo {{ empresa.negocio.nombre }}" 
+                             class="img-fluid"
+                             style="max-width: 80px; height: auto;">
+                    {% else %}
+                        <span class="badge bg-secondary">Sin logo</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-center">
+                    {% set icono = empresa.imagenes|selectattr('tipo_imagen', 'equalto', 'icono')|first %}
+                    {% if icono and icono.filename %}
+                        <img src="{{ url_for('static', filename='uploads/infoempresa/' + icono.filename) }}" 
+                             alt="Ícono {{ empresa.negocio.nombre }}" 
+                             class="img-fluid"
+                             style="max-width: 50px; height: auto;">
+                    {% else %}
+                        <span class="badge bg-secondary">Sin ícono</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% if empresa.Mision %}
+                        <div class="text-wrap" style="max-width: 200px;">
+                            {{ empresa.Mision|truncate(100) }}
+                        </div>
+                    {% else %}
+                        <span class="text-muted fst-italic">Sin misión</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% if empresa.Vision %}
+                        <div class="text-wrap" style="max-width: 200px;">
+                            {{ empresa.Vision|truncate(100) }}
+                        </div>
+                    {% else %}
+                        <span class="text-muted fst-italic">Sin visión</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-center">
+                    {% if empresa.colores and empresa.colores.Nombre_hexadecimal_principal %}
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <div style="
+                                width: 30px;
+                                height: 30px;
+                                border-radius: 4px;
+                                background-color: {{ empresa.colores.Nombre_hexadecimal_principal }};
+                                border: 1px solid rgba(0,0,0,0.1);">
+                            </div>
+                            <span class="small">
+                                {{ empresa.colores.Nombre_hexadecimal_principal }}
+                            </span>
+                        </div>
+                    {% else %}
+                        <span class="badge bg-secondary">Sin color</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('informacion_empresa.editar_empresa', id=empresa.idEmpresa) }}" 
+                           class="btn btn-outline-primary btn-sm"
+                           title="Editar empresa">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ url_for('informacion_empresa.eliminar_empresa', id=empresa.idEmpresa) }}" 
+                              method="post" 
+                              class="d-inline"
+                              onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta empresa?');">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" 
+                                    class="btn btn-outline-danger btn-sm ms-1"
+                                    title="Eliminar empresa">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info shadow-sm" role="alert">
+    <i class="fas fa-info-circle me-2"></i>
+    No se encontraron empresas. {% if busqueda %}Intenta con una búsqueda diferente.{% endif %}
+</div>
+{% endif %}
+{% endblock %}

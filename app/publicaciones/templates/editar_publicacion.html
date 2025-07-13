@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Foto De Cliente{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Editar Foto de Cliente</h2>
+    <form action="{{ url_for('publicaciones.editar_publicacion', id=publicacion.id) }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <label for="fecha_compra" class="form-label">Fecha de Compra</label>
+            <input type="date" class="form-control" id="fecha_compra" name="fecha_compra" value="{{ publicacion.fecha_compra.strftime('%Y-%m-%d') }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="nombre_publicacion" class="form-label">Nombre de la Publicación</label>
+            <input type="text" class="form-control" id="nombre_publicacion" name="nombre_publicacion" value="{{ publicacion.nombre_publicacion }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="cliente_id" class="form-label">Cliente</label>
+            <select class="form-control" id="cliente_id" name="cliente_id" required>
+                {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}" {% if cliente.id == publicacion.cliente_id %}selected{% endif %}>
+                        {{ cliente.nombre_completo }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="productos" class="form-label">Productos</label>
+            <textarea class="form-control" id="productos" name="productos">{{ publicacion.productos }}</textarea>
+        </div>
+
+        <div class="mb-3 position-relative">
+            <label class="form-label">Imagen 1</label><br>
+            <div class="position-relative d-inline-block">
+                <img src="{{ url_for('static', filename='uploads/fotosclientes/' + publicacion.foto_uno) }}" width="400" class="img-thumbnail" onclick="showImageModal(this)">
+                <span class="position-absolute top-0 end-0 bg-white p-2 rounded-circle shadow" style="cursor:pointer;" onclick="showImageModal(this.previousElementSibling)">
+                    <i class="bi bi-arrows-fullscreen"></i>
+                </span>
+            </div>
+            <input type="file" class="form-control mt-2" id="foto_uno" name="foto_uno">
+        </div>
+
+        <div class="mb-3 position-relative">
+            <label class="form-label">Imagen 2</label><br>
+            {% if publicacion.foto_dos %}
+            <div class="position-relative d-inline-block">
+                <img src="{{ url_for('static', filename='uploads/fotosclientes/' + publicacion.foto_dos) }}"  width="400" class="img-thumbnail" onclick="showImageModal(this)">
+                <span class="position-absolute top-0 end-0 bg-white p-2 rounded-circle shadow" style="cursor:pointer;" onclick="showImageModal(this.previousElementSibling)">
+                    <i class="bi bi-arrows-fullscreen"></i>
+                </span>
+            </div>
+            {% endif %}
+            <input type="file" class="form-control mt-2" id="foto_dos" name="foto_dos">
+        </div>
+
+        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        <a href="{{ url_for('publicaciones.listar_publicaciones') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+<!-- Modal para mostrar la imagen en grande -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 60%; margin: auto;">
+        <div class="modal-content" style="border-radius: 15px; background: rgba(255, 255, 255, 0.95); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px);">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Vista Previa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid rounded shadow" style="max-height: 80vh; width: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script>
+function showImageModal(img) {
+    document.getElementById('modalImage').src = img.src;
+    var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    myModal.show();
+}
+</script>
+
+{% endblock %}

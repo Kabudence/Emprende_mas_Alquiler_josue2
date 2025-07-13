@@ -1,0 +1,145 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Registrar Negocio{% endblock %}
+
+{% block content %}
+<h2>Registrar Negocio</h2>
+<form method="POST" action="{{ url_for('admin.registrar_negocio') }}" id="negocioForm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="mb-3">
+    <label for="nombre_negocio" class="form-label">Nombre del Negocio</label>
+    <input type="text" name="nombre_negocio" class="form-control" id="nombre_negocio" required>
+  </div>
+  <div class="mb-3">
+    <label for="ruc" class="form-label">RUC</label>
+    <input type="text" name="ruc" class="form-control" id="ruc" required>
+  </div>
+  <div class="mb-3">
+    <label for="razon_social" class="form-label">Razón Social</label>
+    <input type="text" name="razon_social" class="form-control" id="razon_social" required>
+  </div>
+  <div class="mb-3">
+    <label for="direccion" class="form-label">Dirección</label>
+    <input type="text" name="direccion" class="form-control" id="direccion" required>
+  </div>
+  <div class="mb-3">
+    <label for="departamento" class="form-label">Departamento</label>
+    <input type="text" name="departamento" class="form-control" id="departamento" required>
+  </div>
+  <div class="mb-3">
+    <label for="provincia" class="form-label">Provincia</label>
+    <input type="text" name="provincia" class="form-control" id="provincia" required>
+  </div>
+  <div class="mb-3">
+    <label for="distrito" class="form-label">Distrito</label>
+    <input type="text" name="distrito" class="form-control" id="distrito" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="rubro_id" class="form-label">Rubro</label>
+    <select name="rubro_id" id="rubro_id" class="form-select" required>
+      <option value="" disabled selected>Selecciona un rubro</option>
+      {% for rubro in rubros %}
+        <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="usuario_id" class="form-label">Dueño del Negocio</label>
+    <select name="usuario_id" id="usuario_id" class="form-select" required>
+      <option value="" disabled selected>Selecciona un dueño de tienda</option>
+      {% for usuario in usuarios %}
+        <option value="{{ usuario.id }}">{{ usuario.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="tipoModelo" class="form-label">Modelo de Negocio</label>
+    <select name="tipo_modelo" id="tipoModelo" class="form-select" required>
+      {% for modelo in tipo_modelos %}
+        <option value="{{ modelo.id }}">{{ modelo.nombre|title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+    
+  <div class="mb-3 row">
+    <div class="col">
+      <label for="color_primario" class="form-label">Color Primario</label>
+      <input type="color" name="color_primario" id="color_primario" class="form-control" value="#000000">
+    </div>
+    <div class="col">
+      <label for="color_secundario" class="form-label">Color Secundario</label>
+      <input type="color" name="color_secundario" id="color_secundario" class="form-control" value="#000000">
+    </div>
+  </div>
+  
+  <div class="mb-3" id="membresiaField" style="display:none;">
+    <label for="membresia_id" class="form-label">Membresía</label>
+    <select name="membresia_id" id="membresia_id" class="form-select">
+      <option value="" selected>Seleccionar membresía</option>
+      {% for membresia in membresias %}
+        <option value="{{ membresia.id }}">{{ membresia.nombre }} ({{ membresia.cant_dias }} días)</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Registrar Negocio</button>
+  <a href="{{ url_for('admin.consultar_negocios') }}" class="btn btn-secondary">
+    Ver lista de negocios
+  </a>
+</form>
+
+<!-- Modal de advertencia -->
+<div class="modal fade" id="modalAdvertencia" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle-fill"></i> Atención
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="fs-5">⚠️ Debes seleccionar un dueño de tienda antes de registrar el negocio.</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button class="btn btn-warning" data-bs-dismiss="modal">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("negocioForm");
+    const modal = new bootstrap.Modal(document.getElementById("modalAdvertencia"));
+    const tipoModelo = document.getElementById("tipoModelo");
+    const membresiaField = document.getElementById("membresiaField");
+    const alquilerId = "{{ tipo_alquiler_id }}";
+
+    // 1) Validar dueño antes de enviar
+    form.addEventListener("submit", (e) => {
+      if (!document.getElementById("usuario_id").value) {
+        e.preventDefault();
+        modal.show();
+      }
+    });
+
+    // 2) Mostrar/ocultar membresía al cambiar modelo
+    tipoModelo.addEventListener("change", function() {
+      if (this.value === alquilerId) {
+        membresiaField.style.display = "block";
+        document.getElementById("membresia_id").setAttribute("required", "required");
+      } else {
+        membresiaField.style.display = "none";
+        document.getElementById("membresia_id").removeAttribute("required");
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Nueva Promoción{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Crear Nueva Promoción</h1>
+    <form action="/promociones/crear" method="post" enctype="multipart/form-data" class="p-4 bg-white shadow rounded" >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <label for="id_producto" class="form-label">Producto:</label>
+            <select name="id_producto" id="id_producto" class="form-select" required>
+                <option value="">Seleccione un producto</option>
+                {% for producto in productos %}
+                <option value="{{ producto.id }}">{{ producto.nombre }}</option>                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="detalle" class="form-label">Tamaño y Color:</label>
+            <select id="detalle" name="detalle_id" class="form-select" required>
+                <option value="">Seleccione un tamaño y color</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="precio" class="form-label">Precio:</label>
+            <input type="text" id="precio" class="form-control" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre de Promoción:</label>
+            <input type="text" name="nombre" id="nombre" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción:</label>
+            <textarea name="descripcion" id="descripcion" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo de Promoción:</label>
+            <select name="tipo" id="tipo" class="form-select" required>
+                <option value="">Seleccione</option>
+                <option value="Oferta">Oferta</option>
+                <option value="Descuento">Descuento</option>
+                <option value="2x1">2x1</option>
+                <option value="Paquete Rebajado">Paquete Rebajado</option>
+                <option value="Segundo Producto Barato">Segundo Producto Barato</option>
+            </select>
+        </div>
+
+        <!-- Campo para Precio Oferta (visible solo si se selecciona Oferta) -->    
+        <div class="mb-3" id="precio_oferta_container" style="display: none;">
+            <label for="precio_oferta" class="form-label">Precio Oferta:</label>
+            <input type="number" name="precio_oferta" id="precio_oferta" class="form-control" step="0.01">
+        </div>
+
+        <!-- Campo para Descuento (visible solo si se selecciona Descuento) -->
+        <div class="mb-3" id="descuento_container" style="display:none;">
+            <label for="descuento" class="form-label">Porcentaje de Descuento:</label>
+            <input type="number" id="descuento" name="descuento" class="form-control" placeholder="Descuento en porcentaje" min="0" step="0.01">
+        </div>
+        
+        <div class="mb-3" id="precio_descuento_container" style="display:none;">
+            <label for="precio_descuento" class="form-label">Precio con Descuento:</label>
+            <input type="text" id="precio_descuento" name="precio_desc" class="form-control" readonly>
+        </div>
+
+        <!-- Campo para el 2X1-------------------------------------------------- -->
+        <div class="mb-3" id="precio_2x1_container" style="display:none;">
+            <label for="precio_2x1" class="form-label">Precio 2x1 (Solo vista):</label>
+            <input type="text" id="precio_2x1" name="precio_2x1" class="form-control" readonly>
+        </div>
+        
+       
+        <div class="mb-3" id="precio_con_promocion_container" style="display:none;">
+            <label for="precio_con_promocion" class="form-label">Precio con Promoción:</label>
+            <input type="text" id="precio_con_promocion" name="precio_con_promocion" class="form-control" placeholder="Ingrese el precio con promoción">
+        </div>
+        <!-- Campos PAQUETE REBAJADO ----------------------------------------------------------->
+        <div id="paquete_rebajado_container" style="display: none;" >
+            <div class="mb-3">
+                <label for="cantidad" class="form-label">Cantidad:</label>
+                <input type="number" name="cantidad" id="cantidad" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="total_calculado" class="form-label">Total Calculado (Cantidad x Precio):</label>
+                <input type="text" id="total_calculado" class="form-control" readonly>
+            </div>
+            <div class="mb-3">
+                <label for="precio_paquete" class="form-label">Precio con Promoción:</label>
+                <input type="number" name="precio_paquete" id="precio_paquete" class="form-control">
+            </div>
+        </div>
+
+
+        <!-- Campos SEGUNDO PRODUCTO BARATO ----------------------------------------------------------->    
+        <div id="primer_producto_container" style="display: none;" class="mb-3">
+            <label for="primer_producto" class="form-label">Primer Producto con la Promoción:</label>
+            <input type="number" id="primer_producto" class="form-control" placeholder="Precio del primer producto">
+        </div>
+        
+        <div id="segundo_producto_container" style="display: none;" class="mb-3">
+            <label for="segundo_producto" class="form-label">Segundo Producto con la Promoción:</label>
+            <input type="number" id="segundo_producto" class="form-control" placeholder="Precio del segundo producto">
+        </div>
+        
+        <div id="total_container" style="display: none;" class="mb-3">
+            <label for="total" class="form-label">Total:</label>
+            <input type="number" id="total" name="precio_seg" class="form-control" readonly>
+        </div>
+
+
+        <!-- Campos principales ----------------------------------------------------------->
+        <div class="mb-3">
+            <label for="stock" class="form-label">Stock:</label>
+            <input type="number" name="stock" id="stock" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="estado" class="form-label">Estado:</label>
+            <select name="estado" id="estado" class="form-select" required>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="foto_producto" class="form-label">Imagen de la Promoción:</label>
+            <input type="file" class="form-control" id="foto_producto" name="foto_producto" accept="image/*">
+            <div class="mt-2 text-center">
+                <img id="previewFoto" src="" alt="Vista previa" class="img-fluid rounded" style="max-width: 300px; display: none;">
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Guardar Promoción</button>
+            <a href="/promociones/" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Cargar los detalles dinámicamente al seleccionar un producto
+        $('#id_producto').change(function() {
+            const productoId = $(this).val();
+            if (productoId) {
+                $.get(`/promociones/detalles/${productoId}`, function(data) {
+                    $('#detalle').empty().append('<option value="">Seleccione un tamaño y color</option>');
+                    data.forEach(detalle => {
+                        $('#detalle').append(
+                            `<option value="${detalle.id}" data-precio="${detalle.precio}">${detalle.tamanio_color}</option>`
+                        );
+                    });
+                });
+            } else {
+                // Si no hay producto seleccionado, limpiar los selects
+                $('#detalle').empty().append('<option value="">Seleccione un tamaño y color</option>');
+                $('#precio').val('');
+            }
+        });
+
+        // Mostrar el precio del detalle seleccionado
+        $('#detalle').change(function() {
+            const precio = $(this).find(':selected').data('precio');
+            $('#precio').val(precio || '');
+        });
+    });
+
+    $('#id_producto').change(function() {
+    const productoId = $(this).val();
+    if (productoId) {
+        $.get(`/promociones/detalles/${productoId}`, function(data) {
+            $('#detalle').empty().append('<option value="">Seleccione un tamaño y color</option>');
+            data.forEach(detalle => {
+                $('#detalle').append(
+                    `<option value="${detalle.id}" data-precio="${detalle.precio}">
+                        ${detalle.tamanio_color} - S/ ${detalle.precio.toFixed(2)}
+                    </option>`
+                );
+            });
+        });
+    }
+});
+
+// Actualizar evento para mostrar el precio
+$('#detalle').change(function() {
+    const precio = $(this).find(':selected').data('precio');
+    $('#precio').val(precio ? 'S/ ' + parseFloat(precio).toFixed(2) : '');
+});
+
+    $(document).ready(function() {
+        // Detectar el cambio en el tipo de promoción
+        $('#tipo').change(function() {
+            var tipoSeleccionado = $(this).val(); // Obtener el valor del tipo seleccionado
+
+            // Ocultar todos los contenedores específicos
+            $('#precio_oferta_container').hide();
+            $('#descuento_container').hide();
+            $('#precio_descuento_container').hide();
+            $('#precio_2x1_container').hide();
+            $('#precio_con_promocion_container').hide();
+            $('#paquete_rebajado_container').hide();
+            $('#primer_producto_container').hide();
+            $('#segundo_producto_container').hide();
+            $('#total_container').hide();
+
+            // Limpiar los valores de los campos
+            $('#precio_2x1').val('');
+            $('#precio_con_promocion').val('');
+            $('#total_calculado').val('');
+            $('#cantidad').val('');
+            $('#primer_producto').val('');
+            $('#segundo_producto').val('');
+            $('#total').val('');
+
+            // Mostrar los campos según el tipo seleccionado
+            if (tipoSeleccionado === 'Oferta') {
+                $('#precio_oferta_container').show();
+            } else if (tipoSeleccionado === 'Descuento') {
+                $('#descuento_container').show();
+                $('#precio_descuento_container').show();
+            } else if (tipoSeleccionado === '2x1') {
+                $('#precio_2x1_container').show();
+                $('#precio_con_promocion_container').show();
+
+                var precio = parseFloat($('#precio').val()); // Obtiene el precio actual
+
+                if (precio) {
+                    var precio2x1 = precio * 2; // Multiplica el precio por 2
+                    $('#precio_2x1').val(precio2x1.toFixed(2)); // Muestra el precio calculado en el campo solo lectura
+                }
+            } else if (tipoSeleccionado === 'Paquete Rebajado') {
+                $('#paquete_rebajado_container').show();
+
+                // Calcular el total dinámicamente
+                $('#cantidad').off('keyup').on('keyup', function() {
+                    var cantidad = parseFloat($(this).val()) || 0;
+                    var precio = parseFloat($('#precio').val()) || 0;
+
+                    if (cantidad && precio) {
+                        var totalCalculado = cantidad * precio;
+                        $('#total_calculado').val(totalCalculado.toFixed(2)); // Mostrar el total calculado
+                    } else {
+                        $('#total_calculado').val('');
+                    }
+                });
+            } else if (tipoSeleccionado === 'Segundo Producto Barato') {
+                $('#primer_producto_container').show();
+                $('#segundo_producto_container').show();
+                $('#total_container').show();
+
+                // Calcular el total automáticamente
+                $('#primer_producto, #segundo_producto').off('keyup').on('keyup', function() {
+                    var primerPrecio = parseFloat($('#primer_producto').val()) || 0;
+                    var segundoPrecio = parseFloat($('#segundo_producto').val()) || 0;
+                    var total = primerPrecio + segundoPrecio;
+                    $('#total').val(total.toFixed(2)); // Mostrar el total en el campo de solo lectura
+                });
+            }
+        });
+
+        // Calcular el precio con descuento
+        $('#descuento').off('keyup').on('keyup', function() {
+            var porcentaje = parseFloat($(this).val()) || 0;
+            var precio = parseFloat($('#precio').val()) || 0;
+
+            if (precio && porcentaje) {
+                var descuento = (precio * porcentaje) / 100;
+                var precioConDescuento = precio - descuento;
+                $('#precio_descuento').val(precioConDescuento.toFixed(2)); // Mostrar el precio con descuento
+            } else {
+                $('#precio_descuento').val('');
+            }
+        });
+    });
+
+    document.getElementById("foto_producto").addEventListener("change", function(event) {
+    const input = event.target;
+    const preview = document.getElementById("previewFoto");
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = "block";
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = "none";
+    }
+});
+
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    const nombre = document.getElementById('nombre').value;
+    const tipo = document.getElementById('tipo').value;
+    
+    if (!nombre || !tipo) {
+        e.preventDefault();
+        alert('Nombre y tipo son campos obligatorios');
+    }
+});
+</script>
+{% endblock %}

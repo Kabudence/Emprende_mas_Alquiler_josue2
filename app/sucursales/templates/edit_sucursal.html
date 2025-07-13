@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Sucursal{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <div class="container" style="max-width: 600px;">
+            <h1 class="mb-4 text-center">Editar Sucursal</h1>
+            <form method="POST" action="{{ url_for('sucursales.editar_sucursal', id=sucursal.ID) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3 row">
+                    <label for="nombre_negocio" class="form-label col-md-6">Negocio</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="nombre_negocio" name="nombre_negocio" value="{{ negocio.nombre }}" readonly>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="nombre_sucursal" class="form-label col-md-6">Nombre de Sucursal</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="nombre_sucursal" name="nombre_sucursal" value="{{ sucursal.NombreSucursal }}" required>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="distrito" class="form-label col-md-6">Distrito</label>
+                    <div class="col-md-6">
+                        <select class="form-control" id="distrito" name="distrito" required>
+                            {% for distrito in distritos %}
+                            <option value="{{ distrito[1] }}" {% if distrito[1] == sucursal[3] %}selected{% endif %}>{{ distrito[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="direccion" class="form-label col-md-6">Dirección</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="direccion" name="direccion" value="{{ sucursal.Direccion }}" required>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="correo" class="form-label col-md-6">Correo</label>
+                    <div class="col-md-6">
+                        <input type="email" class="form-control" id="correo" name="correo" value="{{ sucursal.Correo}}">
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="celular" class="form-label col-md-6">Celular</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="celular" name="celular" value="{{ sucursal.Celular }}" required>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="latitud" class="form-label col-md-6">Latitud</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="latitud" name="latitud" value="{{ sucursal.Latitud }}">
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="longitud" class="form-label col-md-6">Longitud</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="longitud" name="longitud" value="{{ sucursal.Longitud  }}">
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="estado" class="form-label col-md-6">Estado</label>
+                    <div class="col-md-6">
+                        <select class="form-control" id="estado" name="estado" required>
+                            <option value="Activo" {% if sucursal.Estado == 'Activo' %}selected{% endif %}>Activo</option>
+                            <option value="Inactivo" {% if sucursal.Estado == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                    <a href="/sucursales" class="btn btn-secondary">Atrás</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

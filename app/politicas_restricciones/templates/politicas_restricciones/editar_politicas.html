@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Política Interna{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Editar Política Interna</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('politicas_restricciones.editar', id=politica.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label for="nombre_politica" class="form-label">Nombre de la Política</label>
+                <input type="text" class="form-control" id="nombre_politica" name="nombre_politica" value="{{ politica.nombre_politica }}" placeholder="Ingrese el nombre de la política" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="4" placeholder="Ingrese la descripción de la política" required>{{ politica.descripcion }}</textarea>
+            </div>
+
+            <!-- Fecha de Creación (solo visualización, no editable) -->
+            <div class="mb-3">
+                <label for="fecha_creacion" class="form-label">Fecha de Creación</label>
+                <input type="text" class="form-control" id="fecha_creacion" name="fecha_creacion" value="{{ politica.fecha_creacion }}" readonly required>
+            </div>
+
+            <!-- Fecha de Implementación (solo visualización, no editable) -->
+            <div class="mb-3">
+                <label for="fecha_implementacion" class="form-label">Fecha de Implementación</label>
+                <input type="text" class="form-control" id="fecha_implementacion" name="fecha_implementacion" value="{{ politica.fecha_implementacion }}" readonly required>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Cerrar el menú hamburguesa cuando se carga la página de editar política
+    document.addEventListener("DOMContentLoaded", function() {
+        const menu = document.getElementById('navbarNav');
+        const menuToggle = document.getElementById('navbarToggle');
+
+        // Si el menú está abierto, cerrarlo
+        if (menu.classList.contains('show')) {
+            menu.classList.remove('show');
+        }
+
+        // Si el menú estaba abierto y se hace clic en el botón, cerrarlo
+        menuToggle.addEventListener('click', function() {
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+            }
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Locales</h1>
+<a href="{{ url_for('locales.crear_local') }}" class="btn btn-primary">Nuevo Local</a>
+
+<table class="table">
+    <thead>
+        <tr>
+           
+            <th>Dirección</th>
+            <th>Número</th>
+            <th>Usuario</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for local in locales %}
+        <tr>
+            
+            <td>{{ local.direccion }}</td>
+            <td>{{ local.numero }}</td>
+            <td>{{ local.usuario.nombre }}</td>
+            <td>
+                <a href="{{ url_for('locales.editar_local', id=local.id) }}" class="btn btn-sm btn-warning">Editar</a>
+                <a href="{{ url_for('locales.eliminar_local', id=local.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro?')">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ titulo }}</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    
+    <div class="form-group">
+        {{ form.latitud.label }}
+        {{ form.latitud(class="form-control") }}
+        {% if form.latitud.errors %}
+            <div class="text-danger">
+                {% for error in form.latitud.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.longitud.label }}
+        {{ form.longitud(class="form-control") }}
+        {% if form.longitud.errors %}
+            <div class="text-danger">
+                {% for error in form.longitud.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.numero.label }}
+        {{ form.numero(class="form-control") }}
+        {% if form.numero.errors %}
+            <div class="text-danger">
+                {% for error in form.numero.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.direccion.label }}
+        {{ form.direccion(class="form-control", placeholder="Ej: Calle 123, Distrito XYZ, Provincia ABC, Departamento DEF") }}
+        <small class="form-text text-muted">
+            Ingrese la dirección completa: calle + distrito + provincia + departamento.
+        </small>
+        {% if form.direccion.errors %}
+            <div class="text-danger">
+                {% for error in form.direccion.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.usuario_id.label }}
+        {{ form.usuario_id(class="form-control") }}
+        {% if form.usuario_id.errors %}
+            <div class="text-danger">
+                {% for error in form.usuario_id.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{{ url_for('locales.listar_locales') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

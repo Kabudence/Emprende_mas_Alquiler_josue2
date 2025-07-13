@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Listado de Reclamos{% endblock %}
+
+{% block content %}
+    <h2 class="mb-3">📌 Listado de Reclamos</h2>
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ url_for('reclamos.crear_reclamo') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Registrar Nuevo Reclamo
+        </a>
+    </div>
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombres Completos</th>
+                <th>N° Documento</th>
+                <th>Motivo</th>
+                <th>Fecha de Comunicación</th>
+                <th>
+                    <select id="filtroTipo" class="form-select form-select-sm">
+                        <option value="todos">Tipo</option>
+                        <option value="Reclamo">Reclamo</option>
+                        <option value="Queja">Queja</option>
+                    </select>
+                </th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tablaReclamos">
+            {% for reclamo in reclamos %}
+            <tr data-tipo="{{ reclamo[14] }}">
+                <td>{{ reclamo[3] }}</td>
+                <td>{{ reclamo[2] }}</td>
+                <td>{{ reclamo[15] }}</td>
+                <td>{{ reclamo[5] }}</td>
+                <td class="tipo-reclamo">
+                    {% if reclamo[14] == 'Reclamo' %}
+                        <span class="badge bg-primary">Reclamo</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Queja</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-info btn-ver" 
+                    
+                        data-tipo_documento="{{ reclamo[1] }}"
+                        data-numero_documento="{{ reclamo[2] }}"
+                        data-nombres="{{ reclamo[3] }}"
+                        data-apellidos="{{ reclamo[4] }}"
+                        data-fecha="{{ reclamo[5] }}"
+                        data-tipo_respuesta="{{ reclamo[6] }}"
+                        data-direccion="{{ reclamo[7] }}"
+                        data-telefono="{{ reclamo[8] }}"
+                        data-email="{{ reclamo[9] }}"
+                        data-orden_compra="{{ reclamo[10] }}"
+                        data-bien_contratado="{{ reclamo[11] }}"
+                        data-monto_reclamado="{{ reclamo[12] }}"
+                        data-descripcion="{{ reclamo[13] }}"
+                        data-tipo="{{ reclamo[14] }}"
+                        data-motivo="{{ reclamo[15] }}"
+                        data-detalle_reclamo="{{ reclamo[16] }}"
+                        data-pedido="{{ reclamo[17] }}"
+                        data-imagen="{{ reclamo[18] if reclamo[18] else ''}}"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalReclamo">
+                        <i class="fas fa-eye"></i> 
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Modal de Visualización -->
+    <div class="modal fade" id="modalReclamo" tabindex="-1" aria-labelledby="modalReclamoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalReclamoLabel">Detalles del Reclamo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Documento:</label>
+                                <input type="text" class="form-control" id="detalle_tipo_documento" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">N° Documento:</label>
+                                <input type="text" class="form-control" id="detalle_numero_documento" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombres Completos:</label>
+                                <input type="text" class="form-control" id="detalle_nombres_completos" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Apellidos:</label>
+                                <input type="text" class="form-control" id="detalle_apellidos" readonly>
+                            </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Fecha:</label>
+                            <input type="text" class="form-control" id="detalle_fecha" readonly>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Tipo de Respuesta:</label>
+                            <input type="text" class="form-control" id="detalle_tipo_respuesta" readonly>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Dirección:</label>
+                            <input type="text" class="form-control" id="detalle_direccion" readonly>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono:</label>
+                                <input type="text" class="form-control" id="detalle_telefono" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email:</label>
+                                <input type="text" class="form-control" id="detalle_email" readonly>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-3">📌 Información General</h5>
+
+                        <div class="mt-2">
+                            <label class="form-label">Orden de Compra:</label>
+                            <input type="text" class="form-control" id="detalle_orden_compra" readonly>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Bien Contratado:</label>
+                            <input type="text" class="form-control" id="detalle_bien_contratado" readonly>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Monto Reclamado:</label>
+                            <input type="text" class="form-control" id="detalle_monto_reclamado" readonly>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Descripción:</label>
+                            <input type="text" class="form-control" id="detalle_descripcion" readonly>
+                        </div>
+
+                        <h5 class="mt-3">📌 Detalle del Reclamo</h5>
+
+                        <div class="mt-2">
+                            <label class="form-label">Tipo:</label>
+                            <input type="text" class="form-control" id="detalle_tipo" readonly>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Motivo:</label>
+                            <input type="text" class="form-control" id="detalle_motivo" readonly>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Detalle del Reclamo:</label>
+                            <textarea class="form-control" id="detalle_detalle_reclamo" rows="2" readonly></textarea>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="form-label">Pedido:</label>
+                            <textarea class="form-control" id="detalle_pedido" rows="2" readonly></textarea>
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <label class="form-label">Imagen Adjunta:</label>
+                            <div>
+                                <img id="detalle_imagen" src="" class="img-fluid rounded" style="max-width: 300px; display: none;">
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.getElementById("filtroTipo").addEventListener("change", function() {
+            let filtro = this.value.toLowerCase(); 
+            let filas = document.querySelectorAll("#tablaReclamos tr");
+
+            filas.forEach(fila => {
+                let tipo = fila.getAttribute("data-tipo").trim(); 
+
+                if (filtro === "todos" || tipo.toLowerCase() === filtro) {
+                    fila.style.display = "";
+                } else {
+                    fila.style.display = "none";
+                }
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let botonesVer = document.querySelectorAll(".btn-ver");
+
+            botonesVer.forEach(boton => {
+                boton.addEventListener("click", function() {
+    console.log("Datos del botón:", this.dataset);
+    document.getElementById("detalle_tipo_documento").value = this.getAttribute("data-tipo_documento");
+    document.getElementById("detalle_numero_documento").value = this.getAttribute("data-numero_documento");
+    document.getElementById("detalle_nombres_completos").value = this.getAttribute("data-nombres");
+    document.getElementById("detalle_apellidos").value = this.getAttribute("data-apellidos");
+    document.getElementById("detalle_fecha").value = this.getAttribute("data-fecha");
+    document.getElementById("detalle_tipo_respuesta").value = this.getAttribute("data-tipo_respuesta");
+    document.getElementById("detalle_direccion").value = this.getAttribute("data-direccion");
+    document.getElementById("detalle_telefono").value = this.getAttribute("data-telefono");
+    document.getElementById("detalle_email").value = this.getAttribute("data-email");
+    document.getElementById("detalle_orden_compra").value = this.getAttribute("data-orden_compra");
+    document.getElementById("detalle_bien_contratado").value = this.getAttribute("data-bien_contratado");
+    document.getElementById("detalle_monto_reclamado").value = this.getAttribute("data-monto_reclamado");
+    document.getElementById("detalle_descripcion").value = this.getAttribute("data-descripcion");
+    document.getElementById("detalle_tipo").value = this.getAttribute("data-tipo");
+    document.getElementById("detalle_motivo").value = this.getAttribute("data-motivo");
+    document.getElementById("detalle_detalle_reclamo").value = this.getAttribute("data-detalle_reclamo");
+    document.getElementById("detalle_pedido").value = this.getAttribute("data-pedido");
+    
+    let imagen = this.getAttribute("data-imagen");
+    let imgTag = document.getElementById("detalle_imagen");
+    if (imagen && imagen !== "None" && imagen.trim() !== "") {
+        imgTag.src = "/static/uploads/libroreclamaciones/" + imagen;
+        imgTag.style.display = "block";
+    } else {
+        imgTag.style.display = "none";
+    }
+});
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Promoción</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">Editar Promoción</h1>
+        <form action="/promociones/editar/{{ promocion[0] }}" method="post" class="p-4 bg-white shadow rounded" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <!-- Campo Nombre -->
+            <!-- Campo Nombre -->
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre de Promoción:</label>
+                <input type="text" name="nombre" id="nombre" class="form-control" value="{{ promocion[1] }}" required>
+            </div>
+
+            <!-- Campo Descripción -->
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción:</label>
+                <textarea name="descripcion" id="descripcion" class="form-control">{{ promocion[2] }}</textarea>
+            </div>
+
+            <!-- Campo para la foto -->
+            <div class="mb-3">
+                <label for="foto_producto" class="form-label">Imagen del Producto:</label>
+                <input type="file" name="foto_producto" id="foto_producto" class="form-control" accept="image/*">
+                {% if promocion[14] %}
+                    <div class="mt-2">
+                        <small>Imagen actual:</small>
+                        <img src="{{ url_for('static', filename='uploads/promociones/' + promocion[14]) }}" 
+                             alt="Imagen actual" class="img-thumbnail mt-2" style="max-width: 200px;">
+                        <input type="hidden" name="foto_actual" value="{{ promocion[14] }}">
+                    </div>
+                {% endif %}
+            </div>
+             <!-- Campo Precio (solo lectura) -->
+             <div class="mb-3">
+                <label for="precio" class="form-label">Precio:</label>
+                <input type="text" id="precio" class="form-control" value="{{ promocion[6] }}" readonly>
+            </div>
+            <!-- Tipo de Promoción -->
+            <div class="mb-3">
+                <label for="tipo" class="form-label">Tipo de Promoción:</label>
+                <select name="tipo" id="tipo" class="form-select" required>
+                    <option value="Oferta" {% if promocion[3] == 'Oferta' %}selected{% endif %}>Oferta</option>
+                    <option value="Descuento" {% if promocion[3] == 'Descuento' %}selected{% endif %}>Descuento</option>
+                    <option value="2x1" {% if promocion[3] == '2x1' %}selected{% endif %}>2x1</option>
+                    <option value="Paquete Rebajado" {% if promocion[3] == 'Paquete Rebajado' %}selected{% endif %}>Paquete Rebajado</option>
+                    <option value="Segundo Producto Barato" {% if promocion[3] == 'Segundo Producto Barato' %}selected{% endif %}>Segundo Producto Barato</option>
+                </select>
+            </div>
+
+            <!-- Campos dinámicos -->
+            <div id="oferta_container" style="display: none;">
+                <div class="mb-3">
+                    <label for="precio_oferta" class="form-label">Precio Oferta:</label>
+                    <input type="number" name="precio_oferta" id="precio_oferta" class="form-control" value="{{ promocion[7] }}">
+                </div>
+            </div>
+
+           <!-- Para Descuento -->
+            <div id="descuento_container" style="display: none;">
+                <div class="mb-3">
+                    <label for="descuento" class="form-label">Porcentaje de Descuento (%):</label>
+                    <input type="number" name="descuento" id="descuento" class="form-control" value="{{ promocion[9] }}">
+                </div>
+                <div class="mb-3">
+                    <label for="precio_desc" class="form-label">Precio con Descuento:</label>
+                    <input type="text" id="precio_desc" class="form-control" value="" readonly>
+                </div>
+            </div>
+
+            <div id="dos_por_uno_container" style="display: none;">
+                <div class="mb-3">
+                    <label for="precio_2x1" class="form-label">Precio 2x1:</label>
+                    <input type="text" id="precio_2x1" class="form-control" value="" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="precio_con_promocion" class="form-label">Precio con Promoción:</label>
+                    <input type="number" name="precio_2x1" id="precio_con_promocion" class="form-control" value="{{ promocion[8] }}">
+                </div>
+            </div>
+
+            <!-- Para Paquete Rebajado -->
+            <div id="paquete_rebajado_container" style="display: none;">
+                <div class="mb-3">
+                    <label for="cantidad" class="form-label">Cantidad:</label>
+                    <input type="number" name="cantidad" id="cantidad" class="form-control" value="{{ promocion[10] }}">
+                </div>
+                <div class="mb-3">
+                    <label for="total_calculado" class="form-label">Total Calculado (Cantidad x Precio):</label>
+                    <input type="text" id="total_calculado" class="form-control" value="" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="precio_paquete" class="form-label">Precio con la Promoción:</label>
+                    <input type="number" name="precio_paquete" id="precio_paquete" class="form-control" value="{{ promocion[11] }}">
+                </div>
+            </div>
+
+            <!-- Para Segundo Producto Barato -->
+            <div id="segundo_producto_container" style="display: none;">
+                <div class="mb-3">
+                    <label for="primer_producto" class="form-label">Precio del Primer Producto con la Promoción:</label>
+                    <input type="number" name="primer_producto" id="primer_producto" class="form-control" value="">
+                </div>
+                <div class="mb-3">
+                    <label for="segundo_producto" class="form-label">Precio del Segundo Producto con la Promoción:</label>
+                    <input type="number" name="segundo_producto" id="segundo_producto" class="form-control" value="">
+                </div>
+                <div class="mb-3">
+                    <label for="total" class="form-label">Total:</label>
+                    <input type="text" name="total" id="total" class="form-control" value="" readonly>
+                </div>
+            </div>
+
+            <!-- Stock -->
+            <div class="mb-3">
+                <label for="stock" class="form-label">Stock:</label>
+                <input type="number" name="stock" id="stock" class="form-control" value="{{ promocion[4] }}" required>
+            </div>
+
+            <!-- Estado -->
+            <div class="mb-3">
+                <label for="estado" class="form-label">Estado:</label>
+                <select name="estado" id="estado" class="form-select" required>
+                    <option value="Activo" {% if promocion[5] == 'Activo' %}selected{% endif %}>Activo</option>
+                    <option value="Inactivo" {% if promocion[5] == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                <a href="/" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const tipo = document.getElementById("tipo");
+            const ofertaContainer = document.getElementById("oferta_container");
+            const descuentoContainer = document.getElementById("descuento_container");
+            const dosPorUnoContainer = document.getElementById("dos_por_uno_container");
+            const paqueteRebajadoContainer = document.getElementById("paquete_rebajado_container");
+            const segundoProductoContainer = document.getElementById("segundo_producto_container");
+    
+            const precioInput = document.getElementById("precio"); // Precio base
+            const precio2x1Input = document.getElementById("precio_2x1"); // Precio 2x1
+            const descuentoInput = document.getElementById("descuento"); // Porcentaje de descuento
+            const precioDescInput = document.getElementById("precio_desc"); // Precio con descuento
+            const cantidadInput = document.getElementById("cantidad"); // Cantidad para Paquete Rebajado
+            const totalCalculadoInput = document.getElementById("total_calculado"); // Total calculado
+            const primerProductoInput = document.getElementById("primer_producto"); // Primer producto
+            const segundoProductoInput = document.getElementById("segundo_producto"); // Segundo producto
+            const totalInput = document.getElementById("total"); // Total para Segundo Producto Barato
+    
+            // Función para ocultar todos los contenedores
+            function ocultarTodosLosContenedores() {
+                ofertaContainer.style.display = "none";
+                descuentoContainer.style.display = "none";
+                dosPorUnoContainer.style.display = "none";
+                paqueteRebajadoContainer.style.display = "none";
+                segundoProductoContainer.style.display = "none";
+            }
+    
+            // Función para actualizar los campos según el tipo de promoción
+            function actualizarCampos() {
+                ocultarTodosLosContenedores();
+    
+                if (tipo.value === "Oferta") {
+                    ofertaContainer.style.display = "block";
+                } else if (tipo.value === "Descuento") {
+                    descuentoContainer.style.display = "block";
+                    calcularDescuento(); // Inicializar el cálculo del descuento
+                } else if (tipo.value === "2x1") {
+                    dosPorUnoContainer.style.display = "block";
+                    calcularPrecio2x1(); // Inicializar el cálculo del precio 2x1
+                } else if (tipo.value === "Paquete Rebajado") {
+                    paqueteRebajadoContainer.style.display = "block";
+                    calcularTotalPaquete(); // Inicializar el cálculo del total para paquete
+                } else if (tipo.value === "Segundo Producto Barato") {
+                    segundoProductoContainer.style.display = "block";
+                    calcularTotalSegundoProducto(); // Inicializar el cálculo del total
+                }
+            }
+    
+            // Función para calcular el descuento dinámicamente
+            function calcularDescuento() {
+                const precio = parseFloat(precioInput.value) || 0;
+                const descuento = parseFloat(descuentoInput.value) || 0;
+                precioDescInput.value = (precio - (precio * descuento / 100)).toFixed(2);
+            }
+    
+            // Función para calcular el precio 2x1 dinámicamente
+            function calcularPrecio2x1() {
+                const precio = parseFloat(precioInput.value) || 0;
+                precio2x1Input.value = (precio * 2).toFixed(2);
+            }
+    
+            // Función para calcular el total del paquete dinámicamente
+            function calcularTotalPaquete() {
+                const precio = parseFloat(precioInput.value) || 0;
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+                totalCalculadoInput.value = (cantidad * precio).toFixed(2);
+            }
+    
+            // Función para calcular el total para Segundo Producto Barato
+            function calcularTotalSegundoProducto() {
+                const primerProducto = parseFloat(primerProductoInput.value) || 0;
+                const segundoProducto = parseFloat(segundoProductoInput.value) || 0;
+                totalInput.value = (primerProducto + segundoProducto).toFixed(2);
+                
+            }
+    
+            // Agregar listeners de eventos solo una vez
+            descuentoInput?.addEventListener("input", calcularDescuento);
+            cantidadInput?.addEventListener("input", calcularTotalPaquete);
+            primerProductoInput?.addEventListener("input", calcularTotalSegundoProducto);
+            segundoProductoInput?.addEventListener("input", calcularTotalSegundoProducto);
+    
+            // Inicializar los campos al cargar la página
+            actualizarCampos();
+    
+            // Actualizar los campos dinámicos al cambiar el tipo de promoción
+            tipo.addEventListener("change", actualizarCampos);
+        });
+    </script>
+    
+    
+</body>
+</html>

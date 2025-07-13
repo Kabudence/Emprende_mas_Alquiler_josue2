@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Sliders{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Lista de Sliders</h1>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <form action="{{ url_for('slider.index') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar slider..." value="{{ busqueda }}" aria-label="Buscar slider">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('slider.agregar') }}" class="btn btn-outline-primary shadow-sm">
+            <i class="fas fa-plus-circle"></i> Agregar Nuevo Slider
+        </a>
+    </div>
+</div>
+
+{% if sliders %}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle shadow-sm">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Título</th>
+                <th>Imagen</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for slider in sliders %}
+            <tr class="text-center">
+                <td>{{ slider.titulo }}</td>
+                <td>
+                    {% if slider.imagen %}
+                    <img src="{{ url_for('static', filename='uploads/servicios/' + slider.imagen) }}"
+                         alt="{{ slider.imagen }}" 
+                         width="100">
+                    {% else %}
+                    <span>No imagen</span>
+                    {% endif %}
+                </td>
+                <td>{{ slider.estado }}</td>
+                <td>
+                    <button class="btn btn-outline-warning btn-sm btn-edit" data-id="{{ slider.id }}" data-titulo="{{ slider.titulo }}" data-imagen="{{ slider.imagen }}" data-estado="{{ slider.estado }}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <form action="{{ url_for('slider.eliminar', id=slider.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este slider?')">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p>No hay sliders disponibles.</p>
+{% endif %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editButtons = document.querySelectorAll('.btn-edit');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                // Redirige a la URL correcta
+                window.location.href = `/slider/editar/${id}`;
+            });
+        });
+    });
+</script>
+{% endblock %}

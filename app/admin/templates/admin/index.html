@@ -1,0 +1,116 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Listado de Rubros{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="my-4">Listado de Rubros</h1>
+  
+  <!-- Barra de Búsqueda -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="input-group shadow-sm">
+        <input type="text" 
+               id="searchInput" 
+               class="form-control" 
+               placeholder="Buscar por nombre o descripción..."
+               aria-label="Buscar rubros">
+        <span class="input-group-text bg-transparent">
+          <i class="fas fa-search"></i>
+        </span>
+      </div>
+    </div>
+    <div class="col-md-6 text-end">
+      <a href="{{ url_for('admin.crear') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Crear Rubro
+      </a>
+    </div>
+  </div>
+
+  <!-- Tabla de Rubros -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>N°</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody">
+        {% for rubro in rubros %}
+        <tr>
+          <td>{{ rubro.id }}</td>
+          <td>{{ rubro.nombre }}</td>
+          <td class="descripcion">{{ rubro.descripcion or 'Sin descripción' }}</td>
+
+          <td>
+            <a href="{{ url_for('admin.editar', id=rubro.id) }}" class="btn btn-warning btn-sm">
+              <i class="fas fa-edit"></i>
+            </a>
+            <form action="{{ url_for('admin.eliminar', id=rubro.id) }}" method="POST" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Script para Búsqueda Dinámica -->
+<script>
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    fetch(`{{ url_for('admin.rubros_search') }}?q=${encodeURIComponent(searchTerm)}`)
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            data.forEach(rubro => {
+                html += `
+                    <tr>
+                        <td>${rubro.id}</td>
+                        <td>${rubro.nombre}</td>
+                        <td class="descripcion">${highlightMatches(rubro.descripcion, searchTerm)}</td>
+                        <td>
+                            <a href="/admin/editar/${rubro.id}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="/admin/eliminar/${rubro.id}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>`;
+            });
+            document.getElementById('resultsBody').innerHTML = html;
+        });
+});
+
+function highlightMatches(text, term) {
+    if (!term || !text) return text;
+    const regex = new RegExp(`(${term})`, 'gi');
+    return text.replace(regex, '<mark class="bg-warning">$1</mark>');
+}
+</script>
+
+<style>
+.mark {
+    background-color: #ffec99;
+    padding: 0 2px;
+    border-radius: 3px;
+}
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+</style>
+
+{% endblock %}

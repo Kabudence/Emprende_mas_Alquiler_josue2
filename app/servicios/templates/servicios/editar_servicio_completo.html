@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Servicio Completo{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="h3 my-4">Editar Servicio Completo</h1>
+  
+  <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- TÍTULO -->
+    <div class="mb-3">
+      <label class="form-label">Título de Publicación</label>
+      <input type="text"
+             class="form-control"
+             name="titulo_publicacion"
+             value="{{ servicio.titulo_publicacion }}"
+             required>
+    </div>
+
+    <!-- LOCALES -->
+<div class="mb-3">
+  <label class="form-label">Locales disponibles</label>
+  {% if locales %}
+    {% for loc in locales %}
+      <div class="form-check">
+        <input class="form-check-input"
+               type="checkbox"
+               name="locales[]"
+               value="{{ loc.id }}"
+               id="loc{{ loc.id }}"
+               {% if loc.id in servicio.locales|map(attribute='id')|list %}checked{% endif %}>
+        <label class="form-check-label" for="loc{{ loc.id }}">
+          {{ loc.direccion }}
+        </label>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-warning">
+      No tienes locales registrados. <a href="#">Agregar local</a>
+    </div>
+  {% endif %}
+</div>
+
+
+    <!-- ESTADO / TIPO SERVICIO -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Estado</label>
+        <select class="form-select" name="estado">
+          <option value="Activo"   {% if servicio.estado=='Activo'   %}selected{% endif %}>Activo</option>
+          <option value="Inactivo" {% if servicio.estado=='Inactivo' %}selected{% endif %}>Inactivo</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Tipo de Servicio</label>
+        <select class="form-select" name="tipo_servicio_id">
+          {% for ts in tipos_servicio %}
+            <option value="{{ ts.id_tipo_servicio }}"
+                    {% if ts.id_tipo_servicio==servicio.tipo_servicio_id %}selected{% endif %}>
+              {{ ts.nombre_servicio }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- IMAGEN PRINCIPAL -->
+    <div class="mb-3">
+      <label class="form-label">Imagen Principal</label>
+      <input type="file" class="form-control" name="imagen" id="imagen">
+      <div class="mt-2" id="previewImagen">
+        {% if servicio.imagen %}
+          <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.imagen) }}" class="img-thumbnail" style="max-width:200px;">
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- SUBTÍTULO 1 / DESCRIPCIÓN 1 -->
+    <div class="mb-3">
+      <label class="form-label">Subtítulo 1</label>
+      <textarea id="subtitulo1" class="form-control" name="subtitulo1" rows="2">{{ servicio.subtitulo1 }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Descripción 1</label>
+      <textarea id="descripcion1" class="form-control" name="descripcion1" rows="4">{{ servicio.descripcion1 }}</textarea>
+    </div>
+
+    
+
+   <!-- SUBTÍTULO 2 / DESCRIPCIÓN 2 -->
+   <div class="mb-3">
+    <label class="form-label">Subtítulo 2</label>
+    <textarea id="subtitulo2" class="form-control" name="subtitulo2" rows="2">{{ servicio.subtitulo2 }}</textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Descripción 2</label>
+    <textarea id="descripcion2" class="form-control" name="descripcion2" rows="4">{{ servicio.descripcion2 }}</textarea>
+  </div> 
+    
+<!-- MEDIA 1 -->
+<div class="mb-3">
+  <label class="form-label">Adjuntar Imagen/Video 1</label>
+  <select id="tipoMedio1" class="form-select mb-2" name="tipo_medio1">
+    <option value="imagen" {% if not servicio.media1 or not servicio.media1.startswith('http') %}selected{% endif %}>Imagen</option>
+    <option value="video" {% if servicio.media1 and servicio.media1.startswith('http') %}selected{% endif %}>Video</option>
+  </select>
+  <div id="grupoMedia1">
+    <input type="file" name="media1_imagen" id="media1Imagen" class="form-control" {% if servicio.media1 and servicio.media1.startswith('http') %}style="display:none"{% endif %}>
+    <input type="text" name="media1_video_url" id="media1Video" class="form-control mt-2" placeholder="https://youtu.be/..." value="{{ servicio.media1 if servicio.media1 and servicio.media1.startswith('http') else '' }}" {% if not servicio.media1 or not servicio.media1.startswith('http') %}style="display:none"{% endif %}>
+  </div>
+  <div id="preview1" class="mt-2">
+    {% if servicio.media1 and servicio.media1.startswith('http') %}
+      <iframe width="300" height="169" src="https://www.youtube.com/embed/{{ servicio.media1|youtube_id }}" frameborder="0" allowfullscreen></iframe>
+    {% elif servicio.media1 %}
+      <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.media1) }}" class="img-thumbnail" style="max-width:200px;">
+    {% endif %}
+  </div>
+</div>
+
+     
+
+
+    
+
+    <!-- SUBTÍTULO 3 / DESCRIPCIÓN 3 -->
+    <div class="mb-3">
+      <label class="form-label">Subtítulo 3</label>
+      <textarea id="subtitulo3" class="form-control" name="subtitulo3" rows="2">{{ servicio.subtitulo3 }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Descripción 3</label>
+      <textarea id="descripcion3" class="form-control" name="descripcion3" rows="4">{{ servicio.descripcion3 }}</textarea>
+    </div>
+
+    <!-- MEDIA 2 -->
+    <div class="mb-3">
+      <label class="form-label">Adjuntar Imagen/Video 2</label>
+      <select id="tipoMedio2" class="form-select mb-2" name="tipo_medio2">
+        <option value="imagen" {% if not servicio.media2 or not servicio.media2.startswith('http') %}selected{% endif %}>Imagen</option>
+        <option value="video" {% if servicio.media2 and servicio.media2.startswith('http') %}selected{% endif %}>Video</option>
+      </select>
+      <div id="grupoMedia2">
+        <input type="file" name="media2_imagen" id="media2Imagen" class="form-control" {% if servicio.media2 and servicio.media2.startswith('http') %}style="display:none"{% endif %}>
+        <input type="text" name="media2_video_url" id="media2Video" class="form-control mt-2" placeholder="https://youtu.be/..." value="{{ servicio.media2 if servicio.media2 and servicio.media2.startswith('http') else '' }}" {% if not servicio.media2 or not servicio.media2.startswith('http') %}style="display:none"{% endif %}>
+      </div>
+      <div id="preview2" class="mt-2">
+        {% if servicio.media2 and servicio.media2.startswith('http') %}
+          <iframe width="300" height="169" src="https://www.youtube.com/embed/{{ servicio.media2|youtube_id }}" frameborder="0" allowfullscreen></iframe>
+        {% elif servicio.media2 %}
+          <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.media2) }}" class="img-thumbnail" style="max-width:200px;">
+        {% endif %}
+      </div>
+    </div>
+    <!-- Precio -->
+<div class="mb-3">
+  <label for="precio" class="form-label">Precio</label>
+  <input type="number" name="precio" id="precio" step="0.01" class="form-control" value="{{ servicio.precio or '' }}" required>
+</div>
+
+<!-- Precio Oferta -->
+<div class="mb-3">
+  <label for="precio_oferta" class="form-label">Precio Oferta</label>
+  <input type="number" name="precio_oferta" id="precio_oferta" step="0.01" class="form-control" value="{{ servicio.precio_oferta or '' }}">
+</div>
+
+<!-- En venta -->
+<div class="mb-3">
+  <label class="form-label">¿En venta?</label>
+  <select name="en_venta" id="en_venta" class="form-select">
+      <option value="1" {% if servicio.en_venta %}selected{% endif %}>Sí</option>
+      <option value="0" {% if not servicio.en_venta %}selected{% endif %}>No</option>
+  </select>
+</div>
+
+    <!-- BOTONES -->
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    <a href="{{ url_for('servicios.completo_index') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Imagen Principal Preview
+    document.getElementById('imagen').addEventListener('change', function(){
+      const preview = document.getElementById('previewImagen'); preview.innerHTML = '';
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="max-width:200px;">`;
+        reader.readAsDataURL(this.files[0]);
+      }
+    });
+
+    const setupMedia = n => {
+      const tipo = document.getElementById(`tipoMedio${n}`),
+            file = document.getElementById(`media${n}Imagen`),
+            url  = document.getElementById(`media${n}Video`),
+            prev = document.getElementById(`preview${n}`);
+      tipo.addEventListener('change', () => {
+        file.style.display = tipo.value==='video' ? 'none' : 'block';
+        url.style.display  = tipo.value==='video' ? 'block': 'none';
+        prev.innerHTML = '';
+      });
+      file.addEventListener('change', function(){ prev.innerHTML=''; if(this.files&&this.files[0]){ const r=new FileReader(); r.onload=e=>prev.innerHTML=`<img src="${e.target.result}" class="img-thumbnail" style="max-width:200px;">`; r.readAsDataURL(this.files[0]); }});
+      url.addEventListener('input', () => {
+        const m = url.value.match(/(?:youtu\.be\/|v=|\/embed\/)([^&]+)/);
+        prev.innerHTML = m&&m[1]
+          ? `<iframe width="300" height="169" src="https://www.youtube.com/embed/${m[1]}" frameborder="0" allowfullscreen></iframe>`
+          : '';
+      });
+    };
+
+    setupMedia(1);
+    setupMedia(2);
+
+    tinymce.init({
+      selector: '#subtitulo1, #descripcion1, #subtitulo2, #descripcion2, #subtitulo3, #descripcion3',
+      height: 200,
+      menubar: false,
+      plugins: 'link lists textcolor',
+      toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | forecolor backcolor | bullist numlist',
+      branding: false
+    });
+  });
+</script>
+{% endblock %}

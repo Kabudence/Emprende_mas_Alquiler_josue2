@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Consulta de Clientes{% endblock %}
+
+{% block content %}
+<h2>Lista de Clientes Registrados</h2>
+<table class="table table-bordered table-hover align-middle shadow-sm">
+    <thead class="table-dark text">
+        <tr>
+            <th>Foto</th>
+            <th>Nombres Completos</th>
+            <th>Fecha</th>
+            <th>WhatsApp</th>
+            <th>Distrito</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for usuario in usuarios %}
+        <td>
+            {% if usuario.foto %}
+            <img src="{{ url_for('static', filename='uploads/registro_clientes/' ~ usuario.foto) }}" 
+                 class="img-thumbnail" width="100" height="100" style="object-fit: cover;">
+            {% else %}
+            <img src="{{ url_for('static', filename='default_profile.png') }}" 
+                 class="img-thumbnail" width="100" height="100" style="object-fit: cover;">
+            {% endif %}
+        </td>
+          <td>{{ usuario.nombre_completo }}</td>
+          <td>{{ usuario.fecha }}</td>
+          <td>{{ usuario.whatsapp }}</td>
+          <td>{{ usuario.distrito }}</td>
+          
+            
+            <td>
+                <a href="#" class="btn btn-outline-info btn-sm me-1"  data-bs-target="#myModal"onclick='openModal(JSON.parse(`{{ usuario | tojson | safe }}`))'
+                >
+                    <i class="fas fa-eye"></i> 
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="/registro_usuarios" class="btn btn-primary mt-3">Volver al Registro</a>
+
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> 
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Detalles del Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="detalleForm">
+                    <div class="row">
+                        <!-- Primera columna -->
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre_completo" class="form-label">Nombres y Apellidos</label>
+                            <input type="text" id="nombre_completo" name="nombre_completo" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="whatsapp" class="form-label">WhatsApp</label>
+                            <input type="text" id="whatsapp" name="whatsapp" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <!-- Segunda columna -->
+                        <div class="col-md-6 mb-3">
+                            <label for="correo" class="form-label">Correo</label>
+                            <input type="email" id="correo" name="correo" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="departamento" class="form-label">Departamento</label>
+                            <input type="text" id="departamento" name="departamento" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <!-- Tercera columna -->
+                        <div class="col-md-6 mb-3">
+                            <label for="provincia" class="form-label">Provincia</label>
+                            <input type="text" id="provincia" name="provincia" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="distrito" class="form-label">Distrito</label>
+                            <input type="text" id="distrito" name="distrito" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <!-- Cuarta columna -->
+                        <div class="col-md-6 mb-3">
+                            <label for="direccion" class="form-label">Dirección</label>
+                            <input type="text" id="direccion" name="direccion" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="referencia" class="form-label">Referencia</label>
+                            <input type="text" id="referencia" name="referencia" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <!-- Quinto conjunto de campos -->
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre_usuario" class="form-label">Nombre de Usuario</label>
+                            <input type="text" id="nombre_usuario" name="nombre_usuario" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha" class="form-label">Fecha de Registro</label>
+                            <input type="date" id="fecha" name="fecha" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select id="estado" name="estado" class="form-select" disabled>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="tipo_cliente" class="form-label">Tipo de Cliente</label>
+                        <input type="text" id="tipo_cliente" name="tipo_cliente" class="form-control" readonly>
+                        
+
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Foto del Usuario</label><br>
+                        <img id="detalleFoto" src="#" alt="Foto del Usuario" class="img-fluid" width="100">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(cliente) {
+        var modal = new bootstrap.Modal(document.getElementById('myModal'));
+        var form = document.getElementById("detalleForm");
+
+       
+        form.nombre_completo.value = cliente.nombre_completo;
+        form.whatsapp.value = cliente.whatsapp;
+        form.correo.value = cliente.correo;
+        form.departamento.value = cliente.departamento;
+        form.provincia.value = cliente.provincia;
+        form.distrito.value = cliente.distrito;
+        form.direccion.value = cliente.direccion;
+        form.referencia.value = cliente.referencia;
+        form.nombre_usuario.value = cliente.nombre_usuario;
+        
+      
+        form.fecha.value = new Date(cliente.fecha).toISOString().split('T')[0];
+        
+        
+        document.getElementById("detalleFoto").src = "/static/uploads/registro_clientes/" + (cliente.foto ? cliente.foto : 'default.png');
+        
+        var tipoClienteMap = {
+            1: 'Cliente Potencial',
+            2: 'Cliente Fijo'
+        };
+        form.tipo_cliente.value = tipoClienteMap[cliente.tipo_cliente_id] || 'Desconocido';
+
+       
+        var estadoSelect = document.getElementById("estado");
+        for (var i = 0; i < estadoSelect.options.length; i++) {
+            if (estadoSelect.options[i].value.toLowerCase() === cliente.estado.toLowerCase()) {
+                estadoSelect.selectedIndex = i;
+                break;
+            }
+        }
+
+        modal.show();
+    }
+</script>
+
+{% endblock %}

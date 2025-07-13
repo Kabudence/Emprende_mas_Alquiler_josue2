@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Sucursal{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <div class="container" style="max-width: 600px;">
+            <h1 class="mb-4 text-center">Crear Sucursal</h1>
+            <form method="POST" action="/sucursales/crear">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label for="nombre_negocio" class="form-label">Negocio</label>
+                    <input type="text" class="form-control" id="nombre_negocio" name="nombre_negocio" value="{{ negocio.NombreNegocio }}" readonly>
+<input type="hidden" name="id_negocio" value="{{ negocio.id }}">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre_sucursal" class="form-label">Nombre de Sucursal</label>
+                        <input type="text" class="form-control" id="nombre_sucursal" name="nombre_sucursal" required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="distrito" class="form-label">Distrito</label>
+                        <select class="form-select" id="distrito" name="distrito" required>
+                            {% for distrito in distritos %}
+                                <option value="{{ distrito[1] }}">{{ distrito[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="direccion" class="form-label">Dirección</label>
+                    <input type="text" class="form-control" id="direccion" name="direccion" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="correo" class="form-label">Correo</label>
+                        <input type="email" class="form-control" id="correo" name="correo">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="celular" class="form-label">Celular</label>
+                        <input type="text" class="form-control" id="celular" name="celular">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="latitud" class="form-label">Latitud</label>
+                        <input type="text" class="form-control" id="latitud" name="latitud">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="longitud" class="form-label">Longitud</label>
+                        <input type="text" class="form-control" id="longitud" name="longitud">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select class="form-select" id="estado" name="estado" required>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success">Crear</button>
+                    <a href="/" class="btn btn-secondary">Atrás</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

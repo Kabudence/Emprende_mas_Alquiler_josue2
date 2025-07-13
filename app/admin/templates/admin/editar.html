@@ -1,0 +1,34 @@
+<!-- app/templates/rubros/editar.html -->
+{% extends 'admin/layout.html' %}
+
+{% block title %}Editar Rubro{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="my-4">Editar Rubro</h1>
+  <form action="{{ url_for('admin.editar', id=rubro.id) }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="mb-3">
+      <label for="nombre" class="form-label">Nombre del Rubro</label>
+      <input type="text" class="form-control" id="nombre" name="nombre" value="{{ rubro.nombre }}" required>
+    </div>
+    
+    <!-- Agregar campo para Descripción -->
+    <div class="mb-3">
+      <label for="descripcion" class="form-label">Descripción</label>
+      <textarea class="form-control" id="descripcion" name="descripcion" rows="4">{{ rubro.descripcion }}</textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="estado" class="form-label">Estado</label>
+      <select class="form-select" id="estado" name="estado" required>
+        <option value="Activo" {% if rubro.estado == 'Activo' %}selected{% endif %}>Activo</option>
+        <option value="Inactivo" {% if rubro.estado == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Actualizar</button>
+  </form>
+</div>
+{% endblock %}

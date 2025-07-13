@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Reclamo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h4 class="mb-3">📌 Datos de la persona que presenta el reclamo</h4>
+    
+    <form action="{{ url_for('reclamos.crear_reclamo') }}" method="POST" class="border p-4 rounded shadow-sm bg-light" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Tipo de Documento:</label>
+                <select class="form-select" name="tipo_documento" required>
+                    <option value="">Seleccionar</option>
+                    <option value="DNI">DNI</option>
+                    <option value="Pasaporte">Pasaporte</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">No de Documento:</label>
+                <input type="text" class="form-control" name="numero_documento" required>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Nombres Completos:</label>
+                <input type="text" class="form-control" name="nombres_completos" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Apellidos:</label>
+                <input type="text" class="form-control" name="apellidos" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tipo de Respuesta:</label>
+            <input type="text" class="form-control" name="tipo_respuesta" value="CORREO ELECTRONICO" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Fecha:</label>
+            <input type="text" class="form-control" id="fecha_actual" name="fecha" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Dirección:</label>
+            <input type="text" class="form-control" name="direccion" required>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Departamento:</label>
+                <input type="text" class="form-control" value="Lima" readonly>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Provincia:</label>
+                <input type="text" class="form-control" value="Lima" readonly>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Distrito:</label>
+            <select class="form-select" name="distrito" required>
+                <option value="">Seleccionar</option>
+                {% for distrito in distritos %}
+                    <option value="{{ distrito[0] }}">{{ distrito[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Teléfono:</label>
+                <input type="text" class="form-control" name="telefono">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email:</label>
+                <input type="email" class="form-control" name="email" required>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: INFORMACIÓN GENERAL -->
+        <h4 class="mb-3 mt-4">📌 Información general</h4>
+
+        <div class="mb-3">
+            <label class="form-label">Orden de compra:</label>
+            <input type="text" class="form-control" name="orden_compra">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Identificación del bien contratado:</label>
+            <div>
+                <input type="radio" name="bien_contratado" value="Producto" required> Producto
+                <input type="radio" name="bien_contratado" value="Servicio" class="ms-3" required> Servicio
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Monto S/:</label>
+            <input type="number" class="form-control" name="monto_reclamado" step="0.01">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Descripción (Nombre del Producto o Servicio):</label>
+            <input type="text" class="form-control" name="descripcion" placeholder="Escribe aquí">
+        </div>
+        <h4 class="mb-3 mt-4">📌 Detalle de su reclamo</h4>
+
+        <div class="mb-3">
+            <label class="form-label">Fecha de comunicación de la respuesta: (7 dias habiles)</label>
+            <input type="text" class="form-control" id="fecha_comunicacion_mostrar" readonly>
+            <input type="hidden" id="fecha_comunicacion" name="fecha_comunicacion"> <!-- Este input oculto guarda el valor en formato MySQL -->
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Tipo:</label>
+            <div>
+                <input type="radio" name="tipo" value="Reclamo" required> Reclamo
+                <input type="radio" name="tipo" value="Queja" class="ms-3" required> Queja
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Motivo:</label>
+            <select class="form-select" name="motivo" required>
+                <option value="">Seleccionar</option>
+                <option value="Producto defectuoso">Producto defectuoso</option>
+                <option value="Retraso en la entrega">Retraso en la entrega</option>
+                <option value="Producto incorrecto">Producto incorrecto</option>
+                <option value="Problemas con la garantía">Problemas con la garantía</option>
+                <option value="Mala atención al cliente">Mala atención al cliente</option>
+                <option value="Problema con el reembolso">Problema con el reembolso</option>
+                <option value="Otros">Otros</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Detalle del reclamo:</label>
+            <textarea type="text" class="form-control" name="detalle_reclamo" placeholder="Detalle de su reclamo o sugerencia aquí" required></textarea>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Pedido:</label>
+            <input type="text" class="form-control" name="pedido" placeholder="Su pedido aquí" required>
+        </div>
+
+        <div class="mt-3">
+            <label class="form-label">Adjuntar Imagen (Opcional):</label>
+            <input type="file" class="form-control" name="imagen" accept="image/*">
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100">Registrar Reclamo</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+    let fechaHoy = new Date();
+    fechaHoy.setDate(fechaHoy.getDate() + 7); // Sumar 7 días
+
+    let anio = fechaHoy.getFullYear();
+    let mes = ('0' + (fechaHoy.getMonth() + 1)).slice(-2);
+    let dia = ('0' + fechaHoy.getDate()).slice(-2);
+
+    // Formato para mostrar al usuario (dd/mm/aaaa)
+    document.getElementById("fecha_comunicacion_mostrar").value = `${dia}/${mes}/${anio}`;
+
+    // Formato para guardar en el campo oculto (dd/mm/aaaa)
+    document.getElementById("fecha_comunicacion").value = `${dia}/${mes}/${anio}`; // <-- Cambiado a DD/MM/YYYY
+});
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let fechaHoy = new Date();
+        let anio = fechaHoy.getFullYear();
+        let mes = ('0' + (fechaHoy.getMonth() + 1)).slice(-2);
+        let dia = ('0' + fechaHoy.getDate()).slice(-2);
+
+        // Formato dd/mm/aaaa para mostrar al usuario
+        document.getElementById("fecha_actual").value = `${dia}/${mes}/${anio}`;
+    });
+</script>
+
+{% endblock %}

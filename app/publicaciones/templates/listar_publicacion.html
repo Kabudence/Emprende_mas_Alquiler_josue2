@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Listado de Fotos de Clientes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Fotos de Clientes</h2>
+    <a href="{{ url_for('publicaciones.crear_publicacion') }}" class="btn btn-primary mb-3">Agregar</a>
+    <div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Fecha Publicación</th>
+                <th>Fecha Compra</th>
+                <th>Nombre Publicación</th>
+                <th>Cliente</th>
+                <th>Productos</th>
+                <th>Fotos</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for publicacion in publicaciones %}
+            <tr>
+                <td>
+                    {% if publicacion.fecha_publicacion %}
+                        {{ publicacion.fecha_publicacion.strftime('%Y-%m-%d') }}
+                    {% else %}
+                        No registrada
+                    {% endif %}
+                </td>
+                <td>{{ publicacion.fecha_compra.strftime('%Y-%m-%d') }}</td>
+                <td>{{ publicacion.nombre_publicacion }}</td>
+                <td>{{ publicacion.cliente.nombre_completo }}</td>
+                <td>{{ publicacion.productos }}</td>
+                <td>
+                    {% if publicacion.foto_uno %}
+                        <img src="{{ url_for('static', filename='uploads/fotosclientes/' + publicacion.foto_uno) }}" 
+                             class="img-thumbnail" 
+                             style="max-width: 200px; max-height: 200px;">
+                    {% endif %}
+                    {% if publicacion.foto_dos %}
+                        <img src="{{ url_for('static', filename='uploads/fotosclientes/' + publicacion.foto_dos) }}" 
+                             class="img-thumbnail" 
+                             style="max-width: 200px; max-height: 200px;">
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('publicaciones.editar_publicacion', id=publicacion.id) }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button onclick="confirmarEliminacion('{{ publicacion.id }}')" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+  </div>
+</div>
+<!-- Script para SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmarEliminacion(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Obtener el token
+            let csrf_token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            fetch("{{ url_for('publicaciones.eliminar_publicacion', id=0) }}".replace('0', id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf_token
+                },
+                body: JSON.stringify({}) // Puedes enviar vacío o algún dato extra
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Eliminado', data.message, 'success')
+                    .then(() => { location.reload(); });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Ocurrió un error inesperado.', 'error');
+            });
+        }
+    });
+}
+
+</script>
+{% endblock %}

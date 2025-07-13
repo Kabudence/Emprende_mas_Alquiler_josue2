@@ -1,0 +1,316 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Gestión de Negocios</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Listado completo de negocios registrados</li>
+    </ol>
+
+    <div class="alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Los negocios marcados en amarillo vencerán en menos de 4 días
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-store me-1"></i>
+            Registro de Negocios
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-hover" id="datatablesSimple">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Modelo</th>
+                        <th>Membresía</th>
+                        <th>Fin Alquiler</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for negocio in negocios %}
+                    <tr class="{% if negocio.tipo_modelo and negocio.tipo_modelo.nombre == 'alquiler' and negocio.fecha_fin_alquiler and (negocio.fecha_fin_alquiler - ahora).days <= 4 %}table-warning{% endif %}">
+                        <td>{{ negocio.nombre|default('Sin datos') }}</td>
+                        <td>
+                            {% if negocio.tipo_modelo %}
+                            <span class="badge bg-{% if negocio.tipo_modelo.nombre == 'venta' %}primary{% else %}secondary{% endif %}">
+                                {{ negocio.tipo_modelo.nombre|upper }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning">No asignado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if negocio.tipo_modelo and negocio.tipo_modelo.nombre == 'alquiler' %}
+                                {% if negocio.membresia %}
+                                    {{ negocio.membresia.nombre }} ({{ negocio.membresia.cant_dias }} días)
+                                {% else %}
+                                    <span class="text-danger">Sin membresía</span>
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if negocio.tipo_modelo and negocio.tipo_modelo.nombre == 'alquiler' and negocio.fecha_fin_alquiler %}
+                                {{ negocio.fecha_fin_alquiler.strftime('%d/%m/%Y') }}
+                                <br><small class="text-muted">
+                                    {{ (negocio.fecha_fin_alquiler - ahora).days }} días restantes
+                                </small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if negocio.tipo_modelo and negocio.tipo_modelo.nombre == 'alquiler' %}
+                                <span class="badge rounded-pill bg-{% if negocio.bloqueado %}danger{% else %}success{% endif %}">
+                                    {% if negocio.bloqueado %}BLOQUEADO{% else %}ACTIVO{% endif %}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- Botón Detalles -->
+                            <button 
+                                type="button" 
+                                class="btn btn-primary btn-sm abrir-modal" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#detalleModal"
+                                data-negocio='{{ {
+                                    "nombre": negocio.nombre|default("Sin datos"),
+                                    "ruc": negocio.ruc|default("Sin datos"),
+                                    "direccion": negocio.direccion|default("Sin datos"),
+                                    "modelo": negocio.tipo_modelo.nombre if negocio.tipo_modelo else "Sin modelo",
+                                    "membresia": negocio.membresia.nombre if negocio.membresia else "Sin membresía",
+                                    "registro": negocio.fecha_registro.strftime("%d/%m/%Y") if negocio.fecha_registro else "No registrado",
+                                    "vencimiento": negocio.fecha_fin_alquiler.strftime("%d/%m/%Y") if negocio.fecha_fin_alquiler else "No aplica",
+                                    "estado": "Bloqueado" if negocio.bloqueado else "Activo"
+                                } | tojson | safe }}'
+                            >
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+
+                            <!-- Botón Bloquear/Desbloquear -->
+                            {% if negocio.tipo_modelo and negocio.tipo_modelo.nombre == 'alquiler' %}
+                            <button class="btn btn-sm {% if negocio.bloqueado %}btn-success{% else %}btn-danger{% endif %}"
+                                    data-id="{{ negocio.id }}"
+                                    onclick="toggleBloqueo(this)">
+                                {% if negocio.bloqueado %}
+                                    <i class="fas fa-lock-open"></i>
+                                {% else %}
+                                    <i class="fas fa-lock"></i>
+                                {% endif %}
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalles -->
+<div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Detalles Completos del Negocio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3"><i class="fas fa-info-circle"></i> Información Básica</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Nombre:</strong> <span id="modalNombre">N/A</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>RUC:</strong> <span id="modalRuc">N/A</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Dirección:</strong> <span id="modalDireccion">N/A</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="mb-3"><i class="fas fa-business-time"></i> Datos de Alquiler</h5>
+                        <ul class="list-group" id="modalAlquilerData">
+                            <li class="list-group-item">
+                                <strong>Modelo:</strong> <span id="modalModelo">N/A</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Membresía:</strong> <span id="modalMembresia">N/A</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Fecha Registro:</strong> <span id="modalRegistro">N/A</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Fecha Vencimiento:</strong> <span id="modalVencimiento">N/A</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Estado:</strong> <span id="modalEstado" class="badge">N/A</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.abrir-modal').forEach(button => {
+        button.addEventListener('click', function () {
+            const rawData = this.getAttribute('data-negocio');
+            console.log("📜 JSON recibido (crudo):", rawData);
+
+            try {
+                let negocio = JSON.parse(rawData);
+                console.log("✅ Datos Parseados:", negocio);
+
+                if (typeof negocio !== 'object' || negocio === null) {
+                    throw new Error("Los datos parseados no son un objeto válido");
+                }
+
+                const fields = {
+                    'modalNombre': 'nombre',
+                    'modalRuc': 'ruc',
+                    'modalDireccion': 'direccion',
+                    'modalModelo': 'modelo',
+                    'modalMembresia': 'membresia',
+                    'modalRegistro': 'registro',
+                    'modalVencimiento': 'vencimiento',
+                    'modalEstado': 'estado'
+                };
+
+                for (let [id, key] of Object.entries(fields)) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        const value = negocio[key] !== undefined && negocio[key] !== null ? negocio[key] : 'Sin datos';
+                        element.textContent = value;
+                        if (id === 'modalEstado') {
+                            element.className = value === "Bloqueado" 
+                                ? "badge bg-danger" 
+                                : "badge bg-success";
+                        }
+                    } else {
+                        console.warn(`Elemento no encontrado: #${id}`);
+                    }
+                }
+            } catch (error) {
+                console.error("❌ Error al parsear o asignar datos:", error);
+                console.log("Datos problemáticos:", rawData);
+                alert("Error: No se pudo cargar los datos. Revisa la consola para más detalles. JSON recibido: " + rawData);
+            }
+        });
+    });
+});
+
+function toggleBloqueo(btn) {
+    const negocioId = btn.dataset.id;
+    
+    fetch(`/admin/negocios/${negocioId}/toggle-bloqueo`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Error en la respuesta');
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            btn.classList.toggle('btn-danger');
+            btn.classList.toggle('btn-success');
+            btn.innerHTML = data.bloqueado 
+                ? '<i class="fas fa-lock-open"></i>' 
+                : '<i class="fas fa-lock"></i>';
+            
+            const row = btn.closest('tr');
+            const estadoBadge = row.querySelector('.badge');
+            if (estadoBadge) {
+                estadoBadge.textContent = data.bloqueado ? 'BLOQUEADO' : 'ACTIVO';
+                estadoBadge.className = `badge rounded-pill bg-${data.bloqueado ? 'danger' : 'success'}`;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado');
+    });
+}
+
+function toggleBloqueo(btn) {
+    const negocioId = btn.dataset.id;
+    const esBloqueo = btn.classList.contains('btn-danger'); // Si es rojo, se va a bloquear
+
+    Swal.fire({
+        title: esBloqueo ? '¿Bloquear este negocio?' : '¿Desbloquear este negocio?',
+        text: esBloqueo 
+            ? "El negocio no podrá operar mientras esté bloqueado." 
+            : "El negocio volverá a estar activo.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: esBloqueo ? '#d33' : '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: esBloqueo ? 'Sí, bloquear' : 'Sí, desbloquear',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/negocios/${negocioId}/toggle-bloqueo`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la respuesta');
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    btn.classList.toggle('btn-danger');
+                    btn.classList.toggle('btn-success');
+                    btn.innerHTML = data.bloqueado 
+                        ? '<i class="fas fa-lock-open"></i>' 
+                        : '<i class="fas fa-lock"></i>';
+
+                    const row = btn.closest('tr');
+                    const estadoBadge = row.querySelector('.badge');
+                    if (estadoBadge) {
+                        estadoBadge.textContent = data.bloqueado ? 'BLOQUEADO' : 'ACTIVO';
+                        estadoBadge.className = `badge rounded-pill bg-${data.bloqueado ? 'danger' : 'success'}`;
+                    }
+
+                    Swal.fire({
+                        title: 'Listo',
+                        text: data.bloqueado ? 'El negocio fue bloqueado.' : 'El negocio fue activado.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Ocurrió un problema al cambiar el estado.', 'error');
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

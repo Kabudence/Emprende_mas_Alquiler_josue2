@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Listado de Envíos{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="mt-4">Listado de Envíos</h1>
+  <div class="mb-3">
+    <a href="{{ url_for('envios.registrar') }}" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Registrar Nuevo Envío
+    </a>
+  </div>
+  
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Sucursal</th>
+        <th>Departamento</th>
+        <th>Provincia</th>
+        <th>Distrito</th>
+        <th>Costo</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for envio in envios %}
+      <tr>
+        <td>{{ envio.id }}</td>
+        <td>{{ envio.sucursal.NombreSucursal}}</td>
+        <td>{{ envio.departamento.nombre }}</td>
+        <td>{{ envio.provincia.nombre }}</td>
+        <td>{{ envio.distrito.Nombre }}</td>
+        <td>{{ envio.costo }}</td>
+        <td>{{ envio.estado }}</td>
+        <td>
+          <a href="{{ url_for('envios.editar', envio_id=envio.id) }}" class="btn btn-warning btn-sm">
+            <i class="fas fa-edit"></i> Editar
+          </a>
+          <form action="{{ url_for('envios.eliminar', envio_id=envio.id) }}" method="POST" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de eliminar este envío?')">
+              <i class="fas fa-trash-alt"></i> Eliminar
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

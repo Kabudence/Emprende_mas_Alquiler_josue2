@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Listado de Promociones{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Listado de Promociones</h1>
+    <a href="{{ url_for('promociones.crear') }}" class="btn btn-primary mb-4">
+        <i class="fas fa-plus-circle"></i> Nueva Promoción
+    </a>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Producto</th>
+                    <th>Detalle</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Precio Original</th>
+                    <th>Precio Promo</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Imagen</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for promocion in promociones %}
+                <tr>
+                    <td>
+                        {% if promocion.detalles %}
+                            {% for d in promocion.detalles %}
+                                {{ d.producto.nombre }}<br>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-danger">Producto no encontrado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if promocion.detalles %}
+                            {% for d in promocion.detalles %}
+                                {{ d.tamanio.nombre }} / {{ d.color.nombre }}<br>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-danger">Sin detalles</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ promocion.nombre }}</td>
+                    <td>{{ promocion.tipo }}</td>
+                    <td class="text-success">
+                        {% if promocion.detalles %}
+                            {% for d in promocion.detalles %}
+                                S/ {{ "%.2f"|format(d.precio) }}<br>
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td class="text-danger fw-bold">
+                        {% if promocion.tipo == 'Descuento' and promocion.precio_desc %}
+                            S/ {{ "%.2f"|format(promocion.precio_desc) }}
+                        {% elif promocion.tipo == 'Oferta' and promocion.precio_oferta %}
+                            S/ {{ "%.2f"|format(promocion.precio_oferta) }}
+                        {% elif promocion.tipo == '2x1' and promocion.precio_2x1 %}
+                            S/ {{ "%.2f"|format(promocion.precio_2x1) }}
+                        {% elif promocion.tipo == 'Paquete Rebajado' and promocion.precio_paquete %}
+                            S/ {{ "%.2f"|format(promocion.precio_paquete) }}
+                        {% elif promocion.tipo == 'Segundo Producto Barato' and promocion.precio_seg %}
+                            S/ {{ "%.2f"|format(promocion.precio_seg) }}
+                        {% endif %}
+                    </td>
+                    <td>{{ promocion.stock }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if promocion.estado == 'Activo' else 'danger' }}">
+                            {{ promocion.estado }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        {% if promocion.foto_producto %}
+                        <img src="{{ url_for('static', filename='uploads/promociones/' + promocion.foto_producto) }}" 
+                            class="img-thumbnail" 
+                            alt="Imagen promoción"
+                            style="width: 100px; height: auto;">
+                        {% else %}
+                        <span class="text-muted">Sin imagen</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap">
+                        <a href="{{ url_for('promociones.editar', id=promocion.id) }}" 
+                           class="btn btn-outline-warning btn-sm"
+                           data-bs-toggle="tooltip" 
+                           title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button onclick="confirmarEliminacion('{{ promocion.id }}')" 
+                                class="btn btn-outline-danger btn-sm"
+                                data-bs-toggle="tooltip" 
+                                title="Eliminar">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-4">
+                        No hay promociones registradas
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Función para confirmar eliminación
+function confirmarEliminacion(id) {
+    Swal.fire({
+        title: '¿Eliminar promoción?',
+        text: "¡Esta acción no se puede deshacer!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/promociones/eliminar/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Eliminado!',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Error de conexión', 'error');
+            });
+        }
+    });
+}
+
+// Inicializar tooltips de Bootstrap
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+</script>
+
+{% endblock %}

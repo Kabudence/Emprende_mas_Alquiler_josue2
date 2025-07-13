@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Orden{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3 text-center">Agregar Nueva Orden</h2>
+
+    <div class="d-flex justify-content-center">
+        <form action="{{ url_for('pedidos.agregar_orden') }}" method="post" class="card p-4 shadow w-50">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">Cliente:</label>
+                <select name="cliente" id="cliente" class="form-select" required onchange="updateWhatsapp()">
+                    <option value="" disabled selected>Seleccione un cliente</option>
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente[0] }}">{{ cliente[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <div class="mb-3">
+                <label class="form-label">WhatsApp:</label>
+                <input type="text" id="whatsapp" class="form-control" readonly>
+            </div>
+        
+            <div class="mb-3">
+                <label class="form-label">Forma de Pago:</label>
+                <select name="forma_pago" id="forma_pago" class="form-select" required onchange="toggleCamposPago(); calcularTotalOrden();">
+                    <option value="" disabled selected>Seleccione una forma de pago</option>
+                    {% for pago in formas_pago %}
+                        <option value="{{ pago }}">{{ pago }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <!-- Costo de Envío (Ocultable) -->
+            <div class="mb-3" id="campo_costo_envio">
+                <label class="form-label">Costo Envío:</label>
+                <input type="number" step="0.01" name="costo_envio" id="costo_envio" class="form-control" oninput="calcularTotalOrden()">
+            </div>
+
+            <!-- Comisión Culqui (Ocultable) -->
+            <div class="mb-3" id="campo_comision_culqui">
+                <label class="form-label">Comisión Culqui:</label>
+                <input type="number" name="comision_culqui" id="comision_culqui" class="form-control" step="0.01">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Estado:</label>
+                <select name="estado" class="form-select" required>
+                    <option value="" disabled selected>Seleccione un estado</option>
+                    {% for estado in estados %}
+                        <option value="{{ estado }}">{{ estado }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Sucursal:</label>
+                <select name="sucursal_id" class="form-select" required>
+                    <option value="" selected disabled>Seleccione una sucursal</option>
+                    {% for sucursal in sucursales %}
+                        <option value="{{ sucursal[0] }}">{{ sucursal[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+            <div class="mb-3" id="campo_distrito">
+                <label class="form-label">Distrito:</label>
+                <input type="text" name="distrito" id="distrito" class="form-control">
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5>Productos</h5>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalProducto">+</button>
+            </div>
+            
+        
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Tamaño</th>
+                        <th>Color</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="lista_productos"></tbody>
+            </table>
+        
+            <input type="hidden" name="productos_json" id="productos_json">
+        
+            <h5>Resumen</h5>
+            <p><strong>Subtotal:</strong> S/ <span id="subtotal">0.00</span></p>
+            <p><strong>Total:</strong> S/ <span id="total">0.00</span></p>
+        
+            <div class="d-flex justify-content-center gap-3">
+                <button type="submit" class="btn btn-success">Registrar Orden</button>
+                <a href="{{ url_for('pedidos.index') }}" class="btn btn-secondary">Volver</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal para Agregar Producto -->
+    <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agregar Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="producto_form">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre:</label>
+                            <input type="text" id="producto_nombre" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tamaño:</label>
+                            <input type="text" id="producto_tamaño" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Color:</label>
+                            <input type="text" id="producto_color" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Precio:</label>
+                            <input type="number" id="producto_precio" class="form-control" required oninput="calcularTotal()">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad:</label>
+                            <input type="number" id="producto_cantidad" class="form-control" required oninput="calcularTotal()">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total:</label>
+                            <input type="text" id="producto_total" class="form-control" readonly>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="agregarProducto()">Agregar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    function calcularTotal() {
+        let precio = parseFloat(document.getElementById("producto_precio").value) || 0;
+        let cantidad = parseInt(document.getElementById("producto_cantidad").value) || 0;
+        document.getElementById("producto_total").value = (precio * cantidad).toFixed(2);
+    }
+
+    function updateWhatsapp() {
+        let clienteId = document.getElementById("cliente").value;
+        if (clienteId) {
+            fetch(`/pedidos/get_whatsapp/${clienteId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("whatsapp").value = data.whatsapp || "";
+                });
+        } else {
+            document.getElementById("whatsapp").value = "";
+        }
+    }
+
+    function toggleCamposPago() {
+        let formaPago = document.getElementById("forma_pago").value;
+        let campoCostoEnvio = document.getElementById("campo_costo_envio");
+        let campoComisionCulqui = document.getElementById("campo_comision_culqui");
+        let campoDistrito = document.getElementById("campo_distrito");
+
+        if (formaPago === "Tarjeta" || formaPago === "Yape") {
+            campoCostoEnvio.style.display = "block";
+            campoComisionCulqui.style.display = "block";
+            campoDistrito.style.display = "block";
+        } else { // "En Local"
+            campoCostoEnvio.style.display = "none";
+            campoComisionCulqui.style.display = "none";
+            campoDistrito.style.display = "none";
+
+            document.getElementById("costo_envio").value = "";
+            document.getElementById("comision_culqui").value = "";
+            document.getElementById("distrito").value = "";
+        }
+    }
+
+    // Ocultar los campos al cargar la página
+    document.addEventListener("DOMContentLoaded", function () {
+        toggleCamposPago();
+    });
+</script>
+
+<script>
+    let productos = [];
+
+    function agregarProducto() {
+        let nombre = document.getElementById("producto_nombre").value;
+        let tamaño = document.getElementById("producto_tamaño").value;
+        let color = document.getElementById("producto_color").value;
+        let precio = parseFloat(document.getElementById("producto_precio").value) || 0;
+        let cantidad = parseInt(document.getElementById("producto_cantidad").value) || 0;
+        let total = precio * cantidad;
+
+        if (nombre && cantidad > 0 && precio > 0) {
+            productos.push({ nombre, tamaño, color, precio, cantidad, total });
+            actualizarListaProductos();
+            calcularTotalOrden();
+
+            // Cerrar modal automáticamente después de agregar
+            let modal = bootstrap.Modal.getInstance(document.getElementById("modalProducto"));
+            modal.hide();
+
+            // Limpiar campos del formulario del modal
+            document.getElementById("producto_form").reset();
+            document.getElementById("producto_total").value = "";
+        }
+    }
+
+    function calcularTotalOrden() {
+        let productos = JSON.parse(document.getElementById("productos_json").value || "[]");
+        let subtotal = productos.reduce((sum, prod) => sum + (parseFloat(prod.precio) * parseInt(prod.cantidad)), 0);
+        let costoEnvio = parseFloat(document.getElementById("costo_envio").value) || 0;
+        let comisionCulqui = document.getElementById("forma_pago").value === "Culqui" ? parseFloat(document.getElementById("comision_culqui").value) || 0 : 0;
+
+        document.getElementById("subtotal").textContent = subtotal.toFixed(2);
+        document.getElementById("total").textContent = (subtotal + costoEnvio + comisionCulqui).toFixed(2);
+    }
+
+    function actualizarListaProductos() {
+        let lista = document.getElementById("lista_productos");
+        lista.innerHTML = "";
+
+        productos.forEach((producto, index) => {
+            let row = `<tr>
+                <td>${producto.nombre}</td>
+                <td>${producto.tamaño || "-"}</td>
+                <td>${producto.color || "-"}</td>
+                <td>S/ ${producto.precio.toFixed(2)}</td>
+                <td>${producto.cantidad}</td>
+                <td>S/ ${producto.total.toFixed(2)}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">X</button></td>
+            </tr>`;
+            lista.innerHTML += row;
+        });
+
+        // Actualizar el input oculto con los productos en JSON
+        document.getElementById("productos_json").value = JSON.stringify(productos);
+    }
+
+    function eliminarProducto(index) {
+        productos.splice(index, 1);
+        actualizarListaProductos();
+    }
+</script>
+{% endblock %}
