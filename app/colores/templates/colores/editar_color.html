@@ -11,6 +11,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="{{ url_for('colores.actualizar', id=color.id) }}" method="POST" onsubmit="return validarFormulario()">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label for="nombre" class="form-label">Nombre del Color</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" value="{{ color.nombre }}" placeholder="Ingrese el nombre del color" required>

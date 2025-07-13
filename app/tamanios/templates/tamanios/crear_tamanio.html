@@ -8,6 +8,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="{{ url_for('tamanios.guardar') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label for="nombre" class="form-label">Nombre del Tamaño</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre del tamaño" required>

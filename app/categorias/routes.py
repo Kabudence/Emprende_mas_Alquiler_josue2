@@ -26,7 +26,6 @@ def index():
 @categorias.route('/crear', methods=['GET', 'POST'])
 @login_required
 def crear():
-    # Obtener el negocio asociado al usuario
     negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
 
     if request.method == 'POST':
@@ -34,7 +33,13 @@ def crear():
         tipo_categoria_id = request.form.get('tipo_categoria_id')
 
         if negocio and nombre and tipo_categoria_id:
-            nueva_categoria = Categoria(nombre=nombre, rubro_id=negocio.rubro_id, tipo_id=tipo_categoria_id)
+            # IMPORTANTE: Ahora también asigna el id_negocio
+            nueva_categoria = Categoria(
+                nombre=nombre,
+                rubro_id=negocio.rubro_id,
+                tipo_id=tipo_categoria_id,
+                id_negocio=negocio.id
+            )
             db.session.add(nueva_categoria)
             db.session.commit()
             flash('Categoría creada con éxito.', 'success')
@@ -42,10 +47,8 @@ def crear():
         else:
             flash('Error al crear la categoría. Verifique los datos ingresados.', 'danger')
 
-    # Obtener todos los rubros y tipos de categorías
     rubros = Rubro.query.all()
-    tipos_categoria = TipoCategoria.query.all()  # Traer los tipos de categoría disponibles
-
+    tipos_categoria = TipoCategoria.query.all()
     return render_template('categorias/crear_categoria.html', rubros=rubros, tipos_categoria=tipos_categoria, negocio=negocio)
 
 

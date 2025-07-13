@@ -8,6 +8,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="{{ url_for('servicios.actualizar', id=servicio.id) }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label for="nombre" class="form-label">Nombre del Servicio</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" value="{{ servicio.nombre }}" placeholder="Ingrese el nombre del servicio" required>
@@ -49,7 +50,7 @@
             <div class="mb-3">
                 <label class="form-label">Imagen Actual:</label>
                 <br>
-                <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen Actual" style="max-width: 100%; max-height: 200px;">
+                <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.media1) }}" alt="Imagen Actual" style="max-width: 100%; max-height: 200px;">
             </div>
             {% else %}
             <div class="mb-3">
@@ -71,11 +72,33 @@
                 <img id="imagePreview" src="#" alt="Vista previa" style="max-width: 100%; max-height: 200px; display: none;">
             </div>
 
+            <!-- Campo de URL del Video -->
+            <div class="mb-3">
+                <label for="video" class="form-label">URL del Video de YouTube</label>
+                <input type="url" class="form-control" id="video" name="video" value="{{ servicio.video }}" placeholder="Ingrese la URL del video" oninput="previewVideo()">
+                <small class="form-text text-muted">Ingrese el enlace del video del servicio. (ejemplo: https://www.youtube.com/watch?v=abc123xyz).</small>
+            </div>
+
+            <!-- Vista previa del video -->
+            <div class="mb-3">
+                <label class="form-label">Vista previa del Video del Servicio:</label>
+                <br>
+                {% if servicio.video %}
+                    <iframe id="videoPreview" width="100%" height="250" frameborder="0" allowfullscreen
+                            src="https://www.youtube.com/embed/{{ servicio.video | replace('https://www.youtube.com/watch?v=', '') }}">
+                    </iframe>
+                {% else %}
+                    <p>No hay video disponible</p>
+                {% endif %}
+            </div>
+
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Guardar Cambios
                 </button>
             </div>
+             
+
         </form>
     </div>
 </div>
@@ -96,6 +119,41 @@
             reader.readAsDataURL(file);
         }
     }
+    // Función para previsualizar el video de YouTube
+    document.addEventListener("DOMContentLoaded", function () {
+    let videoInput = document.getElementById("video");
+    let videoPreview = document.getElementById("videoPreview");
+
+    if (videoInput && videoInput.value.trim() !== "") {
+        let videoID = extractYouTubeID(videoInput.value);
+        if (videoID) {
+            videoPreview.src = "https://www.youtube.com/embed/" + videoID;
+            videoPreview.style.display = "block";
+        }
+    }
+
+    videoInput.addEventListener("input", previewVideo);
+});
+
+function previewVideo() {
+    let videoInput = document.getElementById('video').value;
+    let videoPreview = document.getElementById('videoPreview');
+    
+    let videoID = extractYouTubeID(videoInput);
+    
+    if (videoID) {
+        videoPreview.src = "https://www.youtube.com/embed/" + videoID;
+        videoPreview.style.display = "block";
+    } else {
+        videoPreview.style.display = "none";
+    }
+}
+
+function extractYouTubeID(url) {
+    let regex = /(?:youtube\.com\/(?:.*v=|.*\/)|youtu\.be\/)([^&?\/]+)/;
+    let match = url.match(regex);
+    return match ? match[1] : null;
+}
 </script>
 
 {% endblock %}

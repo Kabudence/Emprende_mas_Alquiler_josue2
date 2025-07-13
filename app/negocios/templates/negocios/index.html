@@ -8,6 +8,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="{{ url_for('negocios.guardar') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
             <!-- Fieldset para datos del negocio -->
             <fieldset class="mb-4">

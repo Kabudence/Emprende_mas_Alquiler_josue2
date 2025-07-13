@@ -88,6 +88,7 @@
                                     <div class="modal-footer  d-flex justify-content-center">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                         <form id="deleteForm{{ color.id }}" method="POST" action="{{ url_for('colores.eliminar', id=color.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-danger">Eliminar</button>
                                         </form>
                                     </div>

@@ -13,7 +13,7 @@
                 <div class="product-images">
                     {% if producto.detalles %}
                         <!-- Mostrar la imagen principal (la primera de la lista) -->
-                        <img id="mainImage" src="{{ url_for('static', filename='uploads/' + producto.detalles[0].imagen) }}" class="img-fluid mb-4" alt="Imagen del producto" style="width: 100%; max-width: 300px; height: auto;">
+                        <img id="mainImage" src="{{ url_for('static', filename='uploads/productos/' + producto.detalles[0].imagen) }}" class="img-fluid mb-4" alt="Imagen del producto" style="width: 100%; max-width: 300px; height: auto;">
                     {% else %}
                         <p>No hay imágenes disponibles.</p>
                     {% endif %}
@@ -21,7 +21,7 @@
                     <div class="product-thumbnails">
                         {% for detalle in producto.detalles %}
                             <!-- Mostrar miniaturas de imágenes de colores únicos -->
-                            <img src="{{ url_for('static', filename='uploads/' + detalle.imagen) }}" class="img-thumbnail" alt="Detalle del producto" style="width: 100px; margin-right: 10px; cursor: pointer;" onclick="changeMainImage(this)">
+                            <img src="{{ url_for('static', filename='uploads/productos/' + detalle.imagen) }}" class="img-thumbnail" alt="Detalle del producto" style="width: 100px; margin-right: 10px; cursor: pointer;" onclick="changeMainImage(this)">
                         {% endfor %}
                     </div>
                 </div>

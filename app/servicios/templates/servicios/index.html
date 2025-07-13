@@ -15,15 +15,29 @@
         </form>
     </div>
     <div class="col-md-6 text-end">
-        <a href="{{ url_for('servicios.crear') }}" class="btn btn-outline-primary shadow-sm">
-            <i class="fas fa-plus-circle"></i> Agregar Servicio
-        </a>
-    </div>
-</div>
+        <div class="d-flex gap-2 justify-content-end"> 
+            <a href="{{ url_for('servicios.crear') }}" class="btn btn-outline-primary shadow-sm">
+                <i class="fas fa-plus-circle"></i> Agregar Servicio Básico
+            </a>
+            <a href="{{ url_for('servicios.crear_completo') }}" class="btn btn-outline-success shadow-sm">
+                <i class="fas fa-plus-circle"></i> Agregar Servicio Completo
+            </a>
+            
+            <a href="{{ url_for('servicios.completo_index') }}" class="btn btn-outline-info shadow-sm">
+                <i class="fas fa-list"></i> Ver Listado de Servicios Completos
+            </a>
+        </div>
+    </div> 
 
+        
+         
+   
+    
+
+</div>   
 {% if servicios %}
     <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle shadow-sm">
+        <table class="table table-bordered table-hover align-middle  shado w-sm">
             <thead class="table-dark text-center">
                 <tr>
                     <th>ID</th>
@@ -49,7 +63,7 @@
                     <td>S/.{{ servicio.precio_oferta | round(2) }}</td>
                     <td>
                         {% if servicio.imagen %}
-                            <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre }}" class="img-thumbnail" style="max-width: 100px; height: auto;">
+                            <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre }}" class="img-thumbnail" style="max-width: 100px; height: auto;">
                         {% else %}
                             <span>No disponible</span>
                         {% endif %}
@@ -75,7 +89,7 @@
                                     </div>
                                     <div class="modal-body">
                                         {% if servicio.imagen %}
-                                            <img src="{{ url_for('static', filename='uploads/' + servicio.imagen) }}" alt="Imagen de {{ servicio.nombre }}" class="img-fluid mt-3">
+                                        <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.imagen) }}"alt="Imagen de {{ servicio.nombre }}" class="img-fluid mt-3">
                                         {% else %}
                                             <span>No disponible</span>
                                         {% endif %}
@@ -103,6 +117,7 @@
                                     <div class="modal-footer d-flex justify-content-center">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                         <form id="deleteForm{{ servicio.id }}" method="POST" action="{{ url_for('servicios.eliminar', id=servicio.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-danger">Eliminar</button>
                                         </form>
                                     </div>

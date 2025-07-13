@@ -6,6 +6,7 @@
 <h1 class="h3 my-4 text-underline">Actualizar Categoría</h1>
 
 <form action="{{ url_for('categorias.actualizar', id=categoria.id) }}" method="POST" class="shadow p-4 rounded">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
         <label for="nombre" class="form-label">Nombre de la Categoría</label>
         <input 

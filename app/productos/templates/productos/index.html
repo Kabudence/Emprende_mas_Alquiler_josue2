@@ -8,6 +8,7 @@
 <div class="row mb-4 align-items-center">
     <div class="col-md-6">
         <form action="/productos" method="GET" class="d-flex shadow p-2 rounded">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar producto..." aria-label="Buscar producto">
             <button type="submit" class="btn btn-outline-secondary">
                 <i class="fas fa-search"></i>
@@ -32,7 +33,7 @@
         </thead>
         <tbody>
             {% for producto in productos %}
-            <tr class="text-center">
+            <tr class="text-center" data-product-id="{{ producto.id }}">
                 <td><strong>{{ producto.id }}</strong></td>
                 <td>{{ producto.nombre }}</td>
                 <td>{{ producto.categoria.nombre }}</td>
@@ -50,54 +51,81 @@
             </tr>
             {% endfor %}
         </tbody>
+        
     </table>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function confirmarEliminacion(id) {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Esta acción no se puede deshacer.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/productos/eliminar/${id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire(
-                            'Eliminado',
-                            data.message,
-                            'success'
-                        ).then(() => {
-                            location.reload();  // Recarga la página para reflejar los cambios
-                        });
-                    } else {
-                        Swal.fire(
-                            'Error',
-                            data.message,
-                            'error'
-                        );
-                    }
-                })
-                .catch(error => {
-                    Swal.fire(
-                        'Error',
-                        'Ocurrió un error inesperado.',
-                        'error'
-                    );
-                });
-            }
-        });
-    }
+  function confirmarEliminacion(id) {
+      const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+      Swal.fire({
+          title: '¿Estás seguro??',
+          text: "¡No podrás revertir esta acción!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar',
+          customClass: {
+              popup: 'swal2-popup-custom',
+              confirmButton: 'swal2-confirm-custom',
+              cancelButton: 'swal2-cancel-custom'
+          }
+      }).then((result) => {
+          if (result.isConfirmed) {
+              fetch(`/productos/eliminar/${id}`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': csrfToken
+                  },
+                  body: JSON.stringify({})
+              })
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Error en la respuesta del servidor');
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  if (data.success) {
+                      Swal.fire({
+                          title: '¡Eliminado!',
+                          text: data.message,
+                          icon: 'success',
+                          showConfirmButton: false,
+                          timer: 1500
+                      }).then(() => {
+                          // Actualización suave sin recargar toda la página
+                          const tr = document.querySelector(`tr[data-product-id="${id}"]`);
+                          if (tr) {
+    tr.style.transition = 'opacity 0.5s';
+    tr.style.opacity = '0';
+    setTimeout(() => {
+        tr.remove();
+        window.location.reload();
+    }, 500);
+}
+
+                      });
+                  } else {
+                      throw new Error(data.message || 'Error desconocido');
+                  }
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  Swal.fire({
+                      title: 'Error',
+                      text: error.message || 'Error al eliminar el producto',
+                      icon: 'error',
+                      confirmButtonText: 'Entendido'
+                  });
+              });
+          }
+      });
+  }
 </script>
 {% endblock %}

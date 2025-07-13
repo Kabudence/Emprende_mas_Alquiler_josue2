@@ -8,6 +8,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="{{ url_for('servicios.guardar') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label for="nombre" class="form-label">Nombre del Servicio</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre del servicio" required>
@@ -18,11 +19,11 @@
             </div>
             <div class="mb-3">
                 <label for="precio" class="form-label">Precio</label>
-                <input type="number" class="form-control" id="precio" name="precio" placeholder="Ingrese el precio" required step="0.01" min="0">
+                <input type="number" class="form-control" id="precio" name="precio" placeholder="Ingrese el precio">
             </div>
             <div class="mb-3">
                 <label for="precio_oferta" class="form-label">Precio de Oferta</label>
-                <input type="number" class="form-control" id="precio_oferta" name="precio_oferta" placeholder="Ingrese el precio de oferta" step="0.01" min="0">
+                <input type="number" class="form-control" id="precio_oferta" name="precio_oferta" placeholder="Ingrese el precio de oferta">
             </div>
             <div class="mb-3">
                 <label for="telefono" class="form-label">Teléfono</label>
@@ -54,6 +55,20 @@
                 <img id="imagePreview" src="#" alt="Vista previa" style="max-width: 100%; max-height: 200px; display: none;">
             </div>
 
+            <div class="mb-3">
+                <label for="video" class="form-label">URL del video del servicio</label>
+                <input type="url" class="form-control" id="video" name="video" placeholder="Ingrese la URL del video">
+                <small class="form-text text-muted">Ingrese un enlace válido (ejemplo: https://www.youtube.com/watch?v=XXXXX).</small>
+            </div>
+            
+            <!-- Vista previa del video -->
+            <div class="mb-3">
+                <label class="form-label">Vista previa del Video del Servicio:</label>
+                <br>
+                <iframe id="videoPreview" width="100%" height="250" style="display: none;" frameborder="0" allowfullscreen></iframe>
+            </div>
+            
+
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Guardar
@@ -79,6 +94,32 @@
             reader.readAsDataURL(file);
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("video").addEventListener("input", previewVideo);
+});
+
+function previewVideo() {
+    let videoInput = document.getElementById('video').value;
+    let videoPreview = document.getElementById('videoPreview');
+    
+    // Extraer el ID del video de YouTube
+    let videoID = extractYouTubeID(videoInput);
+    
+    if (videoID) {
+        videoPreview.src = "https://www.youtube.com/embed/" + videoID;
+        videoPreview.style.display = "block";
+    } else {
+        videoPreview.style.display = "none";
+    }
+}
+
+// Función para extraer el ID del video de YouTube desde diferentes formatos de URL
+function extractYouTubeID(url) {
+    let regex = /(?:youtube\.com\/(?:.*v=|.*\/)|youtu\.be\/)([^&?\/]+)/;
+    let match = url.match(regex);
+    return match ? match[1] : null;
+}
 </script>
 
 {% endblock %}

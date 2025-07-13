@@ -1,4 +1,14 @@
-from flask import Flask, request, redirect, url_for
+import os
+import pymysql
+
+from appointment.interfaces.appointment_controller import appointment_api
+from schedules.interfaces.schedule_controller import schedule_api
+from staff.interfaces.staff_controller import staff_api
+
+pymysql.install_as_MySQLdb()
+
+
+from flask import Flask, request, redirect, url_for,send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from .database import db
@@ -12,7 +22,23 @@ from .tamanios import tamanios as tamanios_blueprint
 from .feedbacks import feedbacks as feedbacks_blueprint
 from .servicios import servicios as servicios_blueprint
 from .politicas_restricciones import politicas_restricciones as politicas_restricciones_blueprint
-import os
+from .slider import slider as slider_blueprint
+from .InformacionEmpresa import Info_Empresa as Info_Empresa_blueprint
+from app.registro_usuarios.routes import registro_usuarios_blueprint
+from app.sucursales.routes import sucursales_blueprint
+from app.promociones.routes import promociones_bp
+from app.publicaciones.routes import publicaciones_bp
+from app.envios.routes import envios_bp
+from app.libro_reclamaciones.routes import reclamos_bp
+from app.pedidos.routes import pedidos_bp
+from .locales.routes import locales_bp
+from .admin.routes import admin_bp 
+from flask_wtf.csrf import CSRFProtect
+
+
+
+from config import Config
+
 
 login_manager = LoginManager()
 
@@ -24,17 +50,31 @@ def check_negocio():
             return redirect(url_for('negocios.index'))
 
 def create_app():
-    app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'ozxcXkasdnM'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost/emprende_mas'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    # app.config['SQLALCHEMY_ECHO'] = True
-    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
+    app = Flask(__name__, static_url_path='/static')
+
+    # Cargar configuración desde config.py
+    app.config.from_object(Config)
+
+    # ───── INICIALIZAR BASE DE DATOS PEEWEE ─────
+    from shared.infrastructure.database import init_db
+    init_db()
+
+    # ───── INYECTAR SERVICIOS DE DOMINIO ─────
+    from shared.factory.container_factory import build_services
+    for key, value in build_services().items():
+        app.config[key] = value
+
+    csrf = CSRFProtect(app)
+
+    servicios_folder = os.path.join(app.root_path, 'static', 'uploads', 'servicios')
+    os.makedirs(servicios_folder, exist_ok=True)
+    app.config['SERVICIOS_UPLOAD_FOLDER'] = servicios_folder
+    app.config['UPLOAD_FOLDER'] = os.path.join('app', 'static', 'uploads', 'servicios')
+    app.config['SERVICIOS_UPLOAD_FOLDER'] = os.path.join('app', 'static', 'uploads', 'servicios')
 
     db.init_app(app)
     login_manager.init_app(app)
-    
+
     login_manager.login_view = 'auth.login'
     
     @login_manager.user_loader
@@ -52,6 +92,26 @@ def create_app():
     app.register_blueprint(tamanios_blueprint, url_prefix='/tamanios')
     app.register_blueprint(feedbacks_blueprint, url_prefix='/feedbacks')
     app.register_blueprint(politicas_restricciones_blueprint, url_prefix='/politicas_restricciones')
+    app.register_blueprint(slider_blueprint, url_prefix='/slider')
+    app.register_blueprint(Info_Empresa_blueprint, url_prefix='/informacion_empresa')
+    app.register_blueprint(registro_usuarios_blueprint, url_prefix='/registro_usuarios')
+    app.register_blueprint(sucursales_blueprint, url_prefix='/sucursales')
+    app.register_blueprint(promociones_bp, url_prefix='/promociones')
+    app.register_blueprint(publicaciones_bp, url_prefix='/publicaciones')
+    app.register_blueprint(envios_bp, url_prefix='/envios')
+    app.register_blueprint(reclamos_bp, url_prefix='/libro_reclamaciones')
+    app.register_blueprint(pedidos_bp, url_prefix='/pedidos')
+    app.register_blueprint(locales_bp, url_prefix='/locales')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(staff_api)
+    csrf.exempt(staff_api)  # <--- agrega esta línea aquí
+    app.register_blueprint(schedule_api)
+    app.register_blueprint(appointment_api)
+
+
+    @app.route('/static/<path:filename>')
+    def serve_static(filename):
+        return send_from_directory('app/static', filename)
     
     @app.before_request
     def before_request():
@@ -59,3 +119,4 @@ def create_app():
             return check_negocio()
 
     return app
+

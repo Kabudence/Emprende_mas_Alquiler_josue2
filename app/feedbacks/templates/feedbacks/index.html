@@ -36,13 +36,22 @@
             </tr>
         </thead>
         <tbody>
-            {% for feedback in feedbacks %}
+            {% for feedback, usuario_nombre in feedbacks %}
             <tr class="text-center">
                 <td><strong>{{ feedback.id }}</strong></td>
                 <td>{{ feedback.asunto }}</td>
                 <td>{{ feedback.descripcion }}</td>
-                <td>{{ feedback.usuario.nombre }}</td>
-                <td>{{ feedback.categoria_feedback.nombre }}</td>  <!-- Nombre de la categoría del feedback -->
+                <!-- <td>
+                    {% if feedback.imagen1 %}
+                        <img src="{{ url_for('static', filename='uploads/comentarios/' ~ feedback.imagen1) }}"
+                             alt="Imagen 1" class="img-thumbnail" style="width: 64px; height: 64px;">
+                    {% else %}
+                        <span class="text-muted">Sin imagen</span>
+                    {% endif %}
+                </td> -->
+                <td>{{ usuario_nombre.strip() if usuario_nombre and usuario_nombre.strip() else 'Kenny' }}</td>
+                <td>{{ feedback.categoria_feedback.nombre }}</td>
+                <td>
                 <td>
                     <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ feedback.id }}">
                         <i class="fas fa-eye"></i>
@@ -60,7 +69,7 @@
                                 </div>
                     
                                 <div class="modal-body text-start">
-                                    <p><strong>Usuario:</strong> {{ feedback.usuario.nombre }}</p>
+                                    <p><strong>Usuario:</strong> {{ usuario_nombre }}</p>
                                     <p><strong>Asunto:</strong> {{ feedback.asunto }}</p>
                                     <p><strong>Descripción:</strong> {{ feedback.descripcion }}</p>
                                     <p><strong>Categoría:</strong> {{ feedback.categoria_feedback.nombre }}</p>
@@ -70,7 +79,7 @@
                                             {% if feedback.imagen1 %}
                                             <div class="mb-3">
                                                 <p><strong>Imagen 1:</strong></p>
-                                                <img src="{{ url_for('static', filename='uploads/' + feedback.imagen1) }}" alt="Imagen 1" class="img-fluid rounded shadow">
+                                                <img src="{{ url_for('static', filename='uploads/comentarios/' + feedback.imagen1) }}" alt="Imagen 1" class="img-fluid rounded shadow">
                                             </div>
                                             {% endif %}
                                         </div>
@@ -78,7 +87,7 @@
                                             {% if feedback.imagen2 %}
                                             <div class="mb-3">
                                                 <p><strong>Imagen 2:</strong></p>
-                                                <img src="{{ url_for('static', filename='uploads/' + feedback.imagen2) }}" alt="Imagen 2" class="img-fluid rounded shadow">
+                                                <img src="{{ url_for('static', filename='uploads/comentarios/' + feedback.imagen2) }}" alt="Imagen 2" class="img-fluid rounded shadow">
                                             </div>
                                             {% endif %}
                                         </div>

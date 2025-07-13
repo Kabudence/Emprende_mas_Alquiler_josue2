@@ -2,22 +2,41 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
-from flask_login import login_required
+from flask_login import login_required, current_user
 from ..models import Producto, Categoria, ProductoDetalle, Tamanio, Color, Negocio
 from ..database import db
 from . import productos
 
 
+
+UPLOAD_FOLDER = 'app/static/uploads/productos'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
+
+def get_current_business():
+    """Obtiene el negocio actual del usuario"""
+    if hasattr(current_user, 'negocio') and current_user.negocio:
+        return current_user.negocio
+    elif hasattr(current_user, 'negocios') and current_user.negocios:
+        return current_user.negocios[0]
+    return None
 
 # Index de productos con filtro por rubro y búsqueda
 @productos.route('/', methods=['GET'])
 @login_required
 def index():
+    negocio = get_current_business()
+    if not negocio:
+        flash('No tiene un negocio asignado', 'danger')
+        return redirect(url_for('main.index'))
+
     busqueda = request.args.get('busqueda', '').strip()
-    negocio = Negocio.query.first()
+    productos_query = Producto.query.filter_by(id_negocio=negocio.id)
+    
 
     if not negocio:
         flash('No se encontró un negocio asociado al usuario.', 'danger')
@@ -27,7 +46,7 @@ def index():
     categorias = Categoria.query.filter_by(rubro_id=negocio.rubro_id).all()
     categoria_ids = [categoria.id for categoria in categorias]
 
-    productos_query = Producto.query.filter(Producto.categoria_id.in_(categoria_ids))
+    productos_query = Producto.query.filter_by(id_negocio=negocio.id)
 
     # Búsqueda por nombre del producto
     if busqueda:
@@ -39,23 +58,53 @@ def index():
 @productos.route('/crear', methods=['GET', 'POST'])
 @login_required
 def crear():
+    negocio_actual = get_current_business()
+    if not negocio_actual:
+        flash('No tiene un negocio asignado', 'danger')
+        return redirect(url_for('main.index'))
     if request.method == 'POST':
         try:
             # Datos principales del producto
             nombre = request.form.get('nombre')
             descripcion = request.form.get('descripcion')
             categoria_id = request.form.get('categoria_id')
+            marca = request.form.get('marca')
+            modelo = request.form.get('modelo')
+            dimensiones = request.form.get('dimensiones')
+            contenido_caja = request.form.get('contenido_caja')
+            garantia = request.form.get('garantia')  # Se almacenará en meses o años
+            pais_origen_procedencia = request.form.get('pais_origen_procedencia')
+            condicion_producto = request.form.get('condicion_producto')
+            link_producto = request.form.get('link_producto')
+            video1 = request.form.get('video1')
+            video2 = request.form.get('video2') 
+
 
             # Validación de campos obligatorios
             if not all([nombre, categoria_id]):
                 flash('Por favor, complete todos los campos obligatorios.', 'danger')
                 return redirect(url_for('productos.crear'))
+            
+
+            categorias = Categoria.query.filter_by(rubro_id=negocio_actual.rubro_id, tipo_id=1).all()
+            colores = Color.query.all()
 
             # Crear el producto principal
             nuevo_producto = Producto(
+                id_negocio=negocio_actual.id,
                 nombre=nombre,
                 descripcion=descripcion,
-                categoria_id=categoria_id
+                categoria_id=categoria_id,
+                marca=marca,
+                modelo=modelo,
+                dimensiones=dimensiones,
+                contenido_caja=contenido_caja,
+                garantia=int(garantia) if garantia else None,
+                pais_origen_procedencia=pais_origen_procedencia,
+                condicion_producto=condicion_producto,
+                link_producto=link_producto,
+                video1=video1,
+                video2=video2
             )
             db.session.add(nuevo_producto)
             db.session.commit()
@@ -104,9 +153,10 @@ def crear():
                     filename = None
                     if image_file and allowed_file(image_file.filename):
                         unique_filename = f"{uuid.uuid4().hex}_{secure_filename(image_file.filename)}"
-                        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-                        if not os.path.exists(current_app.config['UPLOAD_FOLDER']):
-                            os.makedirs(current_app.config['UPLOAD_FOLDER'])
+                        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+                        if not os.path.exists(UPLOAD_FOLDER):
+                          os.makedirs(UPLOAD_FOLDER)
+
                         image_file.save(filepath)
                         filename = unique_filename
 
@@ -132,7 +182,7 @@ def crear():
             flash(f'Error al crear el producto: {e}', 'danger')
             return redirect(url_for('productos.crear'))
 
-    negocio_actual = Negocio.query.first()
+    negocio_actual = get_current_business()
     
     if not negocio_actual:
         flash('No se encontró un negocio en la base de datos','danger')
@@ -195,7 +245,7 @@ def obtener_capacidades(id):
 @productos.route('/editar/<int:producto_id>', methods=['GET', 'POST'])
 def editar_producto(producto_id):
     producto = Producto.query.get_or_404(producto_id)
-    negocio_actual = Negocio.query.first()
+    negocio_actual = get_current_business() 
     # Filtrar las categorías de acuerdo al rubro del negocio y tipo_id = 1
     categorias = Categoria.query.filter_by(rubro_id=negocio_actual.rubro_id, tipo_id=1).all()
 
@@ -204,11 +254,25 @@ def editar_producto(producto_id):
 
     detalles = ProductoDetalle.query.filter_by(producto_id=producto.id).all()
 
+    producto.garantia = int(producto.garantia) if producto.garantia is not None else 0
+
+
     if request.method == 'POST':
+        print(f"Condición del producto recibida: {request.form['condicion_producto']}")
         # Actualizar información del producto
         producto.nombre = request.form['nombre']
         producto.descripcion = request.form['descripcion']
         producto.categoria_id = request.form['categoria_id']
+        producto.marca = request.form['marca']
+        producto.modelo = request.form['modelo']
+        producto.dimensiones = request.form['dimensiones']
+        producto.contenido_caja = request.form['contenido_caja']
+        producto.garantia = int(request.form['garantia']) if request.form['garantia'] else None
+        producto.pais_origen_procedencia = request.form['pais_origen_procedencia']
+        producto.condicion_producto = request.form['condicion_producto']
+        producto.link_producto = request.form['link_producto']
+        producto.video1 = request.form.get('video1')
+        producto.video2 = request.form.get('video2')
 
         # Guardar cambios en el producto
         try:
@@ -230,9 +294,10 @@ def editar_producto(producto_id):
             image_file = request.files.get(f'image_{detalle.id}')
             if image_file:
                 unique_filename = f"{uuid.uuid4().hex}_{secure_filename(image_file.filename)}"
-                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-                if not os.path.exists(current_app.config['UPLOAD_FOLDER']):
-                    os.makedirs(current_app.config['UPLOAD_FOLDER'])
+                filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+                if not os.path.exists(UPLOAD_FOLDER):
+                 os.makedirs(UPLOAD_FOLDER)
+
                 image_file.save(filepath)
                 filename = unique_filename
                 detalle.imagen = filename
@@ -246,6 +311,7 @@ def editar_producto(producto_id):
                 flash(f'Error al actualizar la variante {detalle.id}. Intente nuevamente.', 'danger')
 
         return redirect(url_for('productos.index', producto_id=producto.id))
+                
 
     return render_template('productos/editar_producto.html', producto=producto, categorias=categorias, tamanios=tamanios, colores=colores, detalles=detalles)
 

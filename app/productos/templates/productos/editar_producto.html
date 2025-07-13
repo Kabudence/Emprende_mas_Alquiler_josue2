@@ -8,6 +8,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="{{ url_for('productos.editar_producto', producto_id=producto.id) }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label for="nombre" class="fw-bold">Nombre del Producto</label>
                 <input type="text" class="form-control" value="{{ producto.nombre }}" id="nombre" name="nombre" placeholder="Ingrese el nombre del producto" required>
@@ -27,6 +28,79 @@
                     {% endfor %}
                 </select>
             </div>
+
+            <div class="mb-3">
+                <label for="marca" class="fw-bold">Marca</label>
+                <input type="text" class="form-control" id="marca" name="marca" value="{{ producto.marca or '' }}" placeholder="Ingrese la marca del producto">
+            </div>
+            
+            <div class="mb-3">
+                <label for="modelo" class="fw-bold">Modelo</label>
+                <input type="text" class="form-control" id="modelo" name="modelo" value="{{ producto.modelo or '' }}" placeholder="Ingrese el modelo del producto">
+            </div>
+            
+            <div class="mb-3">
+                <label for="dimensiones" class="fw-bold">Dimensiones y/o Formato</label>
+                <input type="text" class="form-control" id="dimensiones" name="dimensiones" value="{{ producto.dimensiones or '' }}" placeholder="Ejemplo: 10cm x 20cm x 5cm">
+            </div>
+            
+            <div class="mb-3">
+                <label for="contenido_caja" class="fw-bold">Contenido de la Caja</label>
+                <textarea class="form-control" id="contenido_caja" name="contenido_caja" rows="3" placeholder="Describa el contenido de la caja">{{ producto.contenido_caja or '' }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="pais_origen_procedencia" class="fw-bold">Pais Origen/Procedencia</label>
+                <input type="text" class="form-control" id="pais_origen_procedencia" name="pais_origen_procedencia" value="{{ producto.pais_origen_procedencia or '' }}" placeholder="Ingrese el país de origen o procedencia del producto">
+            </div>
+
+            <div class="mb-3">
+                <label for="condicion_producto" class="fw-bold">Condición Producto</label>
+                <select class="form-select" id="condicion_producto" name="condicion_producto">
+                    <option value="Nuevo" {% if producto.condicion_producto == 'nuevo' %}selected{% endif %}>Nuevo</option>
+                    <option value="Usado" {% if producto.condicion_producto == 'usado' %}selected{% endif %}>Usado</option>
+                </select>
+            </div>
+        
+
+
+
+            <div class="mb-3">
+                <label for="garantia" class="fw-bold">Garantía</label>
+                <select class="form-select" id="garantia" name="garantia">
+                    <option value="3" {% if producto.garantia == 3 %}selected{% endif %}>3 meses</option>
+                    <option value="4" {% if producto.garantia == 4 %}selected{% endif %}>4 meses</option>
+                    <option value="5" {% if producto.garantia == 5 %}selected{% endif %}>5 meses</option>
+                    <option value="6" {% if producto.garantia == 6 %}selected{% endif %}>6 meses</option>
+                    <option value="7" {% if producto.garantia == 7 %}selected{% endif %}>7 meses</option>
+                    <option value="8" {% if producto.garantia == 8 %}selected{% endif %}>8 meses</option>
+                    <option value="9" {% if producto.garantia == 9 %}selected{% endif %}>9 meses</option>
+                    <option value="10" {% if producto.garantia == 10 %}selected{% endif %}>10 meses</option>
+                    <option value="11" {% if producto.garantia == 11 %}selected{% endif %}>11 meses</option>
+                    <option value="12" {% if producto.garantia == 12 %}selected{% endif %}>12 meses</option>
+                    <option value="36" {% if producto.garantia == 36 %}selected{% endif %}>2 años</option>
+                    <option value="48" {% if producto.garantia == 48 %}selected{% endif %}>3 años</option>
+                </select>
+            </div>
+            
+            
+            <div class="mb-3">
+                <label for="link_producto" class="fw-bold">Link del Producto</label>
+                <input type="url" class="form-control" id="link_producto" name="link_producto" value="{{ producto.link_producto or '' }}" placeholder="Ingrese la URL del producto">
+            </div>
+            
+            <div class="mb-3">
+                <label for="video1" class="fw-bold">Link del Video 1</label>
+                <input type="url" class="form-control" id="video1" name="video1" value="{{ producto.video1 or '' }}" placeholder="Ingrese el link del primer video">
+            </div>
+            
+            <div class="mb-3">
+                <label for="video2" class="fw-bold">Link del Video 2</label>
+                <input type="url" class="form-control" id="video2" name="video2" value="{{ producto.video2 or '' }}" placeholder="Ingrese el link del segundo video">
+            </div>
+            
+
+            
 
             <h3>Variantes</h3>
             <div class="row row-cols-1 row-cols-md-2" id="attributes-container">
@@ -85,7 +159,7 @@
                                 <input type="file" class="form-control" name="image_{{ producto_detalle.id }}" accept="image/*" onchange="previewImage(this, {{ producto_detalle.id }})">
                                 {% if producto_detalle.imagen %}
                                     <div class="mt-2 text-center">
-                                        <img src="{{ url_for('static', filename='uploads/' + producto_detalle.imagen) }}" class="img-fluid" style="max-height: 150px;" alt="Imagen Variante" id="preview-image-{{ producto_detalle.id }}">
+                                        <img src="{{ url_for('static', filename='uploads/productos/' + producto_detalle.imagen) }}" class="img-fluid" style="max-height: 150px;" alt="Imagen Variante" id="preview-image-{{ producto_detalle.id }}">
                                     </div>
                                 {% endif %}
                             </div>
