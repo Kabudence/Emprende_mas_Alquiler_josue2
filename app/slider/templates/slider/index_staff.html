@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Staff{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Gestión de Staff</h1>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <form action="{{ url_for('staff.index') }}" method="GET" class="d-flex shadow p-2 rounded">
+            <input type="text" name="busqueda" class="form-control me-2" placeholder="Buscar por nombre, DNI..." value="{{ busqueda }}" aria-label="Buscar staff">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('staff.crear') }}" class="btn btn-outline-primary shadow-sm">
+            <i class="fas fa-plus-circle"></i> Agregar Staff
+        </a>
+    </div>
+</div>
+
+{% if staffs %}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Especialidad</th>
+                <th>DNI</th>
+                <th>Capacidad Máxima</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for staff in staffs %}
+            <tr class="text-center">
+                <td><strong>{{ staff.id }}</strong></td>
+                <td>{{ staff.name }}</td>
+                <td>{{ staff.speciality }}</td>
+                <td>{{ staff.dni }}</td>
+                <td>{{ staff.max_capacity }}</td>
+                <td>
+                    <a href="#" class="btn btn-outline-info btn-sm me-1" data-bs-toggle="modal" data-bs-target="#viewModal{{ staff.id }}">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ url_for('staff.editar', staff_id=staff.id) }}" class="btn btn-outline-warning btn-sm me-1">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ staff.id }}">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+
+                    <!-- Modal para ver detalles -->
+                    <div class="modal fade" id="viewModal{{ staff.id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ staff.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 style="width: 100%;" class="text-center modal-title" id="viewModalLabel{{ staff.id }}">Detalles del Staff</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Nombre:</strong> {{ staff.name }}</p>
+                                    <p><strong>Especialidad:</strong> {{ staff.speciality }}</p>
+                                    <p><strong>DNI:</strong> {{ staff.dni }}</p>
+                                    <p><strong>Capacidad Máxima:</strong> {{ staff.max_capacity }}</p>
+                                    <p><strong>ID Negocio:</strong> {{ staff.negocio_id }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Eliminar -->
+                    <div class="modal fade" id="deleteModal{{ staff.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ staff.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="text-center" id="deleteModalLabel{{ staff.id }}">Confirmar Eliminación</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ¿Estás seguro de eliminar al staff <strong>{{ staff.name }}</strong>?
+                                </div>
+                                <div class="modal-footer d-flex justify-content-center">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+               <form id="deleteForm{{ staff.id }}" method="POST" action="{{ url_for('staff.eliminar', staff_id=staff.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+</form>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info text-center" role="alert">
+    No se encontraron miembros del staff que coincidan con tu búsqueda.
+</div>
+{% endif %}
+{% endblock %}

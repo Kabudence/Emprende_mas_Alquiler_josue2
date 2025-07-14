@@ -19,6 +19,13 @@ class StaffRepository:
         except StaffModel.DoesNotExist:
             return None
 
+
+    def delete(self, staff_id):
+        q = StaffModel.delete().where(StaffModel.id == staff_id)
+        deleted = q.execute()
+        return deleted
+
+
     def list_all(self) -> List[Staff]:
         records = StaffModel.select()
         return [

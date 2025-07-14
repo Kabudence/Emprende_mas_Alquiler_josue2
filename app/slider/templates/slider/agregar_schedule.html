@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Agregar Horario{% endblock %}
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Agregar Horario a {{ sucursal.NombreSucursal }}</h2>
+    <form id="form-schedule">
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <label for="day" class="form-label">Día de la semana</label>
+            <select id="day" name="day" class="form-select" required>
+                <option value="" disabled selected>Selecciona un día</option>
+                {% for dia in dias_semana %}
+                <option value="{{ dia }}">{{ dia }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="start_time" class="form-label">Hora de inicio</label>
+            <input type="time" id="start_time" name="start_time" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="end_time" class="form-label">Hora de fin</label>
+            <input type="time" id="end_time" name="end_time" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="staff_ids" class="form-label">Staff asignado</label>
+            <select id="staff_ids" name="staff_ids" class="form-select" multiple required>
+                {% for staff in staff_list %}
+                <option value="{{ staff.id }}">{{ staff.name }} ({{ staff.speciality }})</option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">Mantén presionada Ctrl o Cmd para seleccionar varios.</small>
+        </div>
+        <input type="hidden" name="negocio_id" value="{{ sucursal.id_negocio }}">
+        <input type="hidden" name="business_id" value="{{ sucursal.ID }}">
+        <button type="submit" class="btn btn-primary">Guardar Horario</button>
+        <a href="{{ url_for('schedule.schedules_index') }}" class="btn btn-secondary">Volver</a>
+    </form>
+    <div id="msg"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('form-schedule').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const form   = e.target;
+    const formData = new FormData(form);
+
+    const data = {
+        negocio_id : parseInt(formData.get('negocio_id')),
+        business_id: parseInt(formData.get('business_id')),
+        day        : formData.get('day'),
+        start_time : formData.get('start_time'),
+        end_time   : formData.get('end_time'),
+        staff_ids  : Array.from(formData.getAll('staff_ids')).map(Number)
+    };
+    // OBTIENE EL CSRF TOKEN DEL INPUT HIDDEN
+    const csrfToken = document.getElementById('csrf_token').value;
+
+    const resp  = await fetch('/create-schedule', {
+        method : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken   // <- ESTO ES LO IMPORTANTE
+        },
+        body   : JSON.stringify(data)
+    });
+
+    const text = await resp.text();
+    let body;
+    try { body = JSON.parse(text); } catch { body = { raw: text }; }
+
+    if (resp.status === 201) {
+        document.getElementById('msg').innerHTML =
+            '<div class="alert alert-success">Horario guardado con éxito.</div>';
+        form.reset();
+    } else {
+        document.getElementById('msg').innerHTML =
+            `<div class="alert alert-danger">Error: ${body.error || 'Revisa la consola'}</div>`;
+        console.warn('Respuesta del servidor:', body.raw || body);
+    }
+});
+</script>
+{% endblock %}

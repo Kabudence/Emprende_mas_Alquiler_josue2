@@ -36,3 +36,9 @@ class StaffCommandService:
         all_staff = self.staff_repository.list_all()
         StaffDomainService.validate_authenticity(staff, all_staff)
         return self.staff_repository.update(staff)
+
+    # staff/application/commands/StaffCommandService.py
+
+    def delete(self, staff_id: int):
+        return self.staff_repository.delete(staff_id)
+

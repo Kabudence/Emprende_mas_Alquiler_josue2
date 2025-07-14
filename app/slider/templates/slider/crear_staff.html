@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Staff{% endblock %}
+
+{% block content %}
+<h1 class="h3 my-4 text-underline">Agregar Staff</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+    <form action="{{ url_for('staff.crear') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label for="name" class="form-label">Nombre del Staff</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Ingrese el nombre" required>
+            </div>
+            <div class="mb-3">
+                <label for="speciality" class="form-label">Especialidad</label>
+                <input type="text" class="form-control" id="speciality" name="speciality" placeholder="Ejemplo: Odontólogo" required>
+            </div>
+            <div class="mb-3">
+                <label for="dni" class="form-label">DNI</label>
+                <input type="text" class="form-control" id="dni" name="dni" pattern="[0-9]{8}" maxlength="8" placeholder="Ingrese el DNI (8 dígitos)" required>
+            </div>
+            <div class="mb-3">
+                <label for="max_capacity" class="form-label">Capacidad Máxima</label>
+                <input type="number" class="form-control" id="max_capacity" name="max_capacity" min="1" placeholder="Máximo de citas diarias" required>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

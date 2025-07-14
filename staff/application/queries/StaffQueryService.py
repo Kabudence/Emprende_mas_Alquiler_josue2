@@ -32,3 +32,6 @@ class StaffQueryService:
         :return: Staff object if found, None otherwise.
         """
         return self.staff_repository.get_by_dni(dni)
+
+    def list_all_by_negocio(self, negocio_id):
+        return  self.staff_repository.list_by_negocio_business(negocio_id)
