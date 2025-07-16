@@ -1,3 +1,4 @@
+from datetime import date
 from http.client import HTTPException
 
 from flask import Blueprint, request, jsonify, current_app, flash, redirect, url_for, render_template
@@ -28,11 +29,11 @@ def get_all_schedules():
 @schedule_api.route('/schedule-with-staff', methods=['GET'])
 def get_schedule_with_staff():
     negocio_id = request.args.get('negocio_id', type=int)
-    business_id = request.args.get('business_id', type=int)
-    day = request.args.get('day', type=str)
+    business_id = request.args.get('business_id', default=None, type=int)
+    day = request.args.get('day', default=None, type=str)
 
-    if not (negocio_id and business_id and day):
-        return jsonify({"error": "Missing one or more required params (negocio_id, business_id, day)"}), 400
+    if not negocio_id:
+        return jsonify({"error": "Missing required param: negocio_id"}), 400
 
     schedule_query_service = current_app.config["schedule_query_service"]
 
@@ -45,6 +46,7 @@ def get_schedule_with_staff():
         return jsonify(result), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 404
+
 
 @schedule_api.route('/schedule', methods=['GET'])
 def get_schedule():
@@ -295,3 +297,45 @@ def schedule_errors(err):
     code = err.code if isinstance(err, HTTPException) else 500
     current_app.logger.exception(err)
     return jsonify(error=str(err)), code
+
+# --------------------------- CALENDARIO ---------------------------
+@schedule_api.route("/calendar")
+def calendar_view():
+    negocio_id = request.args.get("negocio_id", type=int)
+    if not negocio_id: return "Falta negocio_id", 400
+
+    today  = date.today()
+    year   = int(request.args.get("year",  today.year))
+    month  = int(request.args.get("month", today.month))
+
+    appt_qs = current_app.config["appointment_query_service"]
+    # ► citas del mes
+    appts   = appt_qs.list_by_month_and_negocio(year=year, month=month, negocio_id=negocio_id)
+
+    print ("Total de citas en el mes:", len(appts))
+    print ("Citas:", [a.to_dict() for a in appts])
+    days_with_appointments = {a.start_time.day for a in appts}   # {1, 7, 15, …}
+    print("Días con citas:", days_with_appointments)
+    return render_template(
+        "slider/calendar.html",
+        year=year, month=month,
+        negocio_id=negocio_id,
+        days_with_appointments=list(days_with_appointments),   # → Jinja2
+    )
+
+
+@schedule_api.route("/calendar/details")
+def calendar_details():
+    negocio_id = request.args.get("negocio_id", type=int)
+    year  = int(request.args["year"]);  month = int(request.args["month"]);  day = int(request.args["day"])
+
+    appt_qs  = current_app.config["appointment_query_service"]
+    iso_date = f"{year:04d}-{month:02d}-{day:02d}"
+    appts    = appt_qs.list_by_day_and_negocio(iso_date, negocio_id)
+
+    # añade (opcional) nombre de staff si tu entidad ya lo trae
+    for a in appts:
+        # a.staff   → relación lazy?
+        a.staff_names = [getattr(a, "staff").name] if getattr(a, "staff", None) else []
+
+    return jsonify({"appointments": [a.to_dict() | {"staff_names": a.staff_names} for a in appts]})

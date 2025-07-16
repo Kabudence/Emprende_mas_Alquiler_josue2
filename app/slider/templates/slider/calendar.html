@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Calendario de Horarios{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4 text-center">Calendario de Horarios</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-outline-primary" onclick="changeMonth(-1)">← Mes anterior</button>
+        <h4 id="calendar-title"></h4>
+        <button class="btn btn-outline-primary" onclick="changeMonth(1)">Mes siguiente →</button>
+    </div>
+    <div id="calendar"></div>
+    <div id="details" class="mt-4"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ---- variables inyectadas ---- */
+let year  = {{ year }};
+let month = {{ month }};
+const diasConCitas = {{ days_with_appointments | tojson }};
+const negocioId    = {{ negocio_id }};
+/* ------------------------------ */
+
+function renderCalendar() {
+    const first = new Date(year, month - 1, 1);
+    const last  = new Date(year, month, 0).getDate();
+
+    let html = '<table class="table table-bordered text-center"><tr>';
+    ['L','M','X','J','V','S','D'].forEach(d => html += `<th>${d}</th>`);
+    html += '</tr><tr>';
+
+    for (let i = 0; i < first.getDay() - 1; i++) html += '<td></td>';
+
+    for (let d = 1; d <= last; d++) {
+        const mark = diasConCitas.includes(d) ? 'bg-success text-white' : '';
+        html += `<td class="${mark}" style="cursor:pointer" onclick="showDetails(${d})">${d}</td>`;
+        if ((first.getDay() - 1 + d) % 7 === 0) html += '</tr><tr>';
+    }
+    html += '</tr></table>';
+
+    document.getElementById('calendar').innerHTML   = html;
+    document.getElementById('calendar-title').innerText = `${month}/${year}`;
+}
+
+function changeMonth(delta){
+    month += delta;
+    if (month < 1){ month = 12; year--; }
+    if (month > 12){ month = 1; year++; }
+    window.location = `/calendar?negocio_id=${negocioId}&year=${year}&month=${month}`;
+}
+
+function showDetails(day){
+    fetch(`/calendar/details?negocio_id=${negocioId}&year=${year}&month=${month}&day=${day}`)
+      .then(r => r.json())
+      .then(data => {
+        let html = `<h5>Citas para el ${day}/${month}/${year}</h5>`;
+        if(data.appointments.length){
+            html += '<ul>';
+            data.appointments.forEach(a=>{
+                const names = (a.staff_names || []).join(', ');
+                const ini   = a.start_time.slice(11,16);
+                const fin   = a.end_time.slice(11,16);
+                html += `<li>${ini} – ${fin} | ${names}</li>`;
+            });
+            html += '</ul>';
+        }else{
+            html += '<div class="alert alert-info">Sin citas</div>';
+        }
+        document.getElementById('details').innerHTML = html;
+      });
+}
+
+renderCalendar();
+</script>
+{% endblock %}

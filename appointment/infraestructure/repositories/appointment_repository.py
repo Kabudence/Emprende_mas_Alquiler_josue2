@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from peewee import fn
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError  # estándar en Python 3.9+
 
 from appointment.domain.entities.appointment import Appointment, AppointmentStatus
 from appointment.infraestructure.models.appointment_model import AppointmentModel
@@ -14,6 +15,16 @@ class AppointmentRepository:
         query = AppointmentModel.select().where(
             (fn.DATE(AppointmentModel.start_time) == day) &
             (AppointmentModel.negocio_id == negocio_id)
+        )
+        return [self._from_model(record) for record in query]
+
+    def get_by_negocio(self, negocio_id: int) -> list:
+        """
+        """
+        now_pe = datetime.now(ZoneInfo("America/Lima"))
+        query = AppointmentModel.select().where(
+            (AppointmentModel.negocio_id == negocio_id) &
+            (AppointmentModel.end_time >= now_pe)
         )
         return [self._from_model(record) for record in query]
 
@@ -114,3 +125,53 @@ class AppointmentRepository:
             return self._from_model(record)
         except AppointmentModel.DoesNotExist:
             return None
+
+    # ------------------------------------------------------------------
+    # NUEVO ➊  -  citas entre dos fechas ISO (inclusive/exclusivo)
+    # ------------------------------------------------------------------
+    def list_between_dates(self,
+                           negocio_id: int,
+                           date_from_iso: str,
+                           date_to_iso: str) -> list:
+        """
+        Devuelve TODAS las citas cuyo start_time esté en el rango:
+        [date_from_iso, date_to_iso)  (incluye inicio, excluye fin).
+
+        • date_from_iso y date_to_iso deben venir como 'YYYY-MM-DD'.
+        • Ignora citas CANCELLED.
+        """
+        from_date = self._iso_to_datetime(date_from_iso)
+        to_date   = self._iso_to_datetime(date_to_iso)
+
+        query = (AppointmentModel
+                 .select()
+                 .where(
+                     (AppointmentModel.negocio_id == negocio_id) &
+                     (AppointmentModel.start_time >= from_date) &
+                     (AppointmentModel.start_time <  to_date) &
+                     (AppointmentModel.status != AppointmentStatus.CANCELLED.value)
+                 ))
+        print(f"Query: {query.sql()}")
+
+        return [self._from_model(r) for r in query]
+
+    # ------------------------------------------------------------------
+    # Helper interno – convierte 'YYYY-MM-DD'  →  datetime 00:00:00
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _iso_to_datetime(iso_str: str) -> datetime:
+        """'YYYY‑MM‑DD' → datetime 00:00:00 con tz Lima (o UTC‑5)."""
+        tz_lima = _safe_zoneinfo("America/Lima")
+        return datetime.strptime(iso_str, "%Y-%m-%d").replace(tzinfo=tz_lima)
+
+def _safe_zoneinfo(key: str):
+    """
+    Devuelve ZoneInfo(key) o, si no existe, una tz fija UTC‑5 (Lima).
+    """
+    try:
+        return ZoneInfo(key)
+    except ZoneInfoNotFoundError:
+        # UTC‑5 sin cambio horario
+        return timezone(timedelta(hours=-5))
+# ─────────────────────────────────────────────────────────────
+

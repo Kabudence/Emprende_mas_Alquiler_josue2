@@ -94,7 +94,6 @@ def staff_to_json(staff):
         "dni": staff.dni
     }
 
-# -------- HTML para administración --------
 
 @staff_api.route('/staff')
 def index():

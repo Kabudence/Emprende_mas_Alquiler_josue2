@@ -73,44 +73,60 @@ class ScheduleRepository:
             query = query.where(ScheduleStaffModel.schedule_id == schedule_id)
         return list(query)
 
-    def get_schedule_with_staff(self, day: str, business_id: int, negocio_id: int) -> Optional[Dict[str, Any]]:
+    def get_schedule_with_staff(
+            self,
+            negocio_id: int,
+            business_id: Optional[int] = None,
+            day: Optional[str] = None
+    ) -> Optional[list[dict]]:
         try:
-            # 1. Encuentra el schedule principal
-            schedule_record = (ScheduleModel
-                               .get((ScheduleModel.day == day) &
-                                    (ScheduleModel.business_id == business_id) &
-                                    (ScheduleModel.negocio_id == negocio_id) &
-                                    (ScheduleModel.is_active == True)))
-            # 2. Trae todos los staff asociados a ese schedule usando JOIN
-            staff_query = (StaffModel
-                           .select()
-                           .join(ScheduleStaffModel, on=(StaffModel.id == ScheduleStaffModel.staff_id))
-                           .where(ScheduleStaffModel.schedule_id == schedule_record.id))
-            staff_list = [{
-                "id": s.id,
-                "speciality": s.speciality,
-                "name": s.name,
-                "negocio_id": s.negocio_id,
-                "max_capacity": s.max_capacity,
-                "dni": getattr(s, "dni", None)
-            } for s in staff_query]
+            # 1. Armar la consulta base con negocio_id obligatorio
+            query = (ScheduleModel.select()
+                     .where(ScheduleModel.negocio_id == negocio_id, ScheduleModel.is_active == True))
 
-            # 3. Devuelve un dict con los datos combinados
-            return {
-                "schedule": {
-                    "id": schedule_record.id,
-                    "day": schedule_record.day,
-                    "start_time": schedule_record.start_time.strftime("%H:%M"),
-                    "end_time": schedule_record.end_time.strftime("%H:%M"),
-                    "negocio_id": schedule_record.negocio_id,
-                    "business_id": schedule_record.business_id,
-                    "is_active": schedule_record.is_active
-                },
-                "staff": staff_list
-            }
+            # 2. Agregar filtros opcionales si se proveen
+            if business_id is not None:
+                query = query.where(ScheduleModel.business_id == business_id)
+            if day is not None:
+                query = query.where(ScheduleModel.day == day)
+
+            schedules = list(query)
+            if not schedules:
+                return None
+
+            result = []
+            for schedule_record in schedules:
+                # Staff asociado a este schedule
+                staff_query = (StaffModel
+                               .select()
+                               .join(ScheduleStaffModel, on=(StaffModel.id == ScheduleStaffModel.staff_id))
+                               .where(ScheduleStaffModel.schedule_id == schedule_record.id))
+
+                staff_list = [{
+                    "id": s.id,
+                    "speciality": s.speciality,
+                    "name": s.name,
+                    "negocio_id": s.negocio_id,
+                    "max_capacity": s.max_capacity,
+                    "dni": getattr(s, "dni", None)
+                } for s in staff_query]
+
+                result.append({
+                    "schedule": {
+                        "id": schedule_record.id,
+                        "day": schedule_record.day,
+                        "start_time": schedule_record.start_time.strftime("%H:%M"),
+                        "end_time": schedule_record.end_time.strftime("%H:%M"),
+                        "negocio_id": schedule_record.negocio_id,
+                        "business_id": schedule_record.business_id,
+                        "is_active": schedule_record.is_active
+                    },
+                    "staff": staff_list
+                })
+
+            return result
         except ScheduleModel.DoesNotExist:
             return None
-
 
     def get_by_id(self, id: int) -> Optional[Schedule]:
         try:

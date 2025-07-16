@@ -107,6 +107,7 @@ def create_app():
     csrf.exempt(staff_api)  # <--- agrega esta línea aquí
     app.register_blueprint(schedule_api)
     app.register_blueprint(appointment_api)
+    csrf.exempt(appointment_api)  # <--- agrega esta línea aquí
 
 
     @app.route('/static/<path:filename>')

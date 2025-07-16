@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
 
+
 appointment_api = Blueprint('appointment_api', __name__)
 
-# Crear una cita
 @appointment_api.route('/appointments', methods=['POST'])
 def create_appointment():
     data = request.get_json()
@@ -44,7 +44,7 @@ def get_appointment(appointment_id):
         return jsonify({'error': 'Appointment not found'}), 404
 
 # Listar citas por día y negocio o staff
-@appointment_api.route('/appointments', methods=['GET'])
+@appointment_api.route('/appointments-by-day', methods=['GET'])
 def list_appointments():
     day = request.args.get('day')
     negocio_id = request.args.get('negocio_id', type=int)
@@ -102,3 +102,6 @@ def get_available_slots():
         negocio_id, business_id, day, duration
     )
     return jsonify({"available_slots": slots}), 200
+
+
+
