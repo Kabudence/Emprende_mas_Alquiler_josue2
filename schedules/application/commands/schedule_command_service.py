@@ -87,3 +87,8 @@ class ScheduleCommandService:
             raise ValueError(
                 f"Schedule-staff relationship already exists for staff IDs: {errores} and schedule {schedule_id}"
             )
+
+    def delete_schedule(self, schedule_id: int):
+
+        return self.schedule_repository.delete(schedule_id)
+

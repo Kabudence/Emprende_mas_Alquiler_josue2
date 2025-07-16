@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Editar Horario{% endblock %}
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Editar Horario de {{ sucursal.NombreSucursal }}</h2>
+    <form method="POST" action="{{ url_for('schedule.editar_horario', horario_id=horario.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <label for="day" class="form-label">Día de la semana</label>
+            <select id="day" name="day" class="form-select" required>
+                {% for dia in dias_semana %}
+                <option value="{{ dia }}" {% if dia == horario.day %}selected{% endif %}>{{ dia }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="start_time" class="form-label">Hora de inicio</label>
+            <input type="time" id="start_time" name="start_time" class="form-control" required value="{{ horario.start_time }}">
+        </div>
+        <div class="mb-3">
+            <label for="end_time" class="form-label">Hora de fin</label>
+            <input type="time" id="end_time" name="end_time" class="form-control" required value="{{ horario.end_time }}">
+        </div>
+        <div class="mb-3">
+            <label for="staff_ids" class="form-label">Staff asignado</label>
+            <select id="staff_ids" name="staff_ids" class="form-select" multiple required>
+                {% for staff in staff_list %}
+                <option value="{{ staff.id }}" {% if staff.id in horario.staff_ids %}selected{% endif %}>
+                    {{ staff.name }} ({{ staff.speciality }})
+                </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">Mantén presionada Ctrl o Cmd para seleccionar varios.</small>
+        </div>
+        <button type="submit" class="btn btn-primary">Actualizar Horario</button>
+        <a href="{{ url_for('schedule.schedules_index') }}" class="btn btn-secondary">Volver</a>
+    </form>
+</div>
+{% endblock %}

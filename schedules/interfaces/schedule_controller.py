@@ -147,15 +147,30 @@ def schedules_index():
         return redirect(url_for('negocios.crear'))
 
     schedule_query_service = current_app.config["schedule_query_service"]
+    staff_query_service = current_app.config["staff_query_service"]
     sucursales_con_horarios = []
+
     for sucursal in sucursales:
         horarios = schedule_query_service.get_all_days_by_negocio_business(
             negocio_id=sucursal["id_negocio"],
             business_id=sucursal["ID"]
         )
+        horarios_out = []
+        for h in horarios:
+            h_dict = h.to_dict()
+            staff_ids = schedule_query_service.get_staff_by_schedule_query(h.id)
+            # Si get_by_id devuelve None si no existe, filtra con if s
+            staff_list = [
+                staff_query_service.get_by_id(sid).to_dict()
+                for sid in staff_ids
+                if staff_query_service.get_by_id(sid)
+            ]
+            h_dict['staff'] = staff_list
+            horarios_out.append(h_dict)
+
         sucursales_con_horarios.append({
             "sucursal": sucursal,
-            "horarios": [h.to_dict() for h in horarios]
+            "horarios": horarios_out
         })
 
     return render_template('slider/index_schedule.html', sucursales_con_horarios=sucursales_con_horarios)
@@ -177,6 +192,70 @@ def agregar_schedule(sucursal_id):
     # Puedes limitar los días aquí si quieres un select fijo en el frontend
     dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
     return render_template('slider/agregar_schedule.html', sucursal=sucursal, staff_list=staff_list, dias_semana=dias_semana)
+
+
+# ---- EDITAR HORARIO (GET y POST) ----
+@schedule_api.route('/schedules/editar/<int:horario_id>', methods=['GET', 'POST'])
+def editar_horario(horario_id):
+    schedule_query_service = current_app.config["schedule_query_service"]
+    staff_query_service = current_app.config["staff_query_service"]
+
+    horario = schedule_query_service.get_by_id(horario_id)
+    if not horario:
+        flash("Horario no encontrado.", "danger")
+        return redirect(url_for('schedule.schedules_index'))
+
+    sucursal = next((s for s in get_sucursales_by_negocio() if s["ID"] == horario.business_id), None)
+    if not sucursal:
+        flash("Sucursal no encontrada.", "danger")
+        return redirect(url_for('schedule.schedules_index'))
+
+    staff_list = staff_query_service.list_all_by_negocio(sucursal["id_negocio"])
+    dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+    if request.method == 'POST':
+        day        = request.form.get('day')
+        start_time = request.form.get('start_time')
+        end_time   = request.form.get('end_time')
+        staff_ids  = request.form.getlist('staff_ids')
+        staff_ids  = [int(sid) for sid in staff_ids]
+
+        schedule_command_service = current_app.config["schedule_command_service"]
+
+        try:
+            updated = schedule_command_service.update(
+                schedule_id=horario.id,
+                negocio_id=horario.negocio_id,
+                business_id=horario.business_id,
+                day=day,
+                start_time=start_time,
+                end_time=end_time,
+                staff_ids=staff_ids
+            )
+            flash("Horario actualizado correctamente.", "success")
+            return redirect(url_for('schedule.schedules_index'))
+        except Exception as e:
+            flash(f"Error al actualizar horario: {e}", "danger")
+
+    # staff_ids seleccionados para el template (debe ser lista de ints)
+    horario_dict = horario.to_dict()
+    horario_dict['staff_ids'] = [s['id'] for s in horario_dict.get('staff', [])]
+    return render_template('slider/editar_schedule.html',
+                           horario=horario_dict,
+                           sucursal=sucursal,
+                           staff_list=staff_list,
+                           dias_semana=dias_semana)
+
+# ---- ELIMINAR HORARIO (POST) ----
+@schedule_api.route('/schedules/eliminar/<int:horario_id>', methods=['POST'])
+def eliminar_horario(horario_id):
+    schedule_command_service = current_app.config["schedule_command_service"]
+    try:
+        schedule_command_service.delete_schedule(horario_id)
+        flash("Horario eliminado correctamente.", "success")
+    except Exception as e:
+        flash(f"Error al eliminar horario: {e}", "danger")
+    return redirect(url_for('schedule.schedules_index'))
 
 
 

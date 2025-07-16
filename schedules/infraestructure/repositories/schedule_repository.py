@@ -112,6 +112,20 @@ class ScheduleRepository:
             return None
 
 
+    def get_by_id(self, id: int) -> Optional[Schedule]:
+        try:
+            record = ScheduleModel.get(ScheduleModel.id == id)
+            return Schedule(
+                id=record.id,
+                day=record.day,
+                start_time=record.start_time,
+                end_time=record.end_time,
+                negocio_id=record.negocio_id,
+                business_id=record.business_id,
+                is_active=record.is_active
+            )
+        except ScheduleModel.DoesNotExist:
+            return None
 
     def create(self, schedule: Schedule) -> Schedule:
         record = ScheduleModel.create(
@@ -150,3 +164,17 @@ class ScheduleRepository:
             is_active=record.is_active
         )
 
+    def delete(self, schedule_id: int) -> bool:
+        try:
+            record = ScheduleModel.get(ScheduleModel.id == schedule_id)
+            record.delete_instance()
+            return True
+        except ScheduleModel.DoesNotExist:
+            return False
+
+    def get_staff_ids_by_schedulee(self, schedule_id: int) -> list:
+        """
+        Devuelve la lista de staff_id asociados a un horario (schedule).
+        """
+        query = ScheduleStaffModel.select().where(ScheduleStaffModel.schedule_id == schedule_id)
+        return [rec.staff_id for rec in query]

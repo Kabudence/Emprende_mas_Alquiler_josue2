@@ -38,3 +38,10 @@ class ScheduleQueryService:
         :return: List of days with schedules.
         """
         return self.schedule_repository.get_by_negocio_and_businessl(negocio_id=negocio_id, business_id=business_id)
+
+
+    def get_by_id(self, horario_id):
+        return self.schedule_repository.get_by_id(horario_id)
+
+    def get_staff_by_schedule_query(self, schedule_id: int):
+        return self.schedule_repository.get_staff_ids_by_schedulee(schedule_id)
