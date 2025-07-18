@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, current_app, flash, redirect, url
 from flask_login import current_user
 from sqlalchemy.sql import text
 from app.database import db
+from staff.domain.entities.staff import Staff
 
 schedule_api = Blueprint('schedule', __name__)
 
@@ -323,9 +324,11 @@ def calendar_view():
         days_with_appointments=list(days_with_appointments),   # → Jinja2
     )
 
-
 @schedule_api.route("/calendar/details")
 def calendar_details():
+    from app.models import Cliente, ServicioCompleto           # SQLAlchemy
+    from staff.infraestructure.models.staff_model import StaffModel  # Peewee
+
     negocio_id = request.args.get("negocio_id", type=int)
     year  = int(request.args["year"]);  month = int(request.args["month"]);  day = int(request.args["day"])
 
@@ -333,9 +336,30 @@ def calendar_details():
     iso_date = f"{year:04d}-{month:02d}-{day:02d}"
     appts    = appt_qs.list_by_day_and_negocio(iso_date, negocio_id)
 
-    # añade (opcional) nombre de staff si tu entidad ya lo trae
-    for a in appts:
-        # a.staff   → relación lazy?
-        a.staff_names = [getattr(a, "staff").name] if getattr(a, "staff", None) else []
+    # ── IDs únicos ───────────────────────────────
+    client_ids  = {a.client_id  for a in appts if a.client_id}
+    staff_ids   = {a.staff_id   for a in appts if a.staff_id}
+    service_ids = {a.service_id for a in appts if a.service_id}
 
-    return jsonify({"appointments": [a.to_dict() | {"staff_names": a.staff_names} for a in appts]})
+    # ── Mapas {id: nombre} ───────────────────────
+    clients  = {c.id: c.nombre_completo
+                for c in Cliente.query.filter(Cliente.id.in_(client_ids))}
+
+    staff    = {s.id: s.name                       # ← usa .select() de Peewee
+                for s in (StaffModel
+                           .select()
+                           .where(StaffModel.id.in_(staff_ids)))}
+
+    services = {sv.id: sv.titulo_publicacion
+                for sv in ServicioCompleto.query.filter(ServicioCompleto.id.in_(service_ids))}
+
+    # ── Enriquecer cada cita ─────────────────────
+    enriched = []
+    for a in appts:
+        dto = a.to_dict()
+        dto["client_name"]  = clients.get(a.client_id,  "")
+        dto["staff_name"]   = staff.get(a.staff_id,    "")
+        dto["service_name"] = services.get(a.service_id, "")
+        enriched.append(dto)
+
+    return jsonify({"appointments": enriched})

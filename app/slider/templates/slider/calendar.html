@@ -56,13 +56,19 @@ function showDetails(day){
       .then(r => r.json())
       .then(data => {
         let html = `<h5>Citas para el ${day}/${month}/${year}</h5>`;
-        if(data.appointments.length){
-            html += '<ul>';
-            data.appointments.forEach(a=>{
-                const names = (a.staff_names || []).join(', ');
-                const ini   = a.start_time.slice(11,16);
-                const fin   = a.end_time.slice(11,16);
-                html += `<li>${ini} – ${fin} | ${names}</li>`;
+        if (data.appointments.length){
+            html += '<ul class="list-unstyled">';
+            data.appointments.forEach(a => {
+                const ini = a.start_time.slice(11,16);
+                const fin = a.end_time.slice(11,16);
+
+                html += `
+                  <li class="mb-2">
+                    <strong>${ini} – ${fin}</strong><br>
+                    Cliente: ${a.client_name || '—'}<br>
+                    Servicio: ${a.service_name || '—'}<br>
+                    Staff: ${a.staff_name || '—'}
+                  </li>`;
             });
             html += '</ul>';
         }else{
