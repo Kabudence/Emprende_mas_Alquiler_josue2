@@ -164,6 +164,24 @@
   <label for="precio_oferta" class="form-label">Precio Oferta</label>
   <input type="number" name="precio_oferta" id="precio_oferta" step="0.01" class="form-control" value="{{ servicio.precio_oferta or '' }}">
 </div>
+<!-- Precio Promoción (%) -->
+<div class="mb-3">
+  <label for="precio_promocion" class="form-label">Reserva (%)</label>
+  <select name="precio_promocion" id="precio_promocion" class="form-select">
+    {% for pct in range(0, 110, 10) %}
+      <option value="{{ pct }}" {% if servicio and servicio.precio_promocion == pct %}selected{% endif %}>
+        {{ pct }}%
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Tiempo de Duración -->
+<div class="mb-3">
+  <label for="tiempo_duracion" class="form-label">Tiempo de duración (ej: 2 horas, 30 min, etc.)</label>
+  <input type="text" name="tiempo_duracion" id="tiempo_duracion" class="form-control"
+         value="{{ servicio.tiempo_duracion if servicio else '' }}">
+</div>
 
 <!-- En venta -->
 <div class="mb-3">

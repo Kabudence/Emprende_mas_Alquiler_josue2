@@ -22,6 +22,9 @@
                     <th>Tipo</th>
                     <th>Precio</th>
                     <th>Oferta</th>
+                    <th>Porcentaje Reserva</th>
+                    <th>Duración</th>
+
                     <th>¿En venta?</th>
                     <th>Imagen</th>
                     <th>Acciones</th>
@@ -39,6 +42,9 @@
                     <td>
                         {{ servicio.precio_oferta if servicio.precio_oferta is not none else '—' }}
                     </td>
+                    <td>{{ servicio.precio_promocion }}%</td>
+<td>{{ servicio.tiempo_duracion or '—' }}</td>
+
                     <td>
                         {% if servicio.en_venta %}
                             <span class="badge bg-success">Sí</span>

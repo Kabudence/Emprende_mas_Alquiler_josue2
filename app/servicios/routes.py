@@ -225,7 +225,8 @@ def crear_completo():
         precio_oferta = request.form.get('precio_oferta')
         en_venta     = request.form.get('en_venta', '1')
         seleccionados = request.form.getlist('locales[]')
-
+        precio_promocion = int(request.form.get('precio_promocion', 0))
+        tiempo_duracion = request.form.get('tiempo_duracion')
         # Función para procesar medios
         def procesar_media(numero):
             tipo_medio = request.form.get(f'tipo_medio{numero}')
@@ -266,6 +267,8 @@ def crear_completo():
             id_negocio=negocio.id,
             precio=precio,
             precio_oferta=precio_oferta if precio_oferta else None,
+            precio_promocion=precio_promocion,
+            tiempo_duracion=tiempo_duracion,
             en_venta=bool(int(en_venta))
         )
 
@@ -300,7 +303,6 @@ def editar_completo(id):
     negocio = get_current_business()
     locales = Local.query.filter_by(usuario_id=current_user.id).all()
     tipos_servicio = TipoServicio.query.all()
-
     if request.method == 'POST':
         try:
             # Actualizar campos básicos
@@ -316,6 +318,8 @@ def editar_completo(id):
             servicio.precio = request.form.get('precio') or 0
             servicio.precio_oferta = request.form.get('precio_oferta') or None
             servicio.en_venta = bool(int(request.form.get('en_venta', '1')))
+            servicio.precio_promocion = int(request.form.get('precio_promocion', 0))
+            servicio.tiempo_duracion = request.form.get('tiempo_duracion')
 
             # Manejo de locales
             nuevos_locales_ids = request.form.getlist('locales[]')

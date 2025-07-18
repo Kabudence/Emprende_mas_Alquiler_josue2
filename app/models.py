@@ -494,34 +494,30 @@ class ServicioCompleto(db.Model):
     titulo_publicacion  = db.Column(db.String(150), nullable=False)
     estado              = db.Column(db.Enum('Activo','Inactivo', name='estado_enum'), nullable=False, default='Activo')
     imagen              = db.Column(db.String(255), nullable=True)
-
     subtitulo1          = db.Column(db.Text, nullable=True)
     descripcion1        = db.Column(db.Text, nullable=True)
     subtitulo2          = db.Column(db.Text, nullable=True)
     descripcion2        = db.Column(db.Text, nullable=True)
     subtitulo3          = db.Column(db.Text, nullable=True)
     descripcion3        = db.Column(db.Text, nullable=True)
-
     media1              = db.Column(db.String(255), nullable=True)
     media2              = db.Column(db.String(255), nullable=True)
-
     precio              = db.Column(db.Numeric(10,2), nullable=False, default=0.0)
     precio_oferta       = db.Column(db.Numeric(10,2), nullable=True)
+    precio_promocion    = db.Column(db.Integer, nullable=False, default=0)    # Porcentaje del 0 al 100
+    tiempo_duracion     = db.Column(db.String(50), nullable=True)
     en_venta            = db.Column(db.Boolean, nullable=False, default=True)
-
     tipo_servicio_id    = db.Column(db.Integer, db.ForeignKey('tipo_servicio.id_tipo_servicio'), nullable=True)
     tipo_servicio       = db.relationship('TipoServicio', backref=db.backref('servicios_completos', lazy='dynamic'))
-
     id_negocio          = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
     negocio             = db.relationship('Negocio', backref='servicios_completos')
-
     locales = db.relationship(
         'Local',
         secondary=servicio_local,
         backref=db.backref('servicios_completos', lazy='dynamic')
     )
 
-    
+
 
 class TipoServicio(db.Model):
     __tablename__ = 'tipo_servicio'
