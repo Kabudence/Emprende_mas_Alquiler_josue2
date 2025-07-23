@@ -1,24 +1,38 @@
-from flask import Blueprint, request, jsonify, current_app
-from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from flask import Blueprint, request, jsonify, current_app
+from datetime import datetime, timezone, timedelta
 
 appointment_api = Blueprint('appointment_api', __name__)
 
+_WEEKDAYS_ES = [
+    "Lunes", "Martes", "Miércoles", "Jueves",
+    "Viernes", "Sábado", "Domingo"
+]
+
 @appointment_api.route('/appointments', methods=['POST'])
 def create_appointment():
-    data = request.get_json()
+    logger = current_app.logger      # usa el logger propio de Flask
+
+    data = request.get_json(silent=True) or {}
+    logger.info("POST /appointments - payload: %s", data)
+
     try:
-        start_time = datetime.fromisoformat(data['start_time'])
-        end_time = datetime.fromisoformat(data['end_time'])
-        client_id = data['client_id']
-        negocio_id = data['negocio_id']
-        staff_id = data['staff_id']
+        start_time  = datetime.fromisoformat(data['start_time'])
+        end_time    = datetime.fromisoformat(data['end_time'])
+        client_id   = data['client_id']
+        negocio_id  = data['negocio_id']
+        staff_id    = data['staff_id']
         business_id = data['business_id']
-        service_id = data['service_id']
+        service_id  = data['service_id']
 
-        # Usa el service inyectado
+        logger.debug(
+            "Parsed params → start=%s end=%s client=%s negocio=%s staff=%s "
+            "business=%s service=%s",
+            start_time, end_time, client_id, negocio_id, staff_id, business_id, service_id
+        )
+
         appointment_command_service = current_app.config["appointment_command_service"]
-
         appointment = appointment_command_service.create(
             start_time=start_time,
             end_time=end_time,
@@ -28,9 +42,12 @@ def create_appointment():
             business_id=business_id,
             service_id=service_id,
         )
+
+        logger.info("Appointment created: id=%s", appointment.id)
         return jsonify(appointment.to_dict()), 201
 
     except Exception as e:
+        logger.exception("Error creating appointment")   # stack-trace incluido
         return jsonify({'error': str(e)}), 400
 
 # Obtener una cita por ID
@@ -84,24 +101,66 @@ def update_appointment_status(appointment_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-# Endpoint para ver slots disponibles
+# Completar cita (poner en CONFIRMED)
+@appointment_api.route('/appointments/<int:appointment_id>/complete', methods=['POST'])
+def complete_appointment(appointment_id):
+    appointment_command_service = current_app.config["appointment_command_service"]
+    try:
+        # Cambia el estado directamente a CONFIRMED
+        appointment_command_service.update_status(appointment_id, "CONFIRMED")
+        return jsonify(True), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@appointment_api.route('/appointments/last-pending-by-client/<int:client_id>', methods=['GET'])
+def last_pending_by_client(client_id):
+    appointment_query_service = current_app.config["appointment_query_service"]
+    appointment = appointment_query_service.get_last_pending_by_client(client_id)
+    if appointment:
+        return jsonify(appointment.to_dict()), 200
+    else:
+        return jsonify({'error': 'No pending appointment found'}), 404
+
+
 @appointment_api.route('/available-slots', methods=['GET'])
 def get_available_slots():
-    negocio_id = request.args.get('negocio_id', type=int)
+    negocio_id  = request.args.get('negocio_id',  type=int)
     business_id = request.args.get('business_id', type=int)
-    day = request.args.get('day', type=str)
-    duration = request.args.get('service_duration_min', type=int, default=60)
+    day         = request.args.get('day')                     # '2025-07-22'
+    duration    = request.args.get('service_duration_min', type=int, default=60)
 
     if not (negocio_id and day):
         return jsonify({"error": "Missing required params"}), 400
 
-    # Llama al query service inyectado
+    try:
+        weekday_name = weekday_es_peru(day)
+        print(f"[AVAIL] Día solicitado: {day} → {weekday_name}")
+    except ValueError:
+        return jsonify({"error": "Invalid day format, expected YYYY-MM-DD"}), 400
+
     availability_query_service = current_app.config["availability_query_service"]
-
     slots = availability_query_service.get_available_slots(
-        negocio_id, business_id, day, duration
+        negocio_id, business_id, weekday_name, duration
     )
-    return jsonify({"available_slots": slots}), 200
 
+    # Devuelve también el nombre del día para que el front pueda mostrarlo
+    return jsonify({
+        "weekday": weekday_name,
+        "available_slots": slots
+    }), 200
 
+def zone_pe():
+    """
+    Devuelve la zona horaria de Perú, usando tzdata si está
+    disponible y UTC-5 fijo si no.
+    """
+    try:
+        return ZoneInfo("America/Lima")
+    except ZoneInfoNotFoundError:
+        return timezone(timedelta(hours=-5))  # Respaldo
 
+def weekday_es_peru(date_str: str) -> str:
+    dias = ["Lunes", "Martes", "Miércoles", "Jueves",
+            "Viernes", "Sábado", "Domingo"]
+    dt_pe = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=zone_pe())
+    return dias[dt_pe.weekday()]

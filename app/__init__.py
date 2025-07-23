@@ -1,5 +1,6 @@
 import os
 import pymysql
+from flask_cors import CORS
 
 from appointment.interfaces.appointment_controller import appointment_api
 from schedules.interfaces.schedule_controller import schedule_api
@@ -51,6 +52,7 @@ def check_negocio():
 
 def create_app():
     app = Flask(__name__, static_url_path='/static')
+    CORS(app, origins=["http://localhost:61568"])
 
     # Cargar configuración desde config.py
     app.config.from_object(Config)

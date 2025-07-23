@@ -67,6 +67,7 @@ class AvailabilityService:
         free_union: set[tuple[str, str]] = set()
 
         for sid in staff_ids:
+            print (f"[AVAIL]    Revisando staff {day}...")
             citas = self.appointment_repo.list_by_staff_and_day(sid, day)
             print(f"[AVAIL]      • Staff {sid} tiene {len(citas)} cita(s) ese día")
 

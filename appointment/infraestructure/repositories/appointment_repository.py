@@ -29,22 +29,17 @@ class AppointmentRepository:
         return [self._from_model(record) for record in query]
 
     def list_by_staff_and_day(self, staff_id: int, day: str):
-        """
-        Recibe `day` en cualquiera de estos formatos:
-        • '2025-07-14'  → lo convierte a 'Monday'
-        • 'Monday'      → lo usa tal cual
-        """
-        # ── 1. Normaliza a nombre de día ──────────────────────────────
-        try:
-            # ¿viene como fecha ISO?
-            _date = datetime.strptime(day, "%Y-%m-%d")
-            day_name = _date.strftime("%A")  # 'Monday', 'Tuesday', …
-        except ValueError:
-            # No era fecha → asumimos que ya es 'Monday', etc.
-            day_name = day
+        from datetime import datetime
+        from peewee import fn
 
-        # ── 2. Consulta por DAYNAME(start_time) ───────────────────────
-        return (
+        try:
+            _date = datetime.strptime(day, "%Y-%m-%d")
+            day_name = _date.strftime("%A")  # 'Monday', 'Tuesday', etc
+        except ValueError:
+            day_name = ES_TO_EN_DAYNAME.get(day, day)
+
+
+        query = (
             AppointmentModel
             .select()
             .where(
@@ -53,6 +48,30 @@ class AppointmentRepository:
                 (AppointmentModel.status != AppointmentStatus.CANCELLED.value)
             )
         )
+        print(f"[DEBUG-REPOSITORY LVL] SQL generado: {query.sql()}")
+
+        preview_query = (
+            AppointmentModel
+            .select(
+                AppointmentModel.id,
+                AppointmentModel.start_time,
+                fn.DAYNAME(AppointmentModel.start_time).alias('real_dayname'),
+                AppointmentModel.status
+            )
+            .where(
+                (AppointmentModel.staff_id == staff_id) &
+                (AppointmentModel.status != AppointmentStatus.CANCELLED.value)
+            )
+            .order_by(AppointmentModel.start_time)
+            .limit(10)  # Puedes quitar el limit si quieres ver todos
+        )
+
+        print(f"[DEBUG-REPOSITORY LVL] Ejemplo de valores reales de DAYNAME(start_time) para staff_id={staff_id}:")
+        for row in preview_query:
+            print(
+                f"ID: {row.id} | start_time: {row.start_time} | real DAYNAME: {row.real_dayname} | status: {row.status}")
+
+        return query
 
     def is_staff_free(self,
                       staff_id: int,
@@ -164,6 +183,28 @@ class AppointmentRepository:
         tz_lima = _safe_zoneinfo("America/Lima")
         return datetime.strptime(iso_str, "%Y-%m-%d").replace(tzinfo=tz_lima)
 
+
+    def get_last_pending_by_client(self, client_id: int) -> Appointment | None:
+        """
+        Devuelve la última (más reciente) cita con estado PENDING para un client_id.
+        Si no hay, retorna None.
+        """
+        from appointment.domain.entities.appointment import AppointmentStatus  # asegúrate que está importado
+        try:
+            record = (
+                AppointmentModel
+                .select()
+                .where(
+                    (AppointmentModel.client_id == client_id) &
+                    (AppointmentModel.status == AppointmentStatus.PENDING.value)
+                )
+                .order_by(AppointmentModel.start_time.desc())
+                .get()
+            )
+            return self._from_model(record)
+        except AppointmentModel.DoesNotExist:
+         return None
+
 def _safe_zoneinfo(key: str):
     """
     Devuelve ZoneInfo(key) o, si no existe, una tz fija UTC‑5 (Lima).
@@ -174,4 +215,14 @@ def _safe_zoneinfo(key: str):
         # UTC‑5 sin cambio horario
         return timezone(timedelta(hours=-5))
 # ─────────────────────────────────────────────────────────────
+
+ES_TO_EN_DAYNAME = {
+    "Lunes": "Monday",
+    "Martes": "Tuesday",
+    "Miércoles": "Wednesday",
+    "Jueves": "Thursday",
+    "Viernes": "Friday",
+    "Sábado": "Saturday",
+    "Domingo": "Sunday"
+}
 

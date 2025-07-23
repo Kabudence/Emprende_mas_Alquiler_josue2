@@ -13,6 +13,7 @@ schedule_api = Blueprint('schedule', __name__)
 
 @schedule_api.route('/api/schedules', methods=['GET'])
 def get_all_schedules():
+
     negocio_id = request.args.get('negocio_id', type=int)
     business_id = request.args.get('business_id', type=int)
 
@@ -139,6 +140,39 @@ def update_schedule():
         return jsonify(schedule.to_dict()), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+
+# ---- LISTAR STAFF POR HORARIO (GET) ----
+@schedule_api.route('/schedules/<int:schedule_id>/staff', methods=['GET'])
+def get_staff_by_schedule(schedule_id: int):
+    """
+    Devuelve la lista de miembros de staff asignados al horario indicado.
+    Path param:
+        schedule_id (int) – ID del horario
+    Respuestas:
+        200 → {"staff": [ {…staff dict…}, … ]}
+        404 → {"error": "Schedule not found"}
+    """
+    # Servicios necesarios
+    schedule_query_service = current_app.config["schedule_query_service"]
+    staff_query_service    = current_app.config["staff_query_service"]
+
+    # 1) Verificar que el horario exista
+    if not schedule_query_service.get_by_id(schedule_id):
+        return jsonify({"error": "Schedule not found"}), 404
+
+    # 2) Obtener IDs de staff asignados al horario
+    staff_ids = schedule_query_service.get_staff_by_schedule_query(schedule_id)
+
+    # 3) Convertir cada registro a dict (filtrando nulos por seguridad)
+    staff_list = [
+        staff_query_service.get_by_id(sid).to_dict()
+        for sid in staff_ids
+        if staff_query_service.get_by_id(sid)
+    ]
+
+    return jsonify({"staff": staff_list}), 200
+
 
 
 

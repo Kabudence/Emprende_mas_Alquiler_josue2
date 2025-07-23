@@ -34,7 +34,6 @@ class StaffCommandService:
                dni:str) -> Staff:
         staff = Staff(id=id, speciality=speciality, name=name, negocio_id=negocio_id, max_capacity=max_capacity,dni=dni)
         all_staff = self.staff_repository.list_all()
-        StaffDomainService.validate_authenticity(staff, all_staff)
         return self.staff_repository.update(staff)
 
     # staff/application/commands/StaffCommandService.py

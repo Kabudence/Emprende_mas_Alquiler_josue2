@@ -29,3 +29,9 @@ class AppointmentQueryService:
         else:
             last = date(year, month + 1, 1).isoformat()
         return self.appointment_repo.list_between_dates(negocio_id, first, last)
+
+    def get_last_pending_by_client(self, client_id: int) -> Appointment | None:
+        """
+        Devuelve la última (más reciente) cita PENDING para el client_id.
+        """
+        return self.appointment_repo.get_last_pending_by_client(client_id)
