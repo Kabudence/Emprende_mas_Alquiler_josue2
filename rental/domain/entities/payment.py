@@ -16,9 +16,17 @@ class Payment:
                   status: PaymentStatus = PaymentStatus.PENDING,
                   ):
         self.id = id
+        if user_id is None:
+            raise ValueError("user_id cannot be None")
         self.user_id = user_id
+        if amount is None or amount < 0:
+            raise ValueError("amount cannot be None or negative")
         self.amount = amount
+        if created_at is None or created_at.strip() == "":
+            raise ValueError("created_at cannot be None or empty")
         self.created_at = created_at
+        if status is None:
+            raise ValueError("status cannot be None")
         self.status = status
 
 

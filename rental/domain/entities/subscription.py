@@ -8,10 +8,19 @@ class Subscription:
                  status: str = "active",
                  ):
         self.id = id
+        if plan_id is None:
+            raise ValueError("plan_id cannot be None")
         self.plan_id = plan_id
+        if negocio_id is None:
+            raise ValueError("negocio_id cannot be None")
         self.negocio_id = negocio_id
+        if initial_date is None or initial_date.strip() == "":
+            raise ValueError("initial_date cannot be None or empty")
         self.initial_date = initial_date
+        if final_date is None or final_date.strip() == "":
+            raise ValueError("final_date cannot be None or empty")
         self.final_date = final_date
+
         self.status = status
     def to_dict(self):
         return {
