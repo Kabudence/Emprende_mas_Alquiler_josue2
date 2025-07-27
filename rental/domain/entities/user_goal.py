@@ -3,6 +3,7 @@ class UserGoal:
                  id : int = None,
                  user_id: int = None,
                  goal_id: int = None,
+                    goal_attained: bool = False,
                  initial_date: str = "",
                  ):
         self.id = id
@@ -12,7 +13,7 @@ class UserGoal:
         if goal_id is None:
             raise ValueError("goal_id cannot be None")
         self.goal_id = goal_id
-        self.goal_attained = False
+        self.goal_attained =  goal_attained
         self.initial_date = initial_date
 
     def to_dict(self):
