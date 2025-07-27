@@ -1,16 +1,16 @@
 from datetime import datetime
+from enum import Enum
+
 from flask_login import UserMixin
 from app.database import db
-
-
-
-
 
 servicio_local = db.Table(
     'servicio_local',
     db.Column('servicio_id', db.Integer, db.ForeignKey('servicio_completo.id'), primary_key=True),
     db.Column('local_id', db.Integer, db.ForeignKey('locales.id'), primary_key=True)
 )
+
+
 class Usuario(UserMixin, db.Model):
     __tablename__ = 'usuarios'
     id = db.Column(db.Integer, primary_key=True)
@@ -28,7 +28,9 @@ class Usuario(UserMixin, db.Model):
     feedbacks = db.relationship('Feedback', backref='usuario', lazy=True)
     negocios = db.relationship('Negocio', backref='usuario', lazy=True)
 
+
 from app import db
+
 
 class Cliente(db.Model):
     __tablename__ = 'clientes'
@@ -52,11 +54,10 @@ class Cliente(db.Model):
     tipo_cliente_id = db.Column(db.Integer, db.ForeignKey('tipo_cliente.id'), nullable=True)
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
 
-    
 
 class TipoCliente(db.Model):
     __tablename__ = 'tipo_cliente'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     tipo = db.Column(db.String(50), nullable=False, unique=True)
 
@@ -70,14 +71,13 @@ class Publicacion(db.Model):
     fecha_publicacion = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     fecha_compra = db.Column(db.Date, nullable=False)
     nombre_publicacion = db.Column(db.String(255), nullable=False)
-    cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)  
+    nombre_cliente = db.Column(db.String(255), nullable=False)  # NUEVO
     productos = db.Column(db.Text, nullable=True)
     foto_uno = db.Column(db.String(255), nullable=False)
     foto_dos = db.Column(db.String(255), nullable=True)
-
-    cliente = db.relationship('Cliente', backref=db.backref('publicaciones', lazy=True))    
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
     negocio = db.relationship('Negocio', backref='publicaciones_negocio')
+
 
 class TipoUsuario(db.Model):
     __tablename__ = 'tipo_usuario'
@@ -85,7 +85,7 @@ class TipoUsuario(db.Model):
     nombre_tipo = db.Column(db.String(50), nullable=False, unique=True)
     descripcion = db.Column(db.String(255), nullable=False)
     usuarios = db.relationship('Usuario', back_populates='tipo_usuario')
-    
+
 
 class Rubro(db.Model):
     __tablename__ = 'rubros'
@@ -96,7 +96,6 @@ class Rubro(db.Model):
     negocios = db.relationship('Negocio', backref='rubro', lazy=True)
     categorias = db.relationship('Categoria', backref='rubro', lazy=True)
     descripcion = db.Column(db.Text, default='Sin descripción')
-   
 
 
 class Negocio(db.Model):
@@ -122,16 +121,18 @@ class Negocio(db.Model):
     fecha_registro = db.Column(db.DateTime)
     fecha_fin_alquiler = db.Column(db.DateTime)
     bloqueado = db.Column(db.Boolean, default=False)
-    tipo_modelo = db.relationship('TipoModelo', backref='negocios') 
+    tipo_modelo = db.relationship('TipoModelo', backref='negocios')
     membresia = db.relationship('TipoMembresia', backref='negocios')
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'))
     categoria = db.relationship('Categoria', back_populates='negocios', lazy=True)
+
 
 class TipoCategoria(db.Model):
     __tablename__ = 'tipos_categoria'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), nullable=False, unique=True)
     categorias = db.relationship('Categoria', backref='tipo_categorias', lazy=True)
+
 
 class Categoria(db.Model):
     __tablename__ = 'categorias'
@@ -143,7 +144,7 @@ class Categoria(db.Model):
     tamanios = db.relationship('Tamanio', backref='categoria', lazy=True)
     servicios = db.relationship('Servicio', backref='categoria', lazy=True)
     negocios = db.relationship('Negocio', back_populates='categoria', lazy=True)
-    id_negocio = db.Column(db.Integer, nullable=False)   # <--- AGREGA ESTA LÍNEA
+    id_negocio = db.Column(db.Integer, nullable=False)  # <--- AGREGA ESTA LÍNEA
 
 
 class Tamanio(db.Model):
@@ -152,6 +153,7 @@ class Tamanio(db.Model):
     nombre = db.Column(db.String(50), nullable=False)
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=False)
     detalles = db.relationship('ProductoDetalle', back_populates='tamanio')
+
 
 class Producto(db.Model):
     __tablename__ = 'productos'
@@ -164,7 +166,7 @@ class Producto(db.Model):
     dimensiones = db.Column(db.String(100), nullable=True)
     contenido_caja = db.Column(db.Text, nullable=True)
     garantia = db.Column(db.Integer, nullable=True)  # Puedes ajustarlo según sea necesario (meses o años)
-    pais_origen_procedencia = db.Column(db.String(100))  
+    pais_origen_procedencia = db.Column(db.String(100))
     condicion_producto = db.Column(db.String(100))
     link_producto = db.Column(db.String(255), nullable=True)
     video1 = db.Column(db.String(255), nullable=True)
@@ -185,6 +187,7 @@ class Color(db.Model):
         db.UniqueConstraint('nombre', 'id_negocio', name='uq_color_negocio'),
     )
 
+
 class ProductoDetalle(db.Model):
     __tablename__ = 'detalles'
     id = db.Column(db.Integer, primary_key=True)
@@ -197,8 +200,9 @@ class ProductoDetalle(db.Model):
     capacidad = db.Column(db.String(100), nullable=True)
     tamanio = db.relationship('Tamanio', back_populates='detalles')
 
-    tamanio = db.relationship('Tamanio', back_populates='detalles')  
-    color = db.relationship('Color', back_populates='detalles')  
+    tamanio = db.relationship('Tamanio', back_populates='detalles')
+    color = db.relationship('Color', back_populates='detalles')
+
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
@@ -209,6 +213,7 @@ class Venta(db.Model):
     detalles = db.relationship('DetalleVenta', backref='venta', lazy=True)
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
     negocio = db.relationship('Negocio', backref='ventas_negocio')
+
 
 class DetalleVenta(db.Model):
     __tablename__ = 'detalles_venta'
@@ -221,6 +226,7 @@ class DetalleVenta(db.Model):
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
     negocio = db.relationship('Negocio', backref='detalles_venta_negocio')
 
+
 class Feedback(db.Model):
     __tablename__ = 'feedbacks'
     id = db.Column(db.Integer, primary_key=True)
@@ -231,13 +237,14 @@ class Feedback(db.Model):
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias_feedback.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocio.id'))
-    
+
 
 class CategoriaFeedback(db.Model):
     __tablename__ = 'categorias_feedback'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True)
     feedbacks = db.relationship('Feedback', backref='categoria_feedback', lazy=True)
+
 
 class Servicio(db.Model):
     __tablename__ = 'servicios'
@@ -252,10 +259,10 @@ class Servicio(db.Model):
     correo = db.Column(db.String(255), nullable=True)
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=False)
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
-    tipo_servicio_id = db.Column(db.Integer,db.ForeignKey('tipo_servicio.id_tipo_servicio'),nullable=True)
+    tipo_servicio_id = db.Column(db.Integer, db.ForeignKey('tipo_servicio.id_tipo_servicio'), nullable=True)
     negocio = db.relationship('Negocio', backref='servicios_negocio')
-    tipo_servicio   = db.relationship('TipoServicio',backref=db.backref('servicios', lazy='dynamic'))
-    
+    tipo_servicio = db.relationship('TipoServicio', backref=db.backref('servicios', lazy='dynamic'))
+
 
 class PoliticaInterna(db.Model):
     __tablename__ = 'politicas_internas'
@@ -266,16 +273,18 @@ class PoliticaInterna(db.Model):
     descripcion = db.Column(db.Text, nullable=False)
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
     negocio = db.relationship('Negocio', backref='politicas_negocio')
-    
+
+
 class Slider(db.Model):
     __tablename__ = 'slider'
     id = db.Column(db.Integer, primary_key=True)
     imagen = db.Column(db.String(255), nullable=True)
     titulo = db.Column(db.String(255), nullable=False)
-    estado = db.Column(db.Enum('Activo', 'Inactivo', name='estado_enum'), 
-                      nullable=False, default='Activo')
+    estado = db.Column(db.Enum('Activo', 'Inactivo', name='estado_enum'),
+                       nullable=False, default='Activo')
     id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
     negocio = db.relationship('Negocio', backref='sliders_negocio')
+
 
 class colorv(db.Model):
     __tablename__ = 'colorv'
@@ -284,9 +293,8 @@ class colorv(db.Model):
     Nombre_hexadecimal_principal = db.Column(db.String(7))
     Nombre_secundario = db.Column(db.String(45))
     Nombre_hexadecimal_secundario = db.Column(db.String(7))
-    idNegocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=True) 
+    idNegocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=True)
     negocio = db.relationship('Negocio', back_populates='colorv', overlaps="colores,empresa_color")
-    
 
 
 # Modelo para imagen
@@ -315,6 +323,7 @@ class Video(db.Model):
     tipo = db.Column(db.Enum('YouTube', 'Vimeo'), default='YouTube', nullable=False)
     url = db.Column(db.String(255), nullable=True)
 
+
 class Empresa(db.Model):
     __tablename__ = 'empresa'
     idEmpresa = db.Column(db.Integer, primary_key=True)
@@ -322,10 +331,7 @@ class Empresa(db.Model):
     Vision = db.Column(db.Text, nullable=True)
     Objetivos = db.Column(db.Text)
     idNegocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
-    
-    
-    
-    
+
     # Relaciones usando nombres de clase como strings
     negocio = db.relationship('Negocio', back_populates='empresa')
     imagenes = db.relationship(
@@ -334,13 +340,13 @@ class Empresa(db.Model):
         viewonly=True,  # Si solo quieres lectura
         lazy=True
     )
-    colores = db.relationship('colorv', 
-                          backref='empresa_color',
-                          foreign_keys='colorv.idNegocio',
-                          primaryjoin='Empresa.idNegocio == colorv.idNegocio',
-                          uselist=False,
-                          overlaps="colorv,negocio")
-    
+    colores = db.relationship('colorv',
+                              backref='empresa_color',
+                              foreign_keys='colorv.idNegocio',
+                              primaryjoin='Empresa.idNegocio == colorv.idNegocio',
+                              uselist=False,
+                              overlaps="colorv,negocio")
+
     redes_sociales = db.relationship(
         'RedSocial',
         secondary='negocios',  # Tabla intermedia
@@ -349,29 +355,31 @@ class Empresa(db.Model):
         viewonly=True,
         lazy=True
     )
-    
+
     videos = db.relationship(
         'Video',
         primaryjoin="and_(Empresa.idNegocio==Video.idNegocio, "
-                   "foreign(Video.idNegocio)==Empresa.idNegocio)",
+                    "foreign(Video.idNegocio)==Empresa.idNegocio)",
         viewonly=True,
         lazy=True
     )
+
 
 class Departamento(db.Model):
     __tablename__ = 'departamentos'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
-    
+
     # Relación con envíos, usando back_populates
     envios = db.relationship('Envio', back_populates='departamento', lazy=True)
+
 
 class Provincia(db.Model):
     __tablename__ = 'provincias'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     departamento_id = db.Column(db.Integer, db.ForeignKey('departamentos.id'), nullable=False)
-    
+
     # Relación con envíos
     envios = db.relationship('Envio', back_populates='provincia', lazy=True)
 
@@ -379,14 +387,14 @@ class Provincia(db.Model):
 class Envio(db.Model):
     __tablename__ = 'envios'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    
+
     sucursal_id = db.Column(db.Integer, db.ForeignKey('sucursales.ID'), nullable=False)
     departamento_id = db.Column(db.Integer, db.ForeignKey('departamentos.id'), nullable=False)
     provincia_id = db.Column(db.Integer, db.ForeignKey('provincias.id'), nullable=False)
     distrito_id = db.Column(db.BigInteger, db.ForeignKey('distritos.ID'), nullable=False)
-    costo = db.Column(db.Numeric(10,2), nullable=False)
+    costo = db.Column(db.Numeric(10, 2), nullable=False)
     estado = db.Column(db.String(10), nullable=False, default='activo')
-    
+
     # Relaciones definidas con back_populates para evitar conflictos
     departamento = db.relationship('Departamento', back_populates='envios', lazy=True)
     provincia = db.relationship('Provincia', back_populates='envios', lazy=True)
@@ -402,9 +410,10 @@ class Distrito(db.Model):
     ID = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     Nombre = db.Column(db.String(255), nullable=False)
     provincia_id = db.Column(db.Integer, nullable=False)  # Asegúrate de que este campo sea el correcto
-     
+
     # Relación con envíos
-    envios = db.relationship('Envio', back_populates='distrito', lazy=True) 
+    envios = db.relationship('Envio', back_populates='distrito', lazy=True)
+
 
 class Sucursal(db.Model):
     __tablename__ = "sucursales"
@@ -420,8 +429,6 @@ class Sucursal(db.Model):
     Longitud = db.Column("Longitud", db.Numeric(11, 8))
     Estado = db.Column("Estado", db.Enum("Activo", "Inactivo"))
     envios = db.relationship("Envio", back_populates="sucursal")
-    
-
 
 
 class OrdenProducto(db.Model):
@@ -455,6 +462,7 @@ class OrdenProducto(db.Model):
                 self.total = self.precio * self.cantidad
         return value
 
+
 class Orden(db.Model):
     __tablename__ = 'ordenes'
 
@@ -482,35 +490,53 @@ class TipoMembresia(db.Model):
     nombre = db.Column(db.String(50), unique=True)
     cant_dias = db.Column(db.Integer)
 
+
 class TipoModelo(db.Model):
     __tablename__ = 'tipo_modelo'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), unique=True)
 
+class TipoOfertaEnum(str, Enum):
+    dos_por_uno = '2x1'
+    descuento  = 'Descuento'
+    oferta     = 'Oferta'
+
 class ServicioCompleto(db.Model):
     __tablename__ = 'servicio_completo'
 
-    id                  = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    titulo_publicacion  = db.Column(db.String(150), nullable=False)
-    estado              = db.Column(db.Enum('Activo','Inactivo', name='estado_enum'), nullable=False, default='Activo')
-    imagen              = db.Column(db.String(255), nullable=True)
-    subtitulo1          = db.Column(db.Text, nullable=True)
-    descripcion1        = db.Column(db.Text, nullable=True)
-    subtitulo2          = db.Column(db.Text, nullable=True)
-    descripcion2        = db.Column(db.Text, nullable=True)
-    subtitulo3          = db.Column(db.Text, nullable=True)
-    descripcion3        = db.Column(db.Text, nullable=True)
-    media1              = db.Column(db.String(255), nullable=True)
-    media2              = db.Column(db.String(255), nullable=True)
-    precio              = db.Column(db.Numeric(10,2), nullable=False, default=0.0)
-    precio_oferta       = db.Column(db.Numeric(10,2), nullable=True)
-    precio_promocion    = db.Column(db.Integer, nullable=False, default=0)    # Porcentaje del 0 al 100
-    tiempo_duracion     = db.Column(db.String(50), nullable=True)
-    en_venta            = db.Column(db.Boolean, nullable=False, default=True)
-    tipo_servicio_id    = db.Column(db.Integer, db.ForeignKey('tipo_servicio.id_tipo_servicio'), nullable=True)
-    tipo_servicio       = db.relationship('TipoServicio', backref=db.backref('servicios_completos', lazy='dynamic'))
-    id_negocio          = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
-    negocio             = db.relationship('Negocio', backref='servicios_completos')
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    titulo_publicacion = db.Column(db.String(150), nullable=False)
+    estado = db.Column(db.Enum('Activo', 'Inactivo', name='estado_enum'), nullable=False, default='Activo')
+    imagen = db.Column(db.String(255), nullable=True)
+
+    subtitulo1 = db.Column(db.Text, nullable=True)
+    descripcion1 = db.Column(db.Text, nullable=True)
+    subtitulo2 = db.Column(db.Text, nullable=True)
+    descripcion2 = db.Column(db.Text, nullable=True)
+    subtitulo3 = db.Column(db.Text, nullable=True)
+    descripcion3 = db.Column(db.Text, nullable=True)
+
+    media1 = db.Column(db.String(255), nullable=True)
+    media2 = db.Column(db.String(255), nullable=True)
+
+    precio = db.Column(db.Numeric(10, 2), nullable=False, default=0.0)
+    precio_oferta = db.Column(db.Numeric(10, 2), nullable=True)
+
+    tipo_oferta = db.Column(
+        db.Enum(*[e.value for e in TipoOfertaEnum], name='tipo_oferta_enum'),
+        nullable=False,
+        default=TipoOfertaEnum.oferta.value
+    )
+    en_venta = db.Column(db.Boolean, nullable=False, default=True)
+
+    tipo_servicio_id = db.Column(db.Integer, db.ForeignKey('tipo_servicio.id_tipo_servicio'), nullable=True)
+    tipo_servicio = db.relationship('TipoServicio', backref=db.backref('servicios_completos', lazy='dynamic'))
+
+    id_negocio = db.Column(db.Integer, db.ForeignKey('negocios.id'), nullable=False)
+    negocio = db.relationship('Negocio', backref='servicios_completos')
+    precio_promocion = db.Column(db.Integer, nullable=True)
+    tiempo_duracion = db.Column(db.String(50), nullable=True)
+
     locales = db.relationship(
         'Local',
         secondary=servicio_local,
@@ -518,26 +544,24 @@ class ServicioCompleto(db.Model):
     )
 
 
-
 class TipoServicio(db.Model):
     __tablename__ = 'tipo_servicio'
 
     id_tipo_servicio = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    nombre_servicio   = db.Column(db.String(50), nullable=False)
+    nombre_servicio = db.Column(db.String(50), nullable=False)
+
 
 class Local(db.Model):
     __tablename__ = 'locales'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     latitud = db.Column(db.String(50), nullable=False)
     longitud = db.Column(db.String(50), nullable=False)
     numero = db.Column(db.String(20), nullable=False)
     direccion = db.Column(db.String(255), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    
-   
-    usuario = db.relationship('Usuario', backref='locales')
 
+    usuario = db.relationship('Usuario', backref='locales')
 
 
 ofertas_detalles = db.Table(
@@ -545,6 +569,7 @@ ofertas_detalles = db.Table(
     db.Column('id_oferta', db.Integer, db.ForeignKey('ofertas.id'), primary_key=True),
     db.Column('id_detalle', db.Integer, db.ForeignKey('detalles.id'), primary_key=True)
 )
+
 
 class Oferta(db.Model):
     __tablename__ = 'ofertas'
@@ -571,4 +596,3 @@ class Oferta(db.Model):
 
 
 
-    

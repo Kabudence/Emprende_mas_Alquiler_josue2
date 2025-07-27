@@ -84,7 +84,7 @@
 
 <div class="container">
     <div class="form-card">
-        <h1 class="form-title text-center">{{ 'Editar Empresa' if empresa else 'Crear Empresa' }}</h1>
+        <h1 class="form-title text-center">{{ 'Datos Complementarios de la Empresa' if empresa else 'Crear Empresa' }}</h1>
         
         <form action="" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -117,17 +117,7 @@
                 <textarea id="objetivos" name="objetivos" class="form-control" rows="4">{{ empresa.Objetivos if empresa else '' }}</textarea>
             </div>
 
-            <!-- Color Inputs -->
-            <div class="form-group color-group">
-                <div class="color-picker">
-                    <label for="color-prim-picker">Color Primario</label>
-                    <input type="color" name="color_prim" id="color-prim-picker" class="form-control" value="{{ color.Nombre_hexadecimal_principal if color else '#000000' }}">
-                </div>
-                <div class="color-picker">
-                    <label for="color-sec-picker">Color Secundario</label>
-                    <input type="color" name="color_sec" id="color-sec-picker" class="form-control" value="{{ color.Nombre_hexadecimal_secundario if color else '#000000' }}">
-                </div>
-            </div>
+
 
             <!-- Input hidden para color hexadecimal -->
             <input type="hidden" name="color_hexadecimal_prim" id="color-prim-hex" value="{{ color.Nombre_hexadecimal_principal if color else '#000000' }}">

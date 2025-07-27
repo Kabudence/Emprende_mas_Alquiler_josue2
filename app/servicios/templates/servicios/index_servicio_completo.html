@@ -21,7 +21,8 @@
                     <th>Estado</th>
                     <th>Tipo</th>
                     <th>Precio</th>
-                    <th>Oferta</th>
+                    <th>Tipo de oferta</th>
+                    <th>Precio Oferta</th>
                     <th>Porcentaje Reserva</th>
                     <th>Duración</th>
 
@@ -39,6 +40,8 @@
                     <td>
                         {{ servicio.precio if servicio.precio is not none else '—' }}
                     </td>
+                        <td>{{ servicio.tipo_oferta }}</td>
+
                     <td>
                         {{ servicio.precio_oferta if servicio.precio_oferta is not none else '—' }}
                     </td>

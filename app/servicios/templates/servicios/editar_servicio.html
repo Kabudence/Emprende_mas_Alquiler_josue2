@@ -97,7 +97,7 @@
                     <i class="fas fa-save"></i> Guardar Cambios
                 </button>
             </div>
-             
+
 
         </form>
     </div>
@@ -108,7 +108,7 @@
     function previewImage(event) {
         const file = event.target.files[0];
         const reader = new FileReader();
-        
+
         reader.onload = function() {
             const imagePreview = document.getElementById('imagePreview');
             imagePreview.src = reader.result;
@@ -138,9 +138,9 @@
 function previewVideo() {
     let videoInput = document.getElementById('video').value;
     let videoPreview = document.getElementById('videoPreview');
-    
+
     let videoID = extractYouTubeID(videoInput);
-    
+
     if (videoID) {
         videoPreview.src = "https://www.youtube.com/embed/" + videoID;
         videoPreview.style.display = "block";

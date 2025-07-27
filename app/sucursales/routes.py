@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import text
 from app.database import db
@@ -112,3 +112,22 @@ def editar_sucursal(id):
         distritos=distritos
     )
     return render_template('edit_sucursal.html', sucursal=sucursal, distritos=distritos)
+
+@sucursales_blueprint.route('/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_sucursal(id):
+    negocio = Negocio.query.filter_by(usuario_id=current_user.id).first()
+    if not negocio:
+        return jsonify(success=False, message="Operación no permitida"), 403
+
+    sucursal = Sucursal.query.filter_by(ID=id, id_negocio=negocio.id).first()
+    if not sucursal:
+        return jsonify(success=False, message="Sucursal no encontrada"), 404
+
+    try:
+        db.session.delete(sucursal)
+        db.session.commit()
+        return jsonify(success=True, message="Sucursal eliminada con éxito"), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, message=f"Error al eliminar: {e}"), 500

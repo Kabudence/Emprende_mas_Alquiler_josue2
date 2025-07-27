@@ -21,7 +21,7 @@
             <tbody>
                 {% for sucursal in sucursales|sort(attribute=6, reverse=True) %}
                 <tr>
-                    <td>{{ loop.index }}</td> 
+                    <td>{{ loop.index }}</td>
                     <td>{{ sucursal[1] }}</td>
                     <td>{{ sucursal[3] }}</td>
                     <td>{{ sucursal[4] }}</td>
@@ -34,7 +34,6 @@
                         <button class="btn btn-outline-danger btn-sm" onclick="confirmarEliminacion('{{ sucursal[0] }}')">
                             <i class="fas fa-trash-alt"></i>
                         </button>
-                        
                     </td>
                 </tr>
                 {% endfor %}
@@ -45,48 +44,46 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function confirmarEliminacion(id) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "Esta acción no se puede deshacer.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`/sucursales/eliminar/${id}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire(
-                        'Eliminado',
-                        data.message,
-                        'success'
-                    ).then(() => {
-                        location.reload();  
+            // Si tienes meta csrf-token, úsalo. Si no, deja csrfToken = null
+            let csrfToken = null;
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta) csrfToken = meta.getAttribute('content');
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/sucursales/eliminar/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(csrfToken ? {'X-CSRFToken': csrfToken} : {})
+                        },
+                        body: JSON.stringify({}) // body vacío, puede omitirse pero es estándar
+                    })
+                    .then(async response => {
+                        let data;
+                        try { data = await response.json(); } catch { data = {}; }
+                        if (response.ok && data.success) {
+                            Swal.fire('Eliminado', data.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.message || 'No se pudo eliminar.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'Ocurrió un error inesperado.', 'error');
                     });
-                } else {
-                    Swal.fire(
-                        'Error',
-                        data.message,
-                        'error'
-                    );
                 }
-            })
-            .catch(error => {
-                Swal.fire(
-                    'Error',
-                    'Ocurrió un error inesperado.',
-                    'error'
-                );
             });
         }
-    });
-}
     </script>
 {% endblock %}

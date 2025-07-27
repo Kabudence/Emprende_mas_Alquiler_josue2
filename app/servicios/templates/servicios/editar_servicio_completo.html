@@ -12,37 +12,25 @@
     <!-- TÍTULO -->
     <div class="mb-3">
       <label class="form-label">Título de Publicación</label>
-      <input type="text"
-             class="form-control"
-             name="titulo_publicacion"
-             value="{{ servicio.titulo_publicacion }}"
-             required>
+      <input type="text" class="form-control" name="titulo_publicacion" value="{{ servicio.titulo_publicacion }}" required>
     </div>
 
     <!-- LOCALES -->
-<div class="mb-3">
-  <label class="form-label">Locales disponibles</label>
-  {% if locales %}
-    {% for loc in locales %}
-      <div class="form-check">
-        <input class="form-check-input"
-               type="checkbox"
-               name="locales[]"
-               value="{{ loc.id }}"
-               id="loc{{ loc.id }}"
-               {% if loc.id in servicio.locales|map(attribute='id')|list %}checked{% endif %}>
-        <label class="form-check-label" for="loc{{ loc.id }}">
-          {{ loc.direccion }}
-        </label>
-      </div>
-    {% endfor %}
-  {% else %}
-    <div class="alert alert-warning">
-      No tienes locales registrados. <a href="#">Agregar local</a>
+    <div class="mb-3">
+      <label class="form-label">Locales disponibles</label>
+      {% if locales %}
+        {% for loc in locales %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="locales[]" value="{{ loc.id }}" id="loc{{ loc.id }}" {% if loc.id in servicio.locales|map(attribute='id')|list %}checked{% endif %}>
+            <label class="form-check-label" for="loc{{ loc.id }}">{{ loc.direccion }}</label>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="alert alert-warning">
+          No tienes locales registrados. <a href="#">Agregar local</a>
+        </div>
+      {% endif %}
     </div>
-  {% endif %}
-</div>
-
 
     <!-- ESTADO / TIPO SERVICIO -->
     <div class="row mb-3">
@@ -57,10 +45,7 @@
         <label class="form-label">Tipo de Servicio</label>
         <select class="form-select" name="tipo_servicio_id">
           {% for ts in tipos_servicio %}
-            <option value="{{ ts.id_tipo_servicio }}"
-                    {% if ts.id_tipo_servicio==servicio.tipo_servicio_id %}selected{% endif %}>
-              {{ ts.nombre_servicio }}
-            </option>
+            <option value="{{ ts.id_tipo_servicio }}" {% if ts.id_tipo_servicio==servicio.tipo_servicio_id %}selected{% endif %}>{{ ts.nombre_servicio }}</option>
           {% endfor %}
         </select>
       </div>
@@ -87,42 +72,35 @@
       <textarea id="descripcion1" class="form-control" name="descripcion1" rows="4">{{ servicio.descripcion1 }}</textarea>
     </div>
 
-    
+    <!-- SUBTÍTULO 2 / DESCRIPCIÓN 2 -->
+    <div class="mb-3">
+      <label class="form-label">Subtítulo 2</label>
+      <textarea id="subtitulo2" class="form-control" name="subtitulo2" rows="2">{{ servicio.subtitulo2 }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Descripción 2</label>
+      <textarea id="descripcion2" class="form-control" name="descripcion2" rows="4">{{ servicio.descripcion2 }}</textarea>
+    </div>
 
-   <!-- SUBTÍTULO 2 / DESCRIPCIÓN 2 -->
-   <div class="mb-3">
-    <label class="form-label">Subtítulo 2</label>
-    <textarea id="subtitulo2" class="form-control" name="subtitulo2" rows="2">{{ servicio.subtitulo2 }}</textarea>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Descripción 2</label>
-    <textarea id="descripcion2" class="form-control" name="descripcion2" rows="4">{{ servicio.descripcion2 }}</textarea>
-  </div> 
-    
-<!-- MEDIA 1 -->
-<div class="mb-3">
-  <label class="form-label">Adjuntar Imagen/Video 1</label>
-  <select id="tipoMedio1" class="form-select mb-2" name="tipo_medio1">
-    <option value="imagen" {% if not servicio.media1 or not servicio.media1.startswith('http') %}selected{% endif %}>Imagen</option>
-    <option value="video" {% if servicio.media1 and servicio.media1.startswith('http') %}selected{% endif %}>Video</option>
-  </select>
-  <div id="grupoMedia1">
-    <input type="file" name="media1_imagen" id="media1Imagen" class="form-control" {% if servicio.media1 and servicio.media1.startswith('http') %}style="display:none"{% endif %}>
-    <input type="text" name="media1_video_url" id="media1Video" class="form-control mt-2" placeholder="https://youtu.be/..." value="{{ servicio.media1 if servicio.media1 and servicio.media1.startswith('http') else '' }}" {% if not servicio.media1 or not servicio.media1.startswith('http') %}style="display:none"{% endif %}>
-  </div>
-  <div id="preview1" class="mt-2">
-    {% if servicio.media1 and servicio.media1.startswith('http') %}
-      <iframe width="300" height="169" src="https://www.youtube.com/embed/{{ servicio.media1|youtube_id }}" frameborder="0" allowfullscreen></iframe>
-    {% elif servicio.media1 %}
-      <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.media1) }}" class="img-thumbnail" style="max-width:200px;">
-    {% endif %}
-  </div>
-</div>
-
-     
-
-
-    
+    <!-- MEDIA 1 -->
+    <div class="mb-3">
+      <label class="form-label">Adjuntar Imagen/Video 1</label>
+      <select id="tipoMedio1" class="form-select mb-2" name="tipo_medio1">
+        <option value="imagen" {% if not servicio.media1 or not servicio.media1.startswith('http') %}selected{% endif %}>Imagen</option>
+        <option value="video" {% if servicio.media1 and servicio.media1.startswith('http') %}selected{% endif %}>Video</option>
+      </select>
+      <div id="grupoMedia1">
+        <input type="file" name="media1_imagen" id="media1Imagen" class="form-control" {% if servicio.media1 and servicio.media1.startswith('http') %}style="display:none"{% endif %}>
+        <input type="text" name="media1_video_url" id="media1Video" class="form-control mt-2" placeholder="https://youtu.be/..." value="{{ servicio.media1 if servicio.media1 and servicio.media1.startswith('http') else '' }}" {% if not servicio.media1 or not servicio.media1.startswith('http') %}style="display:none"{% endif %}>
+      </div>
+      <div id="preview1" class="mt-2">
+        {% if servicio.media1 and servicio.media1.startswith('http') %}
+          <iframe width="300" height="169" src="https://www.youtube.com/embed/{{ servicio.media1|youtube_id }}" frameborder="0" allowfullscreen></iframe>
+        {% elif servicio.media1 %}
+          <img src="{{ url_for('static', filename='uploads/servicios/' + servicio.media1) }}" class="img-thumbnail" style="max-width:200px;">
+        {% endif %}
+      </div>
+    </div>
 
     <!-- SUBTÍTULO 3 / DESCRIPCIÓN 3 -->
     <div class="mb-3">
@@ -153,44 +131,59 @@
         {% endif %}
       </div>
     </div>
-    <!-- Precio -->
-<div class="mb-3">
-  <label for="precio" class="form-label">Precio</label>
-  <input type="number" name="precio" id="precio" step="0.01" class="form-control" value="{{ servicio.precio or '' }}" required>
-</div>
 
-<!-- Precio Oferta -->
-<div class="mb-3">
-  <label for="precio_oferta" class="form-label">Precio Oferta</label>
-  <input type="number" name="precio_oferta" id="precio_oferta" step="0.01" class="form-control" value="{{ servicio.precio_oferta or '' }}">
-</div>
-<!-- Precio Promoción (%) -->
-<div class="mb-3">
-  <label for="precio_promocion" class="form-label">Reserva (%)</label>
-  <select name="precio_promocion" id="precio_promocion" class="form-select">
-    {% for pct in range(0, 110, 10) %}
-      <option value="{{ pct }}" {% if servicio and servicio.precio_promocion == pct %}selected{% endif %}>
-        {{ pct }}%
-      </option>
-    {% endfor %}
-  </select>
-</div>
+    <!-- PRECIO -->
+    <div class="mb-3">
+      <label for="precio" class="form-label">Precio</label>
+      <input type="number" name="precio" id="precio" step="0.01" class="form-control" value="{{ servicio.precio or '' }}" required>
+    </div>
 
-<!-- Tiempo de Duración -->
-<div class="mb-3">
-  <label for="tiempo_duracion" class="form-label">Tiempo de duración (ej: 2 horas, 30 min, etc.)</label>
-  <input type="text" name="tiempo_duracion" id="tiempo_duracion" class="form-control"
-         value="{{ servicio.tiempo_duracion if servicio else '' }}">
-</div>
+    <!-- TIPO DE OFERTA -->
+    <div class="mb-3">
+      <label for="tipo_oferta" class="form-label">Tipo de oferta</label>
+      <select name="tipo_oferta" id="tipo_oferta" class="form-select" required>
+        <option value="Oferta"   {% if servicio.tipo_oferta=='Oferta' %}selected{% endif %}>Oferta (precio fijo)</option>
+        <option value="Descuento"{% if servicio.tipo_oferta=='Descuento' %}selected{% endif %}>Descuento (%)</option>
+        <option value="2x1"      {% if servicio.tipo_oferta=='2x1' %}selected{% endif %}>2 × 1</option>
+      </select>
+    </div>
 
-<!-- En venta -->
-<div class="mb-3">
-  <label class="form-label">¿En venta?</label>
-  <select name="en_venta" id="en_venta" class="form-select">
-      <option value="1" {% if servicio.en_venta %}selected{% endif %}>Sí</option>
-      <option value="0" {% if not servicio.en_venta %}selected{% endif %}>No</option>
-  </select>
-</div>
+    <!-- % DE DESCUENTO (solo visible si se elige Descuento) -->
+    <div class="mb-3" id="grupoPorcentaje" style="display:none;">
+      <label for="porcentaje_descuento" class="form-label">Porcentaje de descuento</label>
+      <input type="number" min="1" max="100" step="1" name="porcentaje_descuento" id="porcentaje_descuento" class="form-control" value="{{ porcentaje_descuento or '' }}">
+    </div>
+
+    <!-- PRECIO OFERTA -->
+    <div class="mb-3" id="grupoOferta">
+      <label for="precio_oferta" class="form-label">Precio Oferta</label>
+      <input type="number" name="precio_oferta" id="precio_oferta" step="0.01" class="form-control" value="{{ servicio.precio_oferta or '' }}">
+    </div>
+
+    <!-- PRECIO PROMOCIÓN (%) -->
+    <div class="mb-3">
+      <label for="precio_promocion" class="form-label">Reserva (%)</label>
+      <select name="precio_promocion" id="precio_promocion" class="form-select">
+        {% for pct in range(0, 110, 10) %}
+          <option value="{{ pct }}" {% if servicio and servicio.precio_promocion == pct %}selected{% endif %}>{{ pct }}%</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- TIEMPO DE DURACIÓN -->
+    <div class="mb-3">
+      <label for="tiempo_duracion" class="form-label">Tiempo de duración (ej: 2 horas, 30 min, etc.)</label>
+      <input type="text" name="tiempo_duracion" id="tiempo_duracion" class="form-control" value="{{ servicio.tiempo_duracion if servicio else '' }}">
+    </div>
+
+    <!-- EN VENTA -->
+    <div class="mb-3">
+      <label class="form-label">¿En venta?</label>
+      <select name="en_venta" id="en_venta" class="form-select">
+        <option value="1" {% if servicio.en_venta %}selected{% endif %}>Sí</option>
+        <option value="0" {% if not servicio.en_venta %}selected{% endif %}>No</option>
+      </select>
+    </div>
 
     <!-- BOTONES -->
     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -223,15 +216,60 @@
       file.addEventListener('change', function(){ prev.innerHTML=''; if(this.files&&this.files[0]){ const r=new FileReader(); r.onload=e=>prev.innerHTML=`<img src="${e.target.result}" class="img-thumbnail" style="max-width:200px;">`; r.readAsDataURL(this.files[0]); }});
       url.addEventListener('input', () => {
         const m = url.value.match(/(?:youtu\.be\/|v=|\/embed\/)([^&]+)/);
-        prev.innerHTML = m&&m[1]
-          ? `<iframe width="300" height="169" src="https://www.youtube.com/embed/${m[1]}" frameborder="0" allowfullscreen></iframe>`
-          : '';
+        prev.innerHTML = m&&m[1] ? `<iframe width="300" height="169" src="https://www.youtube.com/embed/${m[1]}" frameborder="0" allowfullscreen></iframe>` : '';
       });
     };
 
     setupMedia(1);
     setupMedia(2);
 
+    // -------- Lógica tipo de oferta ---------
+    function recalcularDescuento() {
+      const precio = parseFloat(document.getElementById('precio').value || 0);
+      const pctInput = document.getElementById('porcentaje_descuento');
+      const pct = parseFloat(pctInput.value || 0);
+      const campoOferta = document.getElementById('precio_oferta');
+      if (!isNaN(precio) && !isNaN(pct) && pct > 0) {
+        const nuevo = (precio - (precio * pct / 100)).toFixed(2);
+        campoOferta.value = nuevo;
+      }
+    }
+
+    function controlarTipoOferta() {
+      const tipo = document.getElementById('tipo_oferta').value;
+      const grpPct = document.getElementById('grupoPorcentaje');
+      const campoOferta = document.getElementById('precio_oferta');
+      const grupoOferta = document.getElementById('grupoOferta');
+      if (tipo === 'Descuento') {
+        grpPct.style.display = 'block';
+        grupoOferta.style.display = 'block';
+        campoOferta.readOnly = true;
+        recalcularDescuento();
+      } else if (tipo === '2x1') {
+        grpPct.style.display = 'none';
+        grupoOferta.style.display = 'none';
+        campoOferta.readOnly = true;
+      } else {
+        grpPct.style.display = 'none';
+        grupoOferta.style.display = 'block';
+        campoOferta.readOnly = false;
+      }
+    }
+
+    document.getElementById('tipo_oferta').addEventListener('change', controlarTipoOferta);
+    document.getElementById('precio').addEventListener('input', function() {
+      if (document.getElementById('tipo_oferta').value === '2x1') {
+        document.getElementById('precio_oferta').value = this.value;
+      } else if (document.getElementById('tipo_oferta').value === 'Descuento') {
+        recalcularDescuento();
+      }
+    });
+    document.getElementById('porcentaje_descuento').addEventListener('input', recalcularDescuento);
+
+    // Inicialización
+    controlarTipoOferta();
+
+    // TinyMCE
     tinymce.init({
       selector: '#subtitulo1, #descripcion1, #subtitulo2, #descripcion2, #subtitulo3, #descripcion3',
       height: 200,

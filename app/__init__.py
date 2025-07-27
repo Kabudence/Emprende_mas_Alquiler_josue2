@@ -52,7 +52,7 @@ def check_negocio():
 
 def create_app():
     app = Flask(__name__, static_url_path='/static')
-    CORS(app, origins=["http://localhost:61568"])
+    CORS(app, origins=["http://localhost:64643"])
 
     # Cargar configuración desde config.py
     app.config.from_object(Config)

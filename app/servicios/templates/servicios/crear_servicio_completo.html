@@ -134,12 +134,30 @@
   <label for="precio" class="form-label">Precio</label>
   <input type="number" name="precio" id="precio" step="0.01" class="form-control" required>
 </div>
+            <!-- Tipo de Oferta -->
+<div class="mb-3">
+  <label for="tipo_oferta" class="form-label">Tipo de oferta</label>
+  <select name="tipo_oferta" id="tipo_oferta" class="form-select" required>
+    <option value="Oferta"  selected>Oferta (precio fijo)</option>
+    <option value="Descuento">Descuento (%)</option>
+    <option value="2x1">2 × 1</option>
+  </select>
+</div>
 
+<!-- % de descuento (solo visible si se elige Descuento) -->
+<div class="mb-3" id="grupoPorcentaje" style="display:none;">
+  <label for="porcentaje_descuento" class="form-label">Porcentaje de descuento</label>
+  <input type="number" min="1" max="100" step="1"
+         name="porcentaje_descuento" id="porcentaje_descuento"
+         class="form-control">
+</div>
 <!-- Precio Oferta -->
 <div class="mb-3">
   <label for="precio_oferta" class="form-label">Precio Oferta</label>
   <input type="number" name="precio_oferta" id="precio_oferta" step="0.01" class="form-control">
 </div>
+
+
 
     <!-- Precio Promoción (%) -->
 <div class="mb-3">
@@ -152,6 +170,8 @@
     {% endfor %}
   </select>
 </div>
+
+
 
 <!-- Tiempo de Duración -->
 <div class="mb-3">
@@ -229,5 +249,46 @@
     toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | forecolor backcolor | bullist numlist',
     branding: false
   });
+
+  function recalcularDescuento() {
+  const precio    = parseFloat(document.getElementById('precio').value || 0);
+  const pctInput  = document.getElementById('porcentaje_descuento');
+  const pct       = parseFloat(pctInput.value || 0);
+  const campoOferta = document.getElementById('precio_oferta');
+
+  if (!isNaN(precio) && !isNaN(pct)) {
+    const nuevo = (precio - (precio * pct / 100)).toFixed(2);
+    campoOferta.value = nuevo;
+  }
+}
+
+function aplicarTipoOferta() {
+  const tipo = document.getElementById('tipo_oferta').value;
+  const grpPct = document.getElementById('grupoPorcentaje');
+  const campoOferta = document.getElementById('precio_oferta');
+
+  if (tipo === 'Descuento') {
+    grpPct.style.display = 'block';
+    campoOferta.readOnly = true;          // cálculo automático
+    recalcularDescuento();
+  } else if (tipo === '2x1') {
+    grpPct.style.display = 'none';
+    campoOferta.readOnly = true;
+    const precio = parseFloat(document.getElementById('precio').value || 0);
+    campoOferta.value = precio.toFixed(2); // mismo precio
+  } else { // Oferta
+    grpPct.style.display = 'none';
+    campoOferta.readOnly = false;         // libre edición
+    campoOferta.value = '';
+  }
+}
+
+document.getElementById('tipo_oferta').addEventListener('change', aplicarTipoOferta);
+document.getElementById('precio').addEventListener('input', aplicarTipoOferta);
+document.getElementById('porcentaje_descuento').addEventListener('input', recalcularDescuento);
+
+// disparo inicial
+aplicarTipoOferta();
+
 </script>
 {% endblock %}

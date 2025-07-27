@@ -116,7 +116,6 @@ def crear():
             estado = request.form.get('estado', 'Activo')
             detalle_id = request.form.get('detalle_id')
             cantidad = request.form.get('cantidad')
-            # Precios
             precio_oferta = request.form.get('precio_oferta')
             precio_2x1 = request.form.get('precio_2x1')
             descuento = request.form.get('descuento')
