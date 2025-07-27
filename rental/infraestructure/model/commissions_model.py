@@ -13,7 +13,7 @@ class CommissionModel(Model):
         default="direct",
         choices=[("direct", "direct"), ("referred", "referred")]
     )
-    created_at       = DateTimeField(null=True)  # Usualmente sería null=False, pero puedes dejarlo opcional
+    created_at       = DateTimeField(null=True)
 
     class Meta:
         database   = db
