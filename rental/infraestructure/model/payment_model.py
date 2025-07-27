@@ -21,3 +21,4 @@ class PaymentModel(Model):
         indexes    = (
             (('user_id', 'status'), False),
         )
+

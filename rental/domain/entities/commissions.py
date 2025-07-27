@@ -15,8 +15,7 @@ class Commissions:
         if user_id is None:
             raise ValueError("user_id cannot be None")
         self.user_id = user_id
-        if subscription_id is None:
-            raise ValueError("subscription_id cannot be None")
+
         self.subscription_id = subscription_id
         if amount is None:
             raise ValueError("amount cannot be None")

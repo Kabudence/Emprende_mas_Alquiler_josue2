@@ -1,4 +1,3 @@
-# subscriptions/infrastructure/models/subscription_model.py
 from peewee import Model, AutoField, IntegerField, DateTimeField, CharField
 
 from rental.domain.entities.subscription import SubscriptionStatus

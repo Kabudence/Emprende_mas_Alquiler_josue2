@@ -15,14 +15,14 @@ class PlanModel(Model):
             (('name',), False),  # Ejemplo: podrías poner unique si los nombres deben ser únicos
         )
 
-class PlanPlanModel(Model):
-    parent_plan_id = IntegerField()
-    child_plan_id  = IntegerField()
+class PlanModuleModel(Model):
+    plan_id = IntegerField()
+    module_id  = IntegerField()
 
     class Meta:
         database    = db
-        table_name  = 'plan_plan'
-        primary_key = CompositeKey('parent_plan_id', 'child_plan_id')
+        table_name  = 'plan_modules'
+        primary_key = CompositeKey('plan_id', 'module_id')
         indexes = (
-            (('parent_plan_id', 'child_plan_id'), True),  # índice único compuesto
+            (('plan_id', 'module_id'), True),  # índice único compuesto
         )
