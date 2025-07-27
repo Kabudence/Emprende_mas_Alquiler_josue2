@@ -45,7 +45,7 @@ class UserGoalRepository:
         record = UserGoalModel.create(
             user_id=user_goal.user_id,
             goal_id=user_goal.goal_id,
-            goal_attained=user_goal.goal_attained,
+            goal_attained=False,
             initial_date=initial_date
         )
         return UserGoal(
@@ -82,3 +82,27 @@ class UserGoalRepository:
             return True
         except UserGoalModel.DoesNotExist:
             return False
+
+    def get_by_user(self, user_id: int) -> List[UserGoal]:
+        return [
+            UserGoal(
+                id=rec.id,
+                user_id=rec.user_id,
+                goal_id=rec.goal_id,
+                goal_attained=rec.goal_attained,
+                initial_date=rec.initial_date.isoformat() if rec.initial_date else None
+            )
+            for rec in UserGoalModel.select().where(UserGoalModel.user_id == user_id)
+        ]
+
+    def get_by_goal(self, goal_id: int) -> List[UserGoal]:
+        return [
+            UserGoal(
+                id=rec.id,
+                user_id=rec.user_id,
+                goal_id=rec.goal_id,
+                goal_attained=rec.goal_attained,
+                initial_date=rec.initial_date.isoformat() if rec.initial_date else None
+            )
+            for rec in UserGoalModel.select().where(UserGoalModel.goal_id == goal_id)
+        ]
