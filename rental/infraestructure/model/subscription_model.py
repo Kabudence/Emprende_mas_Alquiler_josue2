@@ -6,7 +6,7 @@ from shared.infrastructure.database import db
 class SubscriptionModel(Model):
     id           = AutoField(primary_key=True)
     plan_id      = IntegerField(null=False)
-    negocio_id   = IntegerField(null=False)
+    user_id   = IntegerField(null=False)
     initial_date = DateTimeField(null=False)
     final_date   = DateTimeField(null=False)
     status       = CharField(
@@ -19,5 +19,5 @@ class SubscriptionModel(Model):
         database   = db
         table_name = 'subscriptions'
         indexes    = (
-            (('plan_id', 'negocio_id'), False),
+            (('plan_id', 'user_id'), False),
         )

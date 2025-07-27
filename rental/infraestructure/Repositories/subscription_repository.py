@@ -26,7 +26,7 @@ class SubscriptionRepository:
             return Subscription(
                 id=record.id,
                 plan_id=record.plan_id,
-                negocio_id=record.negocio_id,
+                user_id=record.user_id,
                 initial_date=record.initial_date.isoformat(),
                 final_date=record.final_date.isoformat(),
                 status=SubscriptionStatus(record.status)
@@ -39,7 +39,7 @@ class SubscriptionRepository:
             Subscription(
                 id=rec.id,
                 plan_id=rec.plan_id,
-                negocio_id=rec.negocio_id,
+                user_id=rec.user_id,
                 initial_date=rec.initial_date.isoformat(),
                 final_date=rec.final_date.isoformat(),
                 status=SubscriptionStatus(rec.status)
@@ -55,7 +55,7 @@ class SubscriptionRepository:
         final_date = initial_date + timedelta(days=30)  # 30 días, para asegurar mes aunque no siempre coincida calendario
         record = SubscriptionModel.create(
             plan_id=subscription.plan_id,
-            negocio_id=subscription.negocio_id,
+            user_id=subscription.user_id,
             initial_date=initial_date,
             final_date=final_date,
             status=subscription.status.value if isinstance(subscription.status, SubscriptionStatus) else subscription.status
@@ -63,7 +63,7 @@ class SubscriptionRepository:
         return Subscription(
             id=record.id,
             plan_id=record.plan_id,
-            negocio_id=record.negocio_id,
+            user_id=record.user_id,
             initial_date=record.initial_date.isoformat(),
             final_date=record.final_date.isoformat(),
             status=SubscriptionStatus(record.status)
@@ -73,7 +73,7 @@ class SubscriptionRepository:
         try:
             record = SubscriptionModel.get(SubscriptionModel.id == subscription.id)
             record.plan_id = subscription.plan_id
-            record.negocio_id = subscription.negocio_id
+            record.user_id = subscription.user_id
             # Si quieres permitir actualizar fechas, agrega esto:
             record.initial_date = self._iso_to_datetime(subscription.initial_date)
             record.final_date = self._iso_to_datetime(subscription.final_date)
@@ -82,7 +82,7 @@ class SubscriptionRepository:
             return Subscription(
                 id=record.id,
                 plan_id=record.plan_id,
-                negocio_id=record.negocio_id,
+                user_id=record.user_id,
                 initial_date=record.initial_date.isoformat(),
                 final_date=record.final_date.isoformat(),
                 status=SubscriptionStatus(record.status)
@@ -98,7 +98,7 @@ class SubscriptionRepository:
         except SubscriptionModel.DoesNotExist:
             return False
 
-    def get_by_negocio(self, negocio_id: int) -> List[Subscription]:
+    def get_by_user(self, user_id: int) -> List[Subscription]:
         """
         Devuelve todas las suscripciones de un negocio.
         """
@@ -106,12 +106,12 @@ class SubscriptionRepository:
             Subscription(
                 id=rec.id,
                 plan_id=rec.plan_id,
-                negocio_id=rec.negocio_id,
+                user_id=rec.user_id,
                 initial_date=rec.initial_date.isoformat(),
                 final_date=rec.final_date.isoformat(),
                 status=SubscriptionStatus(rec.status)
             )
-            for rec in SubscriptionModel.select().where(SubscriptionModel.negocio_id == negocio_id)
+            for rec in SubscriptionModel.select().where(SubscriptionModel.user_id == user_id)
         ]
 
     def get_by_status(self, status: str) -> List[Subscription]:
@@ -122,7 +122,7 @@ class SubscriptionRepository:
             Subscription(
                 id=rec.id,
                 plan_id=rec.plan_id,
-                negocio_id=rec.negocio_id,
+                user_id=rec.user_id,
                 initial_date=rec.initial_date.isoformat(),
                 final_date=rec.final_date.isoformat(),
                 status=SubscriptionStatus(rec.status)

@@ -13,9 +13,9 @@ class SubscriptionQueryService:
     def list_all(self) -> List[Subscription]:
         return self.subscription_repo.get_all()
 
-    def list_by_negocio(self, negocio_id: int) -> List[Subscription]:
+    def list_by_user(self, user_id: int) -> List[Subscription]:
         # Debes agregar este método en tu repo si aún no lo tienes
-        return self.subscription_repo.get_by_negocio(negocio_id)
+        return self.subscription_repo.get_by_user(user_id)
 
     def list_by_status(self, status: str) -> List[Subscription]:
         # También agrega esto en tu repo si lo usas mucho
