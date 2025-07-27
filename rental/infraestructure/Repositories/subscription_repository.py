@@ -97,3 +97,35 @@ class SubscriptionRepository:
             return True
         except SubscriptionModel.DoesNotExist:
             return False
+
+    def get_by_negocio(self, negocio_id: int) -> List[Subscription]:
+        """
+        Devuelve todas las suscripciones de un negocio.
+        """
+        return [
+            Subscription(
+                id=rec.id,
+                plan_id=rec.plan_id,
+                negocio_id=rec.negocio_id,
+                initial_date=rec.initial_date.isoformat(),
+                final_date=rec.final_date.isoformat(),
+                status=SubscriptionStatus(rec.status)
+            )
+            for rec in SubscriptionModel.select().where(SubscriptionModel.negocio_id == negocio_id)
+        ]
+
+    def get_by_status(self, status: str) -> List[Subscription]:
+        """
+        Devuelve todas las suscripciones con cierto estado ('active', 'inactive', etc).
+        """
+        return [
+            Subscription(
+                id=rec.id,
+                plan_id=rec.plan_id,
+                negocio_id=rec.negocio_id,
+                initial_date=rec.initial_date.isoformat(),
+                final_date=rec.final_date.isoformat(),
+                status=SubscriptionStatus(rec.status)
+            )
+            for rec in SubscriptionModel.select().where(SubscriptionModel.status == status)
+        ]
