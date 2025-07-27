@@ -12,7 +12,7 @@ class CommissionCommandService:
             self,
             user_id: int,
             amount: float,
-            type: str = CommissionsTypes.DIRECT,
+            type: str = CommissionsTypes,
             subscription_id: int = None ) -> Commissions:
         if user_id is None or amount is None or type is None:
             raise ValueError("user_id, amount and type are required")
