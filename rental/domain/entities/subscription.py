@@ -1,3 +1,11 @@
+from enum import Enum
+
+
+class SubscriptionStatus(Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+
 class Subscription:
     def __init__(self,
                  id: int = None,
@@ -5,7 +13,7 @@ class Subscription:
                  negocio_id: int = None,
                  initial_date: str = "",
                  final_date: str = "",
-                 status: str = "active",
+                 status: SubscriptionStatus = SubscriptionStatus.ACTIVE,
                  ):
         self.id = id
         if plan_id is None:
