@@ -2,6 +2,8 @@ from datetime import datetime
 from enum import Enum
 
 from flask_login import UserMixin
+from sqlalchemy import CheckConstraint
+
 from app.database import db
 
 servicio_local = db.Table(
@@ -23,10 +25,21 @@ class Usuario(UserMixin, db.Model):
     foto_dni_frontal = db.Column(db.String(255), nullable=True)
     foto_dni_posterior = db.Column(db.String(255), nullable=True)
     celular = db.Column(db.String(15), nullable=True)
+    user_inviter = db.Column(db.Integer, nullable=True)
+    role = db.Column(db.String(20), nullable=False, default="COMPRADOR")
+
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('AFILIADO', 'COMPRADOR')",
+            name="ck_usuario_role_valido"
+        ),
+    )
 
     tipo_usuario = db.relationship('TipoUsuario', back_populates='usuarios')
     feedbacks = db.relationship('Feedback', backref='usuario', lazy=True)
     negocios = db.relationship('Negocio', backref='usuario', lazy=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+
 
 
 from app import db
