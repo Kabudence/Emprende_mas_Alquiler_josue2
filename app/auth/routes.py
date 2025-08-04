@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, flash, session
+from flask import render_template, redirect, url_for, request, flash, session, jsonify
 from flask_login import login_user, logout_user, current_user
 from ..models import Negocio, Usuario
 from ..database import db
@@ -22,6 +22,8 @@ def login():
         username = request.form['username'].strip()
         password = request.form['password'].strip()
         user = Usuario.query.filter_by(username=username).first()
+
+
 
         if user and user.password == password:  # Reemplaza esto por check_password_hash si usas hashes
             # Si el usuario es dueño de tienda, verifica negocios bloqueados
@@ -67,3 +69,4 @@ def logout():
     logout_user()
     session.clear()  # Limpiar la sesión al cerrar sesión
     return redirect(url_for('auth.login'))
+

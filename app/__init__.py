@@ -5,6 +5,7 @@ from flask_cors import CORS
 from appointment.interfaces.appointment_controller import appointment_api
 from schedules.interfaces.schedule_controller import schedule_api
 from staff.interfaces.staff_controller import staff_api
+from .admin.external_routes import external_api_bp
 
 pymysql.install_as_MySQLdb()
 
@@ -104,6 +105,9 @@ def create_app():
     app.register_blueprint(reclamos_bp, url_prefix='/libro_reclamaciones')
     app.register_blueprint(pedidos_bp, url_prefix='/pedidos')
     app.register_blueprint(locales_bp, url_prefix='/locales')
+    app.register_blueprint(external_api_bp)
+    csrf.exempt(external_api_bp)  # <--- agrega esta línea aquí
+
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(staff_api)
     csrf.exempt(staff_api)  # <--- agrega esta línea aquí

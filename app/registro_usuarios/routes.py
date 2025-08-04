@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from sqlite3 import IntegrityError
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 import os
@@ -130,3 +132,72 @@ def consultar():
         for cliente in clientes
     ]
     return render_template('consultar.html', usuarios=clientes_serializados)
+
+
+
+@registro_usuarios_blueprint.route('/api/registro', methods=['POST'])
+def api_register():
+    try:
+        data = request.form  # O request.json si envías JSON puro
+
+        required_fields = ['nombre_completo', 'whatsapp', 'correo', 'fecha', 'contrasena', 'tipo_cliente_id']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"error": f"El campo {field} es requerido"}), 400
+
+        # Negocio debe venir por algún medio (id_negocio) o user logueado (ajustar según lógica)
+        id_negocio = data.get('id_negocio')
+        if not id_negocio:
+            return jsonify({"error": "id_negocio es requerido"}), 400
+
+        # Manejo de archivo (multipart/form-data)
+        foto = request.files.get('foto')
+        if not foto or foto.filename == '' or not allowed_file(foto.filename):
+            return jsonify({"error": "Imagen no válida o formato no permitido"}), 400
+
+        # Guardar imagen con nombre único
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        foto_filename = f"{timestamp}_{secure_filename(foto.filename)}"
+        foto.save(os.path.join(BASE_UPLOAD_FOLDER, foto_filename))
+
+        # Hashear contraseña
+        contrasena_encriptada = bcrypt.hashpw(
+            data['contrasena'].encode('utf-8'), bcrypt.gensalt()
+        ).decode('utf-8')
+
+        nuevo_usuario = Cliente(
+            nombre_completo=data['nombre_completo'],
+            whatsapp=data['whatsapp'],
+            correo=data['correo'],
+            departamento=data.get('departamento', ''),
+            provincia=data.get('provincia', ''),
+            distrito=data.get('distrito', ''),
+            direccion=data.get('direccion', ''),
+            referencia=data.get('referencia', ''),
+            nombre_usuario=data.get('nombre_usuario', ''),
+            contrasena=contrasena_encriptada,
+            foto=foto_filename,
+            fecha=data['fecha'],
+            tipo_cliente_id=data['tipo_cliente_id'],
+            estado=data.get('estado', 'Activo'),
+            id_negocio=id_negocio
+        )
+
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+
+        # Devuelve el id y status 200
+        return jsonify({"id": nuevo_usuario.id, "message": "Usuario registrado con éxito"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@registro_usuarios_blueprint.route('/api/usuario/<int:user_id>', methods=['GET'])
+def find_by_id(user_id):
+    user = Cliente.query.get(user_id)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+    user_dict = {column.name: getattr(user, column.name) for column in user.__table__.columns}
+    return jsonify(user_dict), 200

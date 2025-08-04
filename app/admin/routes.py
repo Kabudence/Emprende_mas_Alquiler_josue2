@@ -423,3 +423,70 @@ def eliminar(id):
     db.session.commit()
     flash('Rubro eliminado con éxito.', 'success')
     return redirect(url_for('admin.rubros_index'))
+
+
+
+@admin_bp.route('/api/usuarios/crear', methods=['POST'])
+# @login_required
+def api_crear_usuario():
+    if current_user.id_tipo_usuario != 1:
+        return jsonify({'error': 'No autorizado'}), 403
+
+    data = request.json
+    campos_requeridos = ['nombre', 'dni', 'email', 'celular', 'username', 'password', 'id_tipo_usuario']
+    if not all(k in data for k in campos_requeridos):
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
+
+    # Validación de unicidad (opcional)
+    if Usuario.query.filter_by(username=data['username']).first():
+        return jsonify({'error': 'El username ya existe'}), 409
+    if Usuario.query.filter_by(email=data['email']).first():
+        return jsonify({'error': 'El email ya existe'}), 409
+
+    try:
+        nuevo_usuario = Usuario(
+            nombre = data['nombre'],
+            dni = data['dni'],
+            email = data['email'],
+            celular = data['celular'],
+            username = data['username'],
+            password = data['password'],
+            id_tipo_usuario = data['id_tipo_usuario'],
+            foto_dni_frontal = data.get('foto_dni_frontal'),
+            foto_dni_posterior = data.get('foto_dni_posterior'),
+            user_inviter = data.get('user_inviter'),
+            role = data.get('role', 'COMPRADOR')
+        )
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+        return jsonify({'mensaje': 'Usuario creado', 'id': nuevo_usuario.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@admin_bp.route('/api/usuarios/<int:user_id>', methods=['GET'])
+# @login_required
+def api_usuario_por_id(user_id):
+    if current_user.id_tipo_usuario != 1:
+        return jsonify({'error': 'No autorizado'}), 403
+
+    usuario = Usuario.query.get(user_id)
+    if not usuario:
+        return jsonify({'error': 'Usuario no encontrado'}), 404
+
+    data = {
+        'id': usuario.id,
+        'nombre': usuario.nombre,
+        'dni': usuario.dni,
+        'email': usuario.email,
+        'celular': usuario.celular,
+        'username': usuario.username,
+        'id_tipo_usuario': usuario.id_tipo_usuario,
+        'foto_dni_frontal': usuario.foto_dni_frontal,
+        'foto_dni_posterior': usuario.foto_dni_posterior,
+        'user_inviter': usuario.user_inviter,
+        'role': usuario.role,
+        'created_at': usuario.created_at.strftime('%Y-%m-%d %H:%M:%S') if usuario.created_at else None
+    }
+    return jsonify(data)

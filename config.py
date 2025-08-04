@@ -10,7 +10,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'app/static/uploads'
 
-    # Codifica la contraseña para evitar problemas con caracteres especiales
+
     pwd = quote_plus(MYSQL_PASSWORD)
     SQLALCHEMY_DATABASE_URI = (
         f"mysql+pymysql://{MYSQL_USER}:{pwd}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
