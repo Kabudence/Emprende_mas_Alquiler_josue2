@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+
+{% block title %}Cupones{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2 class="my-4 text-center">Gestión de Cupones</h2>
+
+  <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="business_id" value="{{ negocio.id }}">
+
+  <!-- ================== CREAR MÚLTIPLES CUPONES ================== -->
+  <div class="card shadow mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Crear cupones</h5>
+      <div>
+        <button id="btn-add-coupon-card" class="btn btn-outline-primary btn-sm">
+          + Añadir cupón
+        </button>
+        <button id="btn-create-all" class="btn btn-primary btn-sm ms-2">
+          Crear todos
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- Filtros/Selects para cargar catálogos -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Tipos de cupón</label>
+          <select id="catalog-coupon-types" class="form-select">
+            <option value="">— Cargando… —</option>
+          </select>
+          <small class="text-muted">Se usa para autocompletar tarjetas nuevas.</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tipos de descuento</label>
+          <select id="catalog-discount-types" class="form-select">
+            <option value="">— Cargando… —</option>
+          </select>
+          <small class="text-muted">Fallback: 1=PERCENTAGE, 2=AMOUNT si API no existe.</small>
+        </div>
+      </div>
+
+      <!-- Contenedor de tarjetas de cupones “en borrador” -->
+      <div id="coupon-cards" class="row gy-3"></div>
+
+      <div class="alert alert-info mt-3">
+        Puedes agregar varias tarjetas y luego “Crear todos”. Para cada tarjeta puedes
+        ingresar IDs de productos a asignar inmediatamente al cupón creado (mapeo cupon↔producto).
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== LISTAR CUPONES DEL NEGOCIO ================== -->
+  <div class="card shadow">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Mis cupones</h5>
+      <button id="btn-reload" class="btn btn-outline-secondary btn-sm">Recargar</button>
+    </div>
+    <div class="card-body">
+      <div id="coupons-table-wrapper" class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Desc.</th>
+              <th>Valor</th>
+              <th>Máx desc.</th>
+              <th>Vigencia</th>
+              <th>Código</th>
+              <th>Alianzas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="coupons-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== MODAL: Mapear productos ↔ cupón ================== -->
+<div class="modal fade" id="modal-map-products" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Asignar productos al cupón <span id="map-products-coupon-id"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"> </button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">IDs de producto (separados por coma)</label>
+          <input type="text" class="form-control" id="map-products-input" placeholder="101, 102, 103">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-mapping" type="button" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== MODAL: Triggers (producto que dispara cupón) ================== -->
+<div class="modal fade" id="modal-triggers" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          Configurar triggers para cupón <span id="trigger-coupon-id"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"> </button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label">IDs de producto disparador (coma)</label>
+          <input type="text" class="form-control" id="trigger-products-input" placeholder="777, 778">
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">Cantidad mínima</label>
+            <input type="number" min="1" value="1" class="form-control" id="trigger-min-qty">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Monto mínimo</label>
+            <input type="number" step="0.01" class="form-control" id="trigger-min-amount" placeholder="opcional">
+          </div>
+        </div>
+        <div class="alert alert-info mt-3">
+          “Trigger” = si el cliente compra estos productos (con condiciones), otorgar este cupón al usuario.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-triggers" type="button" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ======= CONFIG =======
+const BASE = "/coupons-api";
+const CSRF = document.getElementById('csrf_token').value;
+const BUSINESS_ID = parseInt(document.getElementById('business_id').value, 10);
+
+// Endpoints REST
+const EP_COUPON_TYPES    = `${BASE}/coupon-types`;
+const EP_DISCOUNT_TYPES  = `${BASE}/discount-types`;
+const EP_COUPONS         = `${BASE}/coupons`;
+const EP_COUPON_PRODUCTS = `${BASE}/coupon-products`;
+const EP_TRIGGERS        = `${BASE}/coupon-trigger-products`;
+
+// ======= STATE =======
+let CATALOG_COUPON_TYPES = [];
+let CATALOG_DISCOUNT_TYPES = []; // [{id, name}]
+let CARD_SEQ = 0;
+
+// ======= HELPERS =======
+function headersJSON() {
+  return {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': CSRF
+  };
+}
+function asIntList(csv) {
+  if (!csv) return [];
+  return csv.split(',').map(s => parseInt(s.trim(), 10)).filter(n => Number.isFinite(n) && n > 0);
+}
+function toIsoLocal(dt) {
+  // input type="datetime-local" => "YYYY-MM-DDTHH:mm"
+  return dt ? dt : null;
+}
+
+// ======= LOAD CATALOGS =======
+async function loadCouponTypes() {
+  try {
+    const r = await fetch(EP_COUPON_TYPES, { headers: headersJSON() });
+    if (!r.ok) throw new Error('cant load coupon types');
+    CATALOG_COUPON_TYPES = await r.json();
+  } catch (e) {
+    CATALOG_COUPON_TYPES = [];
+  }
+  const sel = document.getElementById('catalog-coupon-types');
+  sel.innerHTML = '<option value="">— Selecciona —</option>' +
+    CATALOG_COUPON_TYPES.map(ct => `<option value="${ct.id}">${ct.name}</option>`).join('');
+}
+async function loadDiscountTypes() {
+  try {
+    const r = await fetch(EP_DISCOUNT_TYPES, { headers: headersJSON() });
+    if (!r.ok) throw new Error('no endpoint');
+    const rows = await r.json();
+    CATALOG_DISCOUNT_TYPES = rows.map(x => ({ id: x.id, name: x.name }));
+  } catch (e) {
+    // fallback: ya nos mostraste que tienes 1=PERCENTAGE, 2=AMOUNT
+    CATALOG_DISCOUNT_TYPES = [
+      { id: 1, name: 'PERCENTAGE' },
+      { id: 2, name: 'AMOUNT' }
+    ];
+  }
+  const sel = document.getElementById('catalog-discount-types');
+  sel.innerHTML = CATALOG_DISCOUNT_TYPES.map(dt => `<option value="${dt.id}">${dt.name}</option>`).join('');
+}
+
+// ======= COUPON CARDS (draft) =======
+function renderNewCouponCard() {
+  CARD_SEQ += 1;
+  const idx = CARD_SEQ;
+  const wrapper = document.getElementById('coupon-cards');
+
+  const firstCT = document.getElementById('catalog-coupon-types').value || '';
+  const firstDT = document.getElementById('catalog-discount-types').value || (CATALOG_DISCOUNT_TYPES[0]?.id || '');
+
+  const html = `
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+          <strong>Nuevo cupón</strong>
+          <button class="btn btn-outline-danger btn-sm" onclick="this.closest('.card').remove()">Eliminar</button>
+        </div>
+        <div class="card-body row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Tipo de cupón</label>
+            <select class="form-select" id="ct-${idx}">
+              <option value="">— Ninguno —</option>
+              ${CATALOG_COUPON_TYPES.map(ct => `<option value="${ct.id}" ${String(ct.id)===String(firstCT)?'selected':''}>${ct.name}</option>`).join('')}
+            </select>
+            <small class="text-muted">Clasificación (opcional)</small>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Tipo de descuento</label>
+            <select class="form-select" id="dt-${idx}">
+              ${CATALOG_DISCOUNT_TYPES.map(dt => `<option value="${dt.id}" ${String(dt.id)===String(firstDT)?'selected':''}>${dt.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Valor</label>
+            <input type="number" step="0.01" class="form-control" id="val-${idx}" placeholder="10 (si %), 5.90 (si monto)">
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="name-${idx}" placeholder="WELCOME10">
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Descripción</label>
+            <input type="text" class="form-control" id="desc-${idx}" placeholder="10% hasta S/50">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Máx. descuento (opcional)</label>
+            <input type="number" step="0.01" class="form-control" id="maxd-${idx}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Límite usos global (opcional)</label>
+            <input type="number" min="1" class="form-control" id="uses-${idx}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Código (opcional)</label>
+            <input type="text" class="form-control" id="code-${idx}" placeholder="WELCOME10">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Inicio</label>
+            <input type="datetime-local" class="form-control" id="start-${idx}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Fin</label>
+            <input type="datetime-local" class="form-control" id="end-${idx}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Evento (opcional)</label>
+            <input type="text" class="form-control" id="event-${idx}" placeholder="Black Friday">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Compartir en alianzas</label>
+            <select class="form-select" id="share-${idx}">
+              <option value="false" selected>No</option>
+              <option value="true">Sí</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Productos a asignar (IDs, separados por coma)</label>
+            <input type="text" class="form-control" id="products-${idx}" placeholder="101, 102, 103">
+            <small class="text-muted">Se mapearán al finalizar la creación del cupón.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  wrapper.insertAdjacentHTML('beforeend', html);
+}
+
+async function createAllCoupons() {
+  const cards = [...document.querySelectorAll('#coupon-cards .card')];
+  if (!cards.length) {
+    alert('Agrega al menos un cupón.');
+    return;
+  }
+
+  for (const card of cards) {
+    const idx = card.querySelector('[id^="ct-"]').id.split('-')[1];
+
+    const payload = {
+      business_id: BUSINESS_ID,
+      coupon_type_id: parseInt(document.getElementById(`ct-${idx}`).value || null),
+      discount_type_id: parseInt(document.getElementById(`dt-${idx}`).value),
+      value: parseFloat(document.getElementById(`val-${idx}`).value),
+      name: document.getElementById(`name-${idx}`).value.trim(),
+      description: document.getElementById(`desc-${idx}`).value.trim() || null,
+      max_discount: document.getElementById(`maxd-${idx}`).value ? parseFloat(document.getElementById(`maxd-${idx}`).value) : null,
+      max_uses: document.getElementById(`uses-${idx}`).value ? parseInt(document.getElementById(`uses-${idx}`).value, 10) : null,
+      code: document.getElementById(`code-${idx}`).value.trim() || null,
+      start_date: toIsoLocal(document.getElementById(`start-${idx}`).value),
+      end_date: toIsoLocal(document.getElementById(`end-${idx}`).value),
+      event_name: document.getElementById(`event-${idx}`).value.trim() || null,
+      is_shared_alliances: document.getElementById(`share-${idx}`).value === 'true',
+      status: "ACTIVE"
+    };
+
+    // Validaciones mínimas
+    if (!payload.name || !payload.discount_type_id || !payload.value || !payload.start_date || !payload.end_date) {
+      alert('Completa los campos obligatorios (nombre, tipo descuento, valor, fechas).');
+      return;
+    }
+
+    // Crear cupón
+    let created;
+    try {
+      const r = await fetch(EP_COUPONS, {
+        method: 'POST',
+        headers: headersJSON(),
+        body: JSON.stringify(payload)
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || 'Error creando cupón');
+      created = body;
+    } catch (e) {
+      console.error(e);
+      alert(`Error creando cupón: ${e.message}`);
+      return;
+    }
+
+    // Mapear productos (si los hay)
+    const idsCsv = document.getElementById(`products-${idx}`).value;
+    const product_ids = asIntList(idsCsv);
+    if (product_ids.length) {
+      try {
+        const rr = await fetch(`${EP_COUPON_PRODUCTS}/bulk`, {
+          method: 'POST',
+          headers: headersJSON(),
+          body: JSON.stringify({ coupon_id: created.id, product_ids })
+        });
+        if (!rr.ok) {
+          const b = await rr.json().catch(() => ({}));
+          console.warn('Error mapeando productos:', b);
+        }
+      } catch (e) {
+        console.warn('Error mapeando productos:', e);
+      }
+    }
+
+    // Eliminar tarjeta creada
+    card.remove();
+  }
+
+  await loadMyCoupons();
+  alert('¡Cupones creados!');
+}
+
+// ======= LIST / TABLE =======
+async function loadMyCoupons() {
+  const tbody = document.getElementById('coupons-tbody');
+  tbody.innerHTML = `<tr><td colspan="10">Cargando…</td></tr>`;
+  try {
+    const r = await fetch(`${EP_COUPONS}?business_id=${BUSINESS_ID}`, { headers: headersJSON() });
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) {
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted">Sin cupones</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.name || ''}</td>
+        <td>${c.coupon_type_id ?? ''}</td>
+        <td>${c.discount_type_id ?? ''}</td>
+        <td>${c.value ?? ''}</td>
+        <td>${c.max_discount ?? ''}</td>
+        <td>
+          <div>${c.start_date ? c.start_date.slice(0,16).replace('T',' ') : ''}</div>
+          <div>${c.end_date ? c.end_date.slice(0,16).replace('T',' ') : ''}</div>
+        </td>
+        <td>${c.code || ''}</td>
+        <td>${c.is_shared_alliances ? 'Sí' : 'No'}</td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-primary" onclick="openMapProducts(${c.id})">Productos</button>
+            <button class="btn btn-outline-info" onclick="openTriggers(${c.id})">Triggers</button>
+            <button class="btn btn-outline-danger" onclick="deleteCoupon(${c.id})">Eliminar</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="10" class="text-danger">Error cargando cupones</td></tr>`;
+  }
+}
+
+async function deleteCoupon(id) {
+  if (!confirm('¿Eliminar este cupón?')) return;
+  try {
+    const r = await fetch(`${EP_COUPONS}/${id}`, {
+      method: 'DELETE',
+      headers: headersJSON()
+    });
+    if (!r.ok) {
+      const b = await r.json().catch(() => ({}));
+      alert(b.error || 'No se pudo eliminar');
+      return;
+    }
+    await loadMyCoupons();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ======= MODAL: MAP PRODUCTS =======
+let mapProductsModal, triggersModal;
+document.addEventListener('DOMContentLoaded', () => {
+  mapProductsModal = new bootstrap.Modal(document.getElementById('modal-map-products'));
+  triggersModal   = new bootstrap.Modal(document.getElementById('modal-triggers'));
+});
+
+function openMapProducts(couponId) {
+  document.getElementById('map-products-coupon-id').textContent = `#${couponId}`;
+  document.getElementById('map-products-input').value = '';
+  document.getElementById('btn-save-mapping').onclick = async () => {
+    const csv = document.getElementById('map-products-input').value;
+    const product_ids = asIntList(csv);
+    if (!product_ids.length) {
+      alert('Ingresa al menos un ID de producto');
+      return;
+    }
+    try {
+      const r = await fetch(`${EP_COUPON_PRODUCTS}/bulk`, {
+        method: 'POST',
+        headers: headersJSON(),
+        body: JSON.stringify({ coupon_id: couponId, product_ids })
+      });
+      if (!r.ok) {
+        const b = await r.json().catch(() => ({}));
+        alert(b.error || 'No se pudo guardar');
+        return;
+      }
+      mapProductsModal.hide();
+      alert('¡Productos asignados!');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  mapProductsModal.show();
+}
+
+// ======= MODAL: TRIGGERS =======
+function openTriggers(couponId) {
+  document.getElementById('trigger-coupon-id').textContent = `#${couponId}`;
+  document.getElementById('trigger-products-input').value = '';
+  document.getElementById('trigger-min-qty').value = 1;
+  document.getElementById('trigger-min-amount').value = '';
+
+  document.getElementById('btn-save-triggers').onclick = async () => {
+    const product_trigger_ids = asIntList(document.getElementById('trigger-products-input').value);
+    const min_quantity = parseInt(document.getElementById('trigger-min-qty').value || '1', 10);
+    const min_amount_raw = document.getElementById('trigger-min-amount').value;
+    const min_amount = min_amount_raw ? parseFloat(min_amount_raw) : null;
+
+    if (!product_trigger_ids.length) {
+      alert('Ingresa al menos un producto disparador');
+      return;
+    }
+    try {
+      const r = await fetch(`${EP_TRIGGERS}/bulk`, {
+        method: 'POST',
+        headers: headersJSON(),
+        body: JSON.stringify({
+          coupon_id: couponId,
+          product_trigger_ids,
+          min_quantity,
+          min_amount
+        })
+      });
+      if (!r.ok) {
+        const b = await r.json().catch(() => ({}));
+        alert(b.error || 'No se pudo guardar');
+        return;
+      }
+      triggersModal.hide();
+      alert('¡Triggers guardados!');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  triggersModal.show();
+}
+
+// ======= INIT =======
+document.getElementById('btn-add-coupon-card').addEventListener('click', renderNewCouponCard);
+document.getElementById('btn-create-all').addEventListener('click', createAllCoupons);
+document.getElementById('btn-reload').addEventListener('click', loadMyCoupons);
+
+(async function init(){
+  await Promise.all([loadCouponTypes(), loadDiscountTypes()]);
+  // añade una tarjeta por defecto
+  renderNewCouponCard();
+  await loadMyCoupons();
+})();
+</script>
+{% endblock %}

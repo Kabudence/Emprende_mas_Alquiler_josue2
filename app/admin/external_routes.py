@@ -2,15 +2,16 @@
 
 from flask import Blueprint, request, jsonify
 from flask import render_template, redirect, url_for, request, flash, session, jsonify
-from flask_login import login_user, logout_user, current_user
-from werkzeug.security import check_password_hash  # Para comparar contraseñas hasheadas
+
 
 external_api_bp = Blueprint('external_api', __name__, url_prefix='/external_api/usuarios')
 
 @external_api_bp.route('/crear', methods=['POST'])
 def api_crear_usuario():
-    from app import db                   # Importa aquí (¡no arriba!)
+    from app import db
     from app.models import Usuario
+    from werkzeug.security import generate_password_hash   # Importa el correcto
+
     data = request.json
     campos_requeridos = ['nombre', 'dni', 'email', 'celular', 'username', 'password', 'id_tipo_usuario']
     if not all(k in data for k in campos_requeridos):
@@ -23,13 +24,14 @@ def api_crear_usuario():
         return jsonify({'error': 'El email ya existe'}), 409
 
     try:
+        hashed_password = generate_password_hash(data['password'])  # Hashea la contraseña
         nuevo_usuario = Usuario(
             nombre = data['nombre'],
             dni = data['dni'],
             email = data['email'],
             celular = data['celular'],
             username = data['username'],
-            password = data['password'],
+            password = hashed_password,         # Guarda el hash, no el texto plano
             id_tipo_usuario = data['id_tipo_usuario'],
             foto_dni_frontal = data.get('foto_dni_frontal'),
             foto_dni_posterior = data.get('foto_dni_posterior'),
@@ -42,6 +44,7 @@ def api_crear_usuario():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
 
 @external_api_bp.route('/<int:user_id>', methods=['GET'])
 def api_usuario_por_id(user_id):

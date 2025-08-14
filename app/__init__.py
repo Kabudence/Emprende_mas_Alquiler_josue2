@@ -113,6 +113,11 @@ def create_app():
     csrf.exempt(staff_api)  # <--- agrega esta línea aquí
     app.register_blueprint(schedule_api)
     app.register_blueprint(appointment_api)
+    from coupons.coupon.interface.coupon_ui import coupon_ui_bp
+    app.register_blueprint(coupon_ui_bp)
+    from external_apis.coupons.coupons_gateway import coupons_gateway_bp
+    app.register_blueprint(coupons_gateway_bp)
+
     csrf.exempt(appointment_api)  # <--- agrega esta línea aquí
 
 
