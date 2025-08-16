@@ -39,6 +39,7 @@ from flask_wtf.csrf import CSRFProtect
 
 
 
+
 from config import Config
 
 
@@ -118,7 +119,13 @@ def create_app():
     from external_apis.coupons.coupons_gateway import coupons_gateway_bp
     app.register_blueprint(coupons_gateway_bp)
 
-    csrf.exempt(appointment_api)  # <--- agrega esta línea aquí
+    from external_apis.alianzas.alianza_gateway import alianza_gateway_bp
+    app.register_blueprint(alianza_gateway_bp)
+    csrf.exempt(appointment_api)
+
+    from alianzas.interface.alianzas_ui import alianzas_ui_bp
+
+    app.register_blueprint(alianzas_ui_bp)
 
 
     @app.route('/static/<path:filename>')

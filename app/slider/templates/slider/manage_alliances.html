@@ -1,0 +1,542 @@
+{% extends 'base.html' %}
+
+{% block title %}Alianzas{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2 class="my-4 text-center">Alianzas entre negocios</h2>
+
+  <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="business_id" value="{{ negocio.id }}">
+
+  <!-- ====== PANEL: ENVIAR SOLICITUD ====== -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <strong>Enviar solicitud de alianza</strong>
+        <button
+          class="btn btn-outline-dark btn-sm"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#send-request-panel"
+          aria-expanded="true"
+          aria-controls="send-request-panel"
+          id="toggle-send-panel"
+          title="Mostrar / Ocultar"
+        >
+          <i class="bi bi-chevron-up" id="send-panel-chevron"></i>
+        </button>
+      </div>
+      <button id="btn-send-request" class="btn btn-primary btn-sm">
+        Enviar
+      </button>
+    </div>
+    <div id="send-request-panel" class="collapse show">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Mi negocio</label>
+            <input type="text" class="form-control" value="{{ negocio.nombre }} ( #{{ negocio.id }} )" disabled>
+            <small class="text-muted">Solicitante</small>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Buscar negocio</label>
+            <input type="text" id="negocio_search" class="form-control" placeholder="Escribe para filtrar por nombre…">
+            <small class="text-muted">Filtra la lista de negocios por nombre</small>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Negocio receptor</label>
+            <select id="receptor_id" class="form-select">
+              <option value="">— Selecciona un negocio —</option>
+            </select>
+            <small class="text-muted">Negocio al que enviarás la solicitud</small>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Motivo (opcional)</label>
+            <input type="text" id="motivo" class="form-control" placeholder="Ej. Intercambio de tráfico">
+          </div>
+        </div>
+
+        <div class="mt-3 alert alert-info">
+          Consejo: acuerden beneficios concretos (visibilidad cruzada, packs, descuentos) para acelerar la aceptación.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== TABLEROS / BANDEJAS ====== -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="row g-3 text-center">
+            <div class="col-6 col-md-3">
+              <div class="fw-bold fs-4" id="kpi-pend-rec">0</div>
+              <div class="text-muted small">Pendientes recibidas</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="fw-bold fs-4" id="kpi-pend-env">0</div>
+              <div class="text-muted small">Pendientes enviadas</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="fw-bold fs-4" id="kpi-activas">0</div>
+              <div class="text-muted small">Alianzas activas</div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="fw-bold fs-4" id="kpi-total">0</div>
+              <div class="text-muted small">Total de relaciones</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pendientes RECIBIDAS -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <strong>Solicitudes recibidas</strong>
+          <span class="badge text-bg-secondary" id="count-rec">0</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush" id="list-recibidas"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pendientes ENVIADAS -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <strong>Solicitudes enviadas</strong>
+          <span class="badge text-bg-secondary" id="count-env">0</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush" id="list-enviadas"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== TABLA GENERAL ====== -->
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <strong>Todas mis alianzas</strong>
+      <div>
+        <select id="filter-estado" class="form-select form-select-sm d-inline-block" style="width: 180px;">
+          <option value="">Estado: todos</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="ACEPTADA">Aceptada</option>
+          <option value="RECHAZADA">Rechazada</option>
+          <option value="CANCELADA">Cancelada</option>
+          <option value="SUSPENDIDA">Suspendida</option>
+        </select>
+        <button id="btn-reload" class="btn btn-outline-secondary btn-sm ms-2">Recargar</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Negocio contraparte</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Motivo</th>
+              <th>Solicitada</th>
+              <th>Respondida</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-all"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ========= CONFIG =========
+const BASE = "/alliances-api";
+const CSRF = document.getElementById('csrf_token').value;
+const BUSINESS_ID = parseInt(document.getElementById('business_id').value, 10);
+
+// Endpoints (gateway interno)
+const EP_ALLIANCES          = `${BASE}/alliances`;
+const EP_ALLIANCES_BY_BUSS  = (id) => `${BASE}/alliances/by-business/${id}`;
+const EP_PEND_RECEIVED      = `${BASE}/alliances/pending/received`;
+const EP_PEND_SENT          = `${BASE}/alliances/pending/sent`;
+const EP_ACTIVE             = `${BASE}/alliances/active`;
+const EP_ACCEPT             = (id) => `${BASE}/alliances/${id}/accept`;
+const EP_REJECT             = (id) => `${BASE}/alliances/${id}/reject`;
+const EP_CANCEL             = (id) => `${BASE}/alliances/${id}/cancel`;
+const EP_SUSPEND            = (id) => `${BASE}/alliances/${id}/suspend`;
+const EP_REACTIVATE         = (id) => `${BASE}/alliances/${id}/reactivate`;
+
+// Endpoints UI
+const EP_UI_NEGOCIOS        = (q="") => `/alianzas/negocios-json?exclude_me=1${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+
+// ========= STATE =========
+let BUSINESSES_ALL = [];     // catálogo completo desde /negocios-json
+let BUSINESSES_MAP = {};     // id -> nombre (map para mostrar nombres)
+let ALLIANCES = [];          // últimas alianzas cargadas
+
+// ========= HELPERS =========
+function headersJSON() {
+  return { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF };
+}
+function fmtDt(s) {
+  if (!s) return '—';
+  try { return s.replace('T',' ').slice(0,16); } catch { return s; }
+}
+function estadoBadge(estado) {
+  const map = { PENDIENTE:'secondary', ACEPTADA:'success', RECHAZADA:'danger', CANCELADA:'dark', SUSPENDIDA:'warning' };
+  const cls = map[estado] || 'secondary';
+  return `<span class="badge text-bg-${cls}">${estado}</span>`;
+}
+function otherBusinessId(a) {
+  return a.solicitante_negocio_id === BUSINESS_ID ? a.receptor_negocio_id : a.solicitante_negocio_id;
+}
+function businessName(id) {
+  return BUSINESSES_MAP[id] || `#${id}`;
+}
+function ellos(a) {
+  return businessName(otherBusinessId(a));
+}
+async function fetchJSON(url, options = {}) {
+  const r = await fetch(url, options);
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || 'Error de red');
+  return body;
+}
+
+// ========= COLLAPSE CHEVRON =========
+document.addEventListener('DOMContentLoaded', () => {
+  const collapseEl = document.getElementById('send-request-panel');
+  const chevron = document.getElementById('send-panel-chevron');
+  const setChevron = (open) => {
+    chevron.classList.toggle('bi-chevron-up', open);
+    chevron.classList.toggle('bi-chevron-down', !open);
+  };
+  setChevron(true);
+  collapseEl.addEventListener('shown.bs.collapse', () => setChevron(true));
+  collapseEl.addEventListener('hidden.bs.collapse', () => setChevron(false));
+});
+
+// ========= NEGOCIOS UI =========
+function fillBusinessSelect(rows) {
+  const sel = document.getElementById('receptor_id');
+  const opts = [`<option value="">— Selecciona un negocio —</option>`]
+    .concat(rows.map(n => `<option value="${n.id}">${n.nombre} (#${n.id})</option>`));
+  sel.innerHTML = opts.join('');
+}
+
+// Calcula los IDs de negocios que NO deben aparecer como receptores
+function getExcludedBusinessIds() {
+  const set = new Set();
+  for (const a of ALLIANCES) {
+    set.add(otherBusinessId(a)); // excluye cualquier contraparte con relación previa o vigente
+  }
+  set.add(BUSINESS_ID); // por si acaso
+  return set;
+}
+
+// Rellena el select aplicando exclusión + filtro por texto (local)
+function updateAvailableReceivers() {
+  const term = (document.getElementById('negocio_search').value || '').trim().toLowerCase();
+  const excluded = getExcludedBusinessIds();
+
+  // Filtramos del catálogo completo, pero mantenemos el MAP global para mostrar nombres en listas/tabla
+  const filtered = BUSINESSES_ALL
+    .filter(n => !excluded.has(n.id))
+    .filter(n => !term || n.nombre.toLowerCase().includes(term));
+
+  fillBusinessSelect(filtered);
+}
+
+async function loadBusinesses(q = "") {
+  const rows = await fetchJSON(EP_UI_NEGOCIOS(q));
+  BUSINESSES_ALL = rows.slice(); // catálogo completo
+  BUSINESSES_MAP = Object.fromEntries(rows.map(n => [n.id, n.nombre]));
+  updateAvailableReceivers(); // llena el select aplicando exclusiones si ya hay ALLIANCES
+}
+
+// ========= LOADERS =========
+async function loadKPIsAndLists() {
+  const all = await fetchJSON(EP_ALLIANCES_BY_BUSS(BUSINESS_ID));
+  ALLIANCES = all; // guarda para exclusiones y acciones
+  updateAvailableReceivers(); // al cambiar alianzas, recalcula exclusiones del select
+
+  const pendientesRec = all.filter(a => a.estado === 'PENDIENTE' && a.receptor_negocio_id === BUSINESS_ID);
+  const pendientesEnv = all.filter(a => a.estado === 'PENDIENTE' && a.solicitante_negocio_id === BUSINESS_ID);
+  const activas       = all.filter(a => a.estado === 'ACEPTADA');
+
+  // KPIs
+  document.getElementById('kpi-pend-rec').textContent = pendientesRec.length;
+  document.getElementById('kpi-pend-env').textContent = pendientesEnv.length;
+  document.getElementById('kpi-activas').textContent  = activas.length;
+  document.getElementById('kpi-total').textContent    = all.length;
+
+  // Listas pend.
+  document.getElementById('count-rec').textContent = pendientesRec.length;
+  document.getElementById('count-env').textContent = pendientesEnv.length;
+
+  renderListGroup('list-recibidas', pendientesRec, /*recibidas=*/true);
+  renderListGroup('list-enviadas', pendientesEnv, /*recibidas=*/false);
+
+  // Tabla general
+  renderTableAll(all);
+}
+
+function renderListGroup(containerId, rows, recibidas) {
+  const box = document.getElementById(containerId);
+  if (!rows.length) {
+    box.innerHTML = `<div class="list-group-item text-muted">Sin solicitudes ${recibidas?'recibidas':'enviadas'}.</div>`;
+    return;
+  }
+  box.innerHTML = rows.map(a => {
+    const otherName = ellos(a);
+    const initials = otherName.slice(0,2).toUpperCase();
+    return `
+      <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+            <span class="small text-muted">${initials}</span>
+          </div>
+          <div>
+            <div class="fw-semibold">${otherName} · ${estadoBadge(a.estado)}</div>
+            <div class="text-muted small">Motivo: ${a.motivo || '—'}</div>
+            <div class="text-muted small">Desde: ${fmtDt(a.fecha_solicitud)}</div>
+          </div>
+        </div>
+        <div class="btn-group btn-group-sm">
+          ${
+            recibidas
+              ? `
+                <button class="btn btn-outline-success" onclick="doAccept(${a.id})">Aceptar</button>
+                <button class="btn btn-outline-danger"  onclick="doReject(${a.id})">Rechazar</button>
+              `
+              : `
+                <button class="btn btn-outline-secondary" onclick="doCancel(${a.id})">Cancelar</button>
+              `
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTableAll(allRows) {
+  const estadoFiltro = document.getElementById('filter-estado').value || '';
+  const rows = estadoFiltro ? allRows.filter(r => r.estado === estadoFiltro) : allRows;
+  const tb = document.getElementById('tbl-all');
+  if (!rows.length) {
+    tb.innerHTML = `<tr><td colspan="8" class="text-center text-muted">Sin registros</td></tr>`;
+    return;
+  }
+  tb.innerHTML = rows.map(a => {
+    const myRole = (a.solicitante_negocio_id === BUSINESS_ID ? 'Solicitante' : 'Receptor');
+    const otherName = ellos(a);
+    const actions = buildActions(a);
+    return `
+      <tr>
+        <td>${a.id}</td>
+        <td>${otherName}</td>
+        <td>${myRole}</td>
+        <td>${estadoBadge(a.estado)}</td>
+        <td>${a.motivo || '—'}</td>
+        <td>${fmtDt(a.fecha_solicitud)}</td>
+        <td>${fmtDt(a.fecha_respuesta)}</td>
+        <td>${actions}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function buildActions(a) {
+  const isSolic = a.solicitante_negocio_id === BUSINESS_ID;
+  const isRec   = a.receptor_negocio_id === BUSINESS_ID;
+
+  if (a.estado === 'PENDIENTE') {
+    if (isRec) {
+      return `
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-success" onclick="doAccept(${a.id})">Aceptar</button>
+          <button class="btn btn-outline-danger"  onclick="doReject(${a.id})">Rechazar</button>
+        </div>
+      `;
+    }
+    if (isSolic) {
+      return `<button class="btn btn-outline-secondary btn-sm" onclick="doCancel(${a.id})">Cancelar</button>`;
+    }
+  }
+  if (a.estado === 'ACEPTADA') {
+    return `
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-warning" onclick="doSuspend(${a.id})">Suspender</button>
+        <button class="btn btn-outline-danger"  onclick="doCancel(${a.id})">Cancelar</button>
+      </div>
+    `;
+  }
+  if (a.estado === 'SUSPENDIDA') {
+    return `
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-success" onclick="doReactivate(${a.id})">Reactivar</button>
+        <button class="btn btn-outline-danger"  onclick="doCancel(${a.id})">Cancelar</button>
+      </div>
+    `;
+  }
+  if (a.estado === 'CANCELADA') {
+    // NUEVO: re-solicitar (crea una nueva solicitud PENDIENTE hacia la contraparte)
+    return `
+      <button class="btn btn-outline-primary btn-sm" onclick="doRequestReactivation(${a.id})">
+        Solicitar reactivación
+      </button>
+    `;
+  }
+  return '—';
+}
+
+// ========= ACTIONS =========
+async function sendRequest() {
+  const receptor = parseInt(document.getElementById('receptor_id').value || '0', 10);
+  const motivo   = (document.getElementById('motivo').value || '').trim() || null;
+  if (!receptor || receptor === BUSINESS_ID) {
+    alert('Selecciona un negocio receptor válido (distinto al tuyo).');
+    return;
+  }
+  // Bloqueo adicional: si ya existe/ existió relación, no permitir por aquí
+  if (getExcludedBusinessIds().has(receptor)) {
+    alert('Ya existe o existió una relación con este negocio. Usa “Solicitar reactivación” desde la tabla.');
+    return;
+  }
+  try {
+    await fetchJSON(EP_ALLIANCES, {
+      method: 'POST',
+      headers: headersJSON(),
+      body: JSON.stringify({
+        solicitante_negocio_id: BUSINESS_ID,
+        receptor_negocio_id: receptor,
+        motivo
+      })
+    });
+    document.getElementById('receptor_id').value = '';
+    document.getElementById('motivo').value = '';
+    await loadKPIsAndLists();
+    alert('Solicitud enviada.');
+  } catch (e) {
+    console.error(e);
+    alert(e.message);
+  }
+}
+
+async function doAccept(id) {
+  const motivo = prompt('Mensaje (opcional) para aceptación:', '');
+  try {
+    await fetchJSON(EP_ACCEPT(id), {
+      method: 'PUT',
+      headers: headersJSON(),
+      body: JSON.stringify({ actor_negocio_id: BUSINESS_ID, motivo })
+    });
+    await loadKPIsAndLists();
+  } catch (e) { alert(e.message); }
+}
+
+async function doReject(id) {
+  const motivo = prompt('Motivo de rechazo (opcional):', '');
+  if (!confirm('¿Rechazar esta solicitud?')) return;
+  try {
+    await fetchJSON(EP_REJECT(id), {
+      method: 'PUT',
+      headers: headersJSON(),
+      body: JSON.stringify({ actor_negocio_id: BUSINESS_ID, motivo })
+    });
+    await loadKPIsAndLists();
+  } catch (e) { alert(e.message); }
+}
+
+async function doCancel(id) {
+  const motivo = prompt('Motivo de cancelación (opcional):', '');
+  if (!confirm('¿Cancelar esta relación/solicitud?')) return;
+  try {
+    await fetchJSON(EP_CANCEL(id), {
+      method: 'PUT',
+      headers: headersJSON(),
+      body: JSON.stringify({ actor_negocio_id: BUSINESS_ID, motivo })
+    });
+    await loadKPIsAndLists();
+  } catch (e) { alert(e.message); }
+}
+
+async function doSuspend(id) {
+  const motivo = prompt('Motivo para suspender (opcional):', '');
+  if (!confirm('¿Suspender esta alianza?')) return;
+  try {
+    await fetchJSON(EP_SUSPEND(id), {
+      method: 'PUT',
+      headers: headersJSON(),
+      body: JSON.stringify({ actor_negocio_id: BUSINESS_ID, motivo })
+    });
+    await loadKPIsAndLists();
+  } catch (e) { alert(e.message); }
+}
+
+async function doReactivate(id) {
+  const motivo = prompt('Mensaje (opcional) para reactivar:', '');
+  try {
+    await fetchJSON(EP_REACTIVATE(id), {
+      method: 'PUT',
+      headers: headersJSON(),
+      body: JSON.stringify({ actor_negocio_id: BUSINESS_ID, motivo })
+    });
+    await loadKPIsAndLists();
+  } catch (e) { alert(e.message); }
+}
+
+// NUEVO: solicitar reactivación desde una CANCELADA (crea NUEVA solicitud)
+async function doRequestReactivation(id) {
+  const a = ALLIANCES.find(x => x.id === id);
+  if (!a) { alert('No se encontró la alianza.'); return; }
+  const receptor = otherBusinessId(a);
+  const motivo = prompt('Mensaje (opcional) para reactivar la alianza:', '') || null;
+  if (!confirm(`Se enviará una nueva solicitud a “${businessName(receptor)}”. ¿Continuar?`)) return;
+
+  try {
+    await fetchJSON(EP_ALLIANCES, {
+      method: 'POST',
+      headers: headersJSON(),
+      body: JSON.stringify({
+        solicitante_negocio_id: BUSINESS_ID,
+        receptor_negocio_id: receptor,
+        motivo
+      })
+    });
+    await loadKPIsAndLists();
+    alert('Solicitud de reactivación enviada.');
+  } catch (e) { alert(e.message); }
+}
+
+// ========= INIT =========
+document.getElementById('btn-send-request').addEventListener('click', sendRequest);
+document.getElementById('btn-reload').addEventListener('click', loadKPIsAndLists);
+document.getElementById('filter-estado').addEventListener('change', loadKPIsAndLists);
+
+// Búsqueda local sobre el dataset cargado
+document.getElementById('negocio_search').addEventListener('input', () => {
+  updateAvailableReceivers();
+});
+
+(async function init(){
+  // 1) Cargar negocios (para mapear nombres y poblar el select)
+  await loadBusinesses("");
+  // 2) Cargar alianzas (mostrar nombres en listas/tabla y excluir receptores no disponibles)
+  await loadKPIsAndLists();
+})();
+</script>
+{% endblock %}
