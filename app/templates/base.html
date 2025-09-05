@@ -1,32 +1,115 @@
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Panel de Administración{% endblock %}</title>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Panel de Administración{% endblock %}</title>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <script src="https://cdn.tiny.cloud/1/jqasl7p02onefomhc5b7d1i4jdagke8c83jxmhbwdlt26iso/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 
+    <style>
+        /* ===== Temas por variables CSS ===== */
+        :root {
+            --sidebar-bg: #212529;         /* default: bg-dark */
+            --sidebar-text: #ffffff;
+            --sidebar-link-hover: #f8f9fa;
+            --body-bg: #ffffff;            /* fondo default */
+            --divider: rgba(255,255,255,.25);
+        }
+        /* Tema especial para usuario externo */
+        .theme-external {
+            --sidebar-bg: #8B1E3F;         /* rojo oscuro */
+            --sidebar-text: #ffffff;
+            --sidebar-link-hover: #F3E6EA; /* blanco rosado suave */
+            --body-bg: #f0f2f5;            /* gris claro */
+            --divider: rgba(255,255,255,.35);
+        }
 
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+        body {
+            background: var(--body-bg);
+        }
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            position: sticky;
+            top: 0;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+        }
+        .sidebar h3 {
+            color: var(--sidebar-text);
+            margin-bottom: .5rem;
+        }
+        .sidebar hr {
+            color: var(--divider);
+            border-color: var(--divider);
+            opacity: 1;
+        }
+        .sidebar .nav-link {
+            color: var(--sidebar-text);
+            opacity: .95;
+            border-radius: .5rem;
+            padding: .5rem .75rem;
+        }
+        .sidebar .nav-link:hover {
+            background: rgba(255,255,255,.08);
+            color: var(--sidebar-link-hover);
+        }
+        .sidebar .nav-item + .nav-item {
+            margin-top: .1rem;
+        }
+    </style>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-        <script src="https://cdn.tiny.cloud/1/jqasl7p02onefomhc5b7d1i4jdagke8c83jxmhbwdlt26iso/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- <link href="/static/styles.css" rel="stylesheet"> -->
+</head>
+<body
+    {# Detectamos username desde Flask-Login o session/user_data y aplicamos tema #}
+    {% set _session_user = session.get('user_data', {}) %}
+    {% set username = (current_user.username if (current_user is defined and current_user.is_authenticated)
+                       else (user_data.get('username') if (user_data is defined and user_data)
+                             else _session_user.get('username'))) %}
+    {% set is_josue = (username == 'josueexterno1') %}
+    class="{{ 'theme-external' if is_josue else '' }}"
+>
+    <div class="d-flex">
 
+        <nav class="sidebar d-flex flex-column text-white p-3">
+            <h3 class="text-center">
+                {{ 'Panel de Usuario Externo' if is_josue else 'Panel' }}
+            </h3>
+            <hr>
 
-
-        <!-- <link href="/static/styles.css" rel="stylesheet"> -->
-    </head>
-    <body>
-        <div class="d-flex">
-
-            <nav class="d-flex flex-column bg-dark text-white p-3" style="width: 250px; min-height: 100vh; position: sticky; top: 0;">
-                <h3 class="text-center">Panel</h3>
-                <hr class="text-white">
-                <ul class="nav flex-column">
+            <ul class="nav flex-column">
+                {% if is_josue %}
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white" href="/productos">
+                            <i class="fas fa-cogs me-2"></i>Productos
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white" href="{{ url_for('alianzas_ui.manage_alliances') }}">
+                            <i class="fas fa-handshake me-2"></i>Alianzas
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white" href="/coupons">
+                            <i class="bi bi-ticket-detailed-fill me-2"></i>Cupones
+                        </a>
+                    </li>
+                    <hr>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white" href="/auth/logout">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </li>
+                {% else %}
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/">
                             <i class="fas fa-tachometer-alt me-2"></i>Dashboard
@@ -44,7 +127,7 @@
                     </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/tamanios">
-                            <i class="fas fa-ruler me-2"></i>Tamaños
+                            <i class="fas fa-ruler me-2"></i>Presentaciones
                         </a>
                     </li>
                     <li class="nav-item mb-2">
@@ -61,7 +144,7 @@
                         <a class="nav-link text-white" href="/servicios">
                             <i class="fas fa-users me-2"></i>Servicios
                         </a>
-                    </li>                
+                    </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/feedbacks">
                             <i class="fas fa-comment-dots me-2"></i>Feedbacks
@@ -71,17 +154,17 @@
                         <a class="nav-link text-white" href="/politicas_restricciones">
                             <i class="fas fa-gavel me-2"></i>Políticas y Restricciones
                         </a>
-                    </li>      
+                    </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/slider">
                             <i class="fas fa-gavel me-2"></i>Slider
                         </a>
-                    </li>    
+                    </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/informacion_empresa/informacionempresa">
                             <i class="fas fa-gavel me-2"></i>Información de Empresa
                         </a>
-                    </li>     
+                    </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/registro_usuarios">
                             <i class="fas fa-users me-2"></i>Clientes
@@ -92,19 +175,16 @@
                             <i class="fas fa-user-md me-2"></i>Staff
                         </a>
                     </li>
-
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/coupons">
                             <i class="bi bi-ticket-detailed-fill me-2"></i>Cupones
                         </a>
                     </li>
-                             <li class="nav-item mb-2">
-  <a class="nav-link text-white" href="{{ url_for('alianzas_ui.manage_alliances') }}">
-    <i class="fas fa-handshake me-2"></i>Alianzas
-  </a>
-</li>
-
-
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white" href="{{ url_for('alianzas_ui.manage_alliances') }}">
+                            <i class="fas fa-handshake me-2"></i>Alianzas
+                        </a>
+                    </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/sucursales">
                             <i class="bi bi-building-fill-add me-2"></i>Sucursales
@@ -120,7 +200,6 @@
                             <i class="fas fa-calendar-day me-2"></i>Calendario de Citas
                         </a>
                     </li>
-
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/promociones">
                             <i class="bi bi-tags-fill me-2"></i>Promociones
@@ -130,7 +209,7 @@
                         <a class="nav-link text-white" href="/publicaciones">
                             <i class="fas fa-users me-2"></i>Fotos de Clientes
                         </a>
-                    </li>  
+                    </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white" href="/envios">
                             <i class="fas fa-users me-2"></i>Envios
@@ -156,19 +235,19 @@
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </a>
                     </li>
-                
-                </ul>
-            </nav>
+                {% endif %}
+            </ul>
+        </nav>
 
-            <div class="flex-grow-1 p-4">
-                {% block content %}
-                <h1>Bienvenido al Panel de Administración</h1>
-                {% endblock %}
-            </div>
+        <div class="flex-grow-1 p-4">
+            {% block content %}
+            <h1>Bienvenido al Panel de Administración</h1>
+            {% endblock %}
         </div>
+    </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        {% block scripts %}{% endblock %}
-    </body>
-    </html>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -111,7 +111,7 @@
                             <div class="mb-3">
                                 <label for="size_{{ producto_detalle.id }}" class="fw-bold">Tamaño</label>
                                 <select class="form-select" name="size_{{ producto_detalle.id }}" required id="size_{{ producto_detalle.id }}" onchange="actualizarColor({{ producto_detalle.id }})">
-                                    <option selected disabled>Seleccione un tamaño</option>
+                                    <option selected disabled>Seleccione una presentacion</option>
                                     {% for tamanio in tamanios %}
                                         <option value="{{ tamanio.id }}" {% if tamanio.id == producto_detalle.tamanio_id %}selected{% endif %}>
                                             {{ tamanio.nombre }}

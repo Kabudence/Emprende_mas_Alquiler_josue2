@@ -16,7 +16,7 @@ log = logging.getLogger("alliances-api")
 
 # ---------- Config ----------
 # Apunta al BASE_URL del microservicio de alianzas (no al gateway interno).
-BASE_URL = os.getenv("ALLIANCES_BASE_URL", "http://127.0.0.1:8000")
+BASE_URL = os.getenv("ALIANZAS_BASE_URL", "http://127.0.0.1:5001")
 
 # Prefijo base expuesto por el microservicio
 ALLIANCES_PREFIX = "/api/alliances"

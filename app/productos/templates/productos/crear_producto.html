@@ -112,20 +112,20 @@
                 {% for sizeIndex in range(4) %}
                 <div class="card mb-4 border rounded">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <strong>Tamaño {{ sizeIndex + 1 }}</strong>
+                        <strong>Presentacion {{ sizeIndex + 1 }}</strong>
                         <button type="button" class="btn btn-outline-primary toggle-card"
                             data-index="{{ sizeIndex }}">Habilitar</button>
                     </div>
                     <div class="card-body" id="card-body-{{ sizeIndex }}" style="display: none;">
                         <div class="mb-3">
-                            <label for="size-{{ sizeIndex }}" class="form-label">Tamaño</label>
+                            <label for="size-{{ sizeIndex }}" class="form-label">presentacion</label>
                             <select class="form-select size-select" id="size-{{ sizeIndex }}"
                                 name="size_{{ sizeIndex + 1 }}">
-                                <option selected disabled>Seleccione un tamaño</option>
+                                <option selected disabled>Seleccione una presentacion</option>
                                 <!-- Las opciones de tamaños se agregarán dinámicamente -->
                             </select>
                         </div>
-                        <h5>Colores y Variantes</h5>
+                        <h5>Presentaciones</h5>
                         <div class="row gx-3" id="variant-container-{{ sizeIndex }}">
                             {% for variantIndex in range(3) %}
                             <div class="col-md-4">

@@ -54,7 +54,10 @@ def check_negocio():
 
 def create_app():
     app = Flask(__name__, static_url_path='/static')
-    CORS(app, origins=["http://localhost:64643"])
+    CORS(app, resources={
+        r"/coupons-api/*": {"origins": "*"},
+        r"/api/*": {"origins": "*"},
+    })
 
     # Cargar configuración desde config.py
     app.config.from_object(Config)
@@ -119,9 +122,12 @@ def create_app():
     from external_apis.coupons.coupons_gateway import coupons_gateway_bp
     app.register_blueprint(coupons_gateway_bp)
 
+
     from external_apis.alianzas.alianza_gateway import alianza_gateway_bp
     app.register_blueprint(alianza_gateway_bp)
     csrf.exempt(appointment_api)
+    csrf.exempt(coupon_ui_bp)
+    csrf.exempt(coupons_gateway_bp)
 
     from alianzas.interface.alianzas_ui import alianzas_ui_bp
 

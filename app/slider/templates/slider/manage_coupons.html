@@ -6,7 +6,7 @@
 <div class="container">
   <h2 class="my-4 text-center">Gestión de Cupones</h2>
 
-  <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+  <!-- (sin csrf) -->
   <input type="hidden" id="business_id" value="{{ negocio.id }}">
 
   <!-- ============ CREAR CUPÓN (individual) ============ -->
@@ -14,21 +14,13 @@
     <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
       <div class="d-flex align-items-center gap-2">
         <h5 class="mb-0">Crear cupón</h5>
-        <!-- Botón para ocultar/mostrar -->
-        <button
-          class="btn btn-outline-dark btn-sm"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#create-coupon-panel"
-          aria-expanded="true"
-          aria-controls="create-coupon-panel"
-          id="toggle-create-panel"
-          title="Mostrar / Ocultar"
-        >
+        <button class="btn btn-outline-dark btn-sm" type="button"
+                data-bs-toggle="collapse" data-bs-target="#create-coupon-panel"
+                aria-expanded="true" aria-controls="create-coupon-panel"
+                id="toggle-create-panel" title="Mostrar / Ocultar">
           <i class="bi bi-chevron-up" id="create-coupon-chevron"></i>
         </button>
       </div>
-
       <div class="d-flex gap-2">
         <button id="btn-fill-defaults" class="btn btn-outline-secondary btn-sm">
           Asignar parámetros por defecto
@@ -39,39 +31,47 @@
       </div>
     </div>
 
-    <!-- SOLO el cuerpo está dentro del collapse -->
     <div id="create-coupon-panel" class="collapse show">
       <div class="card-body">
 
-        <!-- 1) CLASIFICACIÓN Y REGLAS (horizontal) -->
         <h6 class="text-uppercase text-muted mb-2">Clasificación y reglas</h6>
         <div class="row g-3 align-items-end">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Tipo de cupón</label>
             <select id="ct" class="form-select">
               <option value="">— Selecciona —</option>
             </select>
-            <small class="text-muted">Etiqueta o categoría (opcional).</small>
+            <small class="text-muted">Etiqueta o categoría de cupón (opcional).</small>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Tipo de descuento</label>
             <select id="dt" class="form-select">
               <option value="">— Selecciona —</option>
             </select>
             <small class="text-muted">Porcentaje o monto.</small>
           </div>
-          <div class="col-md-4">
-            <label class="form-label d-block">Alianzas</label>
+          <div class="col-md-3">
+            <label class="form-label">Categoría (opcional)</label>
+            <select id="category_id" class="form-select">
+              <option value="">— Selecciona —</option>
+            </select>
+            <small class="text-muted">Clasifica el cupón para el catálogo.</small>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label d-block">Opciones</label>
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" id="share">
               <label class="form-check-label" for="share">Compartir en alianzas</label>
+            </div>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="show-holder">
+              <label class="form-check-label" for="show-holder">Mostrar en holder</label>
             </div>
           </div>
         </div>
 
         <hr class="my-4">
 
-        <!-- 2) CENTRO: DOS COLUMNAS (detalles básicos | montos y límites) -->
         <div class="row g-4">
           <div class="col-md-6">
             <div class="border rounded-3 p-3 h-100">
@@ -79,10 +79,6 @@
               <div class="mb-3">
                 <label class="form-label">Nombre</label>
                 <input type="text" id="name" class="form-control" placeholder="WELCOME10">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Código (opcional)</label>
-                <input type="text" id="code" class="form-control" placeholder="WELCOME10">
               </div>
               <div>
                 <label class="form-label">Descripción (opcional)</label>
@@ -102,13 +98,9 @@
                 </div>
                 <small class="text-muted">Se ajusta según tipo de descuento.</small>
               </div>
-              <div class="mb-3">
+              <div>
                 <label class="form-label">Máx. descuento (opcional)</label>
                 <input type="number" step="0.01" id="maxd" class="form-control" placeholder="p.ej. 50.00">
-              </div>
-              <div>
-                <label class="form-label">Límite de usos global (opcional)</label>
-                <input type="number" min="1" id="uses" class="form-control" placeholder="p.ej. 1000">
               </div>
             </div>
           </div>
@@ -116,7 +108,6 @@
 
         <hr class="my-4">
 
-        <!-- 3) VIGENCIA Y EVENTO (horizontal) -->
         <h6 class="text-uppercase text-muted mb-2">Vigencia y evento</h6>
         <div class="row g-3">
           <div class="col-md-3">
@@ -129,22 +120,78 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Evento (opcional)</label>
-            <input type="text" id="event" class="form-control" placeholder="Black Friday">
+            <select id="event_id" class="form-select">
+              <option value="">— Selecciona —</option>
+            </select>
+          </div>
+          <!-- Estado eliminado de UI -->
+        </div>
+
+        <hr class="my-4">
+
+        <!-- ======= Aplicación del cupón durante la creación ======= -->
+        <h6 class="text-uppercase text-muted mb-2">Aplicación del cupón</h6>
+
+        <div class="row g-2 align-items-end mb-2">
+          <div class="col-md-3">
+            <label class="form-label">Tipo de item</label>
+            <select id="ap-type-create" class="form-select">
+              <option value="PRODUCT" selected>Producto</option>
+              <option value="SERVICE">Servicio</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Código de asignación (requerido si agregas items)</label>
+            <input type="text" id="ap-code-create" class="form-control" placeholder="Ej: WELCOME10-PROD">
+            <small class="text-muted">Se guardará junto al mapping cupón ↔ item.</small>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Stock (opcional)</label>
+            <input type="number" min="0" step="1" id="ap-stock-create" class="form-control" placeholder="p.ej. 100">
+            <small class="text-muted">Si lo dejas vacío, no se controla stock.</small>
           </div>
           <div class="col-md-2">
             <label class="form-label">Estado</label>
-            <select id="status" class="form-select">
+            <select id="ap-status-create" class="form-select">
               <option value="ACTIVE" selected>Activo</option>
               <option value="INACTIVE">Inactivo</option>
             </select>
           </div>
+          <small class="text-muted d-block">
+            El <b>código</b>, <b>stock</b> y <b>estado</b> se aplicarán a todos los ítems seleccionados.
+          </small>
         </div>
 
-      </div><!-- /.card-body -->
-    </div><!-- /#create-coupon-panel -->
-  </div><!-- /.card -->
+        <div class="row g-2 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">Item de destino</label>
+            <select id="ap-item-create" class="form-select">
+              <option value="">— Selecciona —</option>
+            </select>
+          </div>
+          <div class="col-md-4" id="ap-variant-col-create">
+            <label class="form-label">Variante (obligatoria para producto)</label>
+            <select id="ap-var-create" class="form-select">
+              <option value="">— Selecciona un producto —</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" id="ap-add-btn-create">Añadir</button>
+          </div>
+        </div>
 
-  <!-- ============ LISTAR CUPONES ============ -->
+        <div class="mt-3">
+          <div id="ap-selected-create" class="d-flex flex-wrap gap-2"></div>
+          <small class="text-muted d-block mt-2">
+            Estos <span id="ap-type-label-create">productos</span> recibirán el <b>descuento</b> del cupón cuando se aplique.
+          </small>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LISTAR CUPONES (MIS CUPONES) ============ -->
   <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Mis cupones</h5>
@@ -162,7 +209,9 @@
               <th>Valor</th>
               <th>Máx desc.</th>
               <th>Vigencia</th>
-              <th>Código</th>
+              <th>Categoría</th>
+              <th>Evento</th>
+              <th>Holder</th>
               <th>Alianzas</th>
               <th>Acciones</th>
             </tr>
@@ -172,72 +221,122 @@
       </div>
     </div>
   </div>
-</div>
 
-<!-- ===== MODAL: Condiciones para generar el cupón ===== -->
-<div class="modal fade" id="modal-triggers" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content shadow">
-      <div class="modal-header">
-        <h5 class="modal-title">
-          Condiciones para generar el cupón <span id="trigger-coupon-id"></span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+  <!-- ============ CUPONES DE ALIADOS ============ -->
+  <div class="card shadow mt-4" id="ally-coupons-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Cupones de aliados</h5>
+      <div class="d-flex gap-2 align-items-center">
+        <input id="ally-search" class="form-control form-control-sm" placeholder="Buscar por nombre">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="ally-active-only" checked>
+          <label class="form-check-label small" for="ally-active-only">Solo vigentes</label>
+        </div>
+        <button id="btn-ally-reload" class="btn btn-outline-secondary btn-sm">Recargar</button>
       </div>
-      <div class="modal-body">
-
-        <div class="row g-2 align-items-end">
-          <div class="col-md-6">
-            <label class="form-label">Producto que genera el cupón</label>
-            <select id="tr-prod" class="form-select">
-              <option value="">— Selecciona —</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Variante (opcional)</label>
-            <select id="tr-var" class="form-select">
-              <option value="">— Selecciona un producto —</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <button class="btn btn-outline-primary w-100" id="tr-add-btn">Añadir</button>
-          </div>
-        </div>
-
-        <div class="row g-2 mt-3">
-          <div class="col-4">
-            <label class="form-label">Cantidad mínima comprada</label>
-            <input type="number" min="1" value="1" class="form-control" id="trigger-min-qty">
-          </div>
-          <div class="col-4">
-            <label class="form-label">Monto mínimo acumulado (opcional)</label>
-            <input type="number" step="0.01" class="form-control" id="trigger-min-amount" placeholder="opcional">
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <div id="tr-selected" class="d-flex flex-wrap gap-2"></div>
-          <small class="text-muted d-block mt-2">
-            Cuando el cliente compra estos productos (con las condiciones definidas), se <b>genera</b> este cupón.
-          </small>
-        </div>
-
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Aliado</th>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Tipo cupón</th>
+              <th>Tipo desc.</th>
+              <th>Valor</th>
+              <th>Vigencia</th>
+              <th>Categoría</th>
+              <th>Evento</th>
+              <th>Holder</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="ally-coupons-tbody"></tbody>
+        </table>
       </div>
-      <div class="modal-footer">
-        <button id="btn-save-triggers" type="button" class="btn btn-primary">Guardar condiciones</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      <div id="ally-empty" class="text-center text-muted d-none">
+        No hay cupones compartidos por tus aliados.
       </div>
     </div>
   </div>
-</div>
 
+  <!-- ===== MODAL: Condiciones (triggers) ===== -->
+  <div class="modal fade" id="modal-triggers" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content shadow">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            Condiciones para generar el cupón <span id="trigger-coupon-id"></span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Tipo de origen -->
+          <div class="row g-2 align-items-end mb-2">
+            <div class="col-md-4">
+              <label class="form-label">Origen</label>
+              <select id="tr-type" class="form-select">
+                <option value="PRODUCT" selected>Producto</option>
+                <option value="SERVICE">Servicio</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+              <label class="form-label">Item que genera el cupón</label>
+              <select id="tr-prod" class="form-select">
+                <option value="">— Selecciona —</option>
+              </select>
+            </div>
+            <div class="col-md-4" id="tr-variant-col">
+              <label class="form-label">Variante (obligatoria)</label>
+              <select id="tr-var" class="form-select">
+                <option value="">— Selecciona un producto —</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-outline-primary w-100" id="tr-add-btn">Añadir</button>
+            </div>
+          </div>
+
+          <div class="row g-2 mt-3">
+            <div class="col-4">
+              <label class="form-label">Cantidad mínima comprada</label>
+              <input type="number" min="1" value="1" class="form-control" id="trigger-min-qty">
+            </div>
+            <div class="col-4">
+              <label class="form-label">Monto mínimo acumulado (opcional)</label>
+              <input type="number" step="0.01" class="form-control" id="trigger-min-amount" placeholder="opcional">
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <div id="tr-selected" class="d-flex flex-wrap gap-2"></div>
+            <small class="text-muted d-block mt-2">
+              Cuando el cliente compra estos <span id="tr-type-label">productos</span> (con las condiciones definidas), se <b>genera</b> este cupón.
+            </small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button id="btn-save-triggers" type="button" class="btn btn-primary">Guardar condiciones</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 // ======= CONFIG =======
 const BASE = "/coupons-api";
-const CSRF = document.getElementById('csrf_token').value;
 const BUSINESS_ID = parseInt(document.getElementById('business_id').value, 10);
 
 // Gateway interno
@@ -245,24 +344,46 @@ const EP_COUPON_TYPES    = `${BASE}/coupon-types`;
 const EP_DISCOUNT_TYPES  = `${BASE}/discount-types`;
 const EP_COUPONS         = `${BASE}/coupons`;
 const EP_TRIGGERS        = `${BASE}/coupon-trigger-products`;
+const EP_CATEGORIES      = `${BASE}/categories`;
+const EP_EVENTS          = `${BASE}/events`;
+const EP_APPLIES         = `${BASE}/coupon-products`; // para asignación al crear
 
-// UI locals para productos/variantes del negocio
+// UI locals negocio
 const EP_UI_PRODUCTS_BY_BUSINESS = `/coupons/products-json`;
 const EP_UI_VARIANTS_BY_PRODUCT  = (pid) => `/coupons/product-variants-json/${pid}`;
+const EP_UI_SERVICES_BY_BUSINESS = `/coupons/services-json`;
+
+// Alianzas
+const BASE_ALLIANCES = "/alliances-api";
+const EP_ALLY_ACTIVE = `${BASE_ALLIANCES}/alliances/active`;
+const EP_UI_NEGOCIOS = (q="") => `/alianzas/negocios-json?exclude_me=1${q?`&q=${encodeURIComponent(q)}`:""}`;
 
 // ======= STATE =======
-let CATALOG_COUPON_TYPES = [];   // [{id, name}]
-let CATALOG_DISCOUNT_TYPES = []; // [{id, name}]
-let MAP_CT = {};                 // id -> name
-let MAP_DT = {};                 // id -> name
-let PRODUCTS = [];               // [{id, name}]
-let VARIANTS_BY_PRODUCT = {};    // {productId: [{id,label}]}
+let CATALOG_COUPON_TYPES = [];
+let CATALOG_DISCOUNT_TYPES = [];
+let CATALOG_CATEGORIES = [];
+let CATALOG_EVENTS = [];
+let MAP_CT = {};
+let MAP_DT = {};
+let MAP_CAT = {};
+let MAP_EVT = {};
+let PRODUCTS = [];             // [{id,name}]
+let SERVICES = [];             // [{id,name}]
+let VARIANTS_BY_PRODUCT = {};  // {productId:[{id,label}]}
+let VARIANT_LABELS = {};       // {variantId: label}
+let ALLY_COUPONS = [];
+let BIZ_MAP = {};
 
 let triggersModal;
-let TR_SELECTED = new Set();
+let TR_SELECTED = new Set();       // trigger ids
+let TR_TYPE = 'PRODUCT';           // PRODUCT | SERVICE
+
+// Asignación en creación
+let AP_SELECTED = new Set();       // para PRODUCT = variantes; para SERVICE = servicio_id
+let AP_TYPE = 'PRODUCT';           // PRODUCT | SERVICE
 
 // ======= HELPERS =======
-function headersJSON(){ return {'Content-Type':'application/json','X-CSRFToken':CSRF}; }
+function headersJSON(){ return {'Content-Type':'application/json'}; } // sin CSRF
 function toDateTimeLocalValue(date){
   const pad=n=>String(n).padStart(2,'0');
   return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -275,6 +396,8 @@ function badgeHtml(pid, text, onRemove){
   </span>`;
 }
 function findProductName(pid){ const p=PRODUCTS.find(p=>p.id===pid); return p? p.name : `#${pid}`; }
+function findServiceName(id){ const s=SERVICES.find(s=>s.id===id); return s? s.name : `#${id}`; }
+function findVariantLabel(vid){ return VARIANT_LABELS[vid] || `#${vid}`; }
 function discountSuffix(){
   const dtId=parseInt(document.getElementById('dt').value||'0',10);
   const name=MAP_DT[dtId]||'';
@@ -282,7 +405,34 @@ function discountSuffix(){
 }
 function refreshValSuffix(){ document.getElementById('val-suffix').textContent=discountSuffix(); }
 
-// ======= LOAD CATALOGS & PRODUCTS =======
+async function loadBizCatalog(){
+  try{
+    const r = await fetch(EP_UI_NEGOCIOS());
+    const rows = r.ok ? await r.json() : [];
+    BIZ_MAP = Object.fromEntries(rows.map(n => [n.id, n.nombre]));
+  }catch{ BIZ_MAP = {}; }
+}
+function bizName(id){ return BIZ_MAP[id] || `#${id}`; }
+
+// ======= (ALIADOS) helper que faltaba =======
+async function getActiveAllies(){
+  try{
+    const r = await fetch(`${EP_ALLY_ACTIVE}?negocio_id=${BUSINESS_ID}`);
+    const rows = r.ok ? await r.json() : [];
+    const ids = new Set();
+    rows.forEach(a=>{
+      if (a.estado !== 'ACEPTADA') return;
+      const other = (a.solicitante_negocio_id === BUSINESS_ID) ? a.receptor_negocio_id : a.solicitante_negocio_id;
+      ids.add(other);
+    });
+    return Array.from(ids);
+  }catch(e){
+    console.error(e);
+    return [];
+  }
+}
+
+// ======= LOAD CATALOGS & ITEMS =======
 async function loadCouponTypes(){
   try{
     const r=await fetch(EP_COUPON_TYPES,{headers:headersJSON()});
@@ -306,9 +456,35 @@ async function loadDiscountTypes(){
   document.getElementById('dt').innerHTML = CATALOG_DISCOUNT_TYPES.map(dt=>optionHtml(dt.id, dt.name)).join('');
   refreshValSuffix();
 }
+async function loadCategories(){
+  try{
+    const r=await fetch(EP_CATEGORIES,{headers:headersJSON()});
+    if(!r.ok) throw 0;
+    CATALOG_CATEGORIES=await r.json();
+  }catch{ CATALOG_CATEGORIES=[]; }
+  MAP_CAT=Object.fromEntries((CATALOG_CATEGORIES||[]).map(x=>[x.id,x.name]));
+  const sel=document.getElementById('category_id');
+  sel.innerHTML = `<option value="">— Selecciona —</option>`
+    + (CATALOG_CATEGORIES||[]).map(c=>optionHtml(c.id,c.name)).join('');
+}
+async function loadEvents(){
+  try{
+    const r=await fetch(EP_EVENTS,{headers:headersJSON()});
+    if(!r.ok) throw 0;
+    CATALOG_EVENTS=await r.json();
+  }catch{ CATALOG_EVENTS=[]; }
+  MAP_EVT=Object.fromEntries((CATALOG_EVENTS||[]).map(x=>[x.id,x.name]));
+  const sel=document.getElementById('event_id');
+  sel.innerHTML = `<option value="">— Selecciona —</option>`
+    + (CATALOG_EVENTS||[]).map(e=>optionHtml(e.id,e.name)).join('');
+}
 async function loadProductsByBusiness(){
   const r=await fetch(`${EP_UI_PRODUCTS_BY_BUSINESS}?business_id=${BUSINESS_ID}`);
   PRODUCTS = r.ok ? (await r.json()) : [];
+}
+async function loadServicesByBusiness(){
+  const r=await fetch(`${EP_UI_SERVICES_BY_BUSINESS}`);
+  SERVICES = r.ok ? (await r.json()) : [];
 }
 async function ensureVariants(productId){
   if(VARIANTS_BY_PRODUCT[productId]) return VARIANTS_BY_PRODUCT[productId];
@@ -316,21 +492,28 @@ async function ensureVariants(productId){
   if(!r.ok){ VARIANTS_BY_PRODUCT[productId]=[]; return []; }
   const rows=await r.json();
   VARIANTS_BY_PRODUCT[productId]=rows||[];
+  (rows||[]).forEach(v => { VARIANT_LABELS[v.id] = v.label; });
   return VARIANTS_BY_PRODUCT[productId];
 }
 function fillProductsSelect(selectEl, selectedValue=""){
   selectEl.innerHTML = `<option value="">— Selecciona —</option>`
     + PRODUCTS.map(p=>optionHtml(p.id,p.name,String(p.id)===String(selectedValue))).join('');
 }
+function fillServicesSelect(selectEl, selectedValue=""){
+  selectEl.innerHTML = `<option value="">— Selecciona —</option>`
+    + SERVICES.map(s=>optionHtml(s.id,s.name,String(s.id)===String(selectedValue))).join('');
+}
 async function fillVariantsSelect(selectEl, productId){
   selectEl.innerHTML = `<option value="">— Cargando… —</option>`;
   const variants = await ensureVariants(productId);
-  selectEl.innerHTML = `<option value="">— Opcional —</option>`
+  selectEl.innerHTML = `<option value="">— Selecciona variante —</option>`
     + variants.map(v=>optionHtml(v.id, v.label)).join('');
 }
 
 // ======= CREATE =======
 function readPayload(){
+  const catVal = document.getElementById('category_id').value;
+  const evtVal = document.getElementById('event_id').value;
   return {
     business_id: BUSINESS_ID,
     coupon_type_id: (document.getElementById('ct').value? parseInt(document.getElementById('ct').value): null),
@@ -339,13 +522,13 @@ function readPayload(){
     name: document.getElementById('name').value.trim(),
     description: document.getElementById('desc').value.trim() || null,
     max_discount: document.getElementById('maxd').value ? parseFloat(document.getElementById('maxd').value) : null,
-    max_uses: document.getElementById('uses').value ? parseInt(document.getElementById('uses').value,10) : null,
-    code: document.getElementById('code').value.trim() || null,
     start_date: document.getElementById('start').value || null,
     end_date: document.getElementById('end').value || null,
-    event_name: document.getElementById('event').value.trim() || null,
-    is_shared_alliances: document.getElementById('share').checked,
-    status: document.getElementById('status').value || "ACTIVE"
+    category_id: catVal ? parseInt(catVal,10) : null,
+    event_id: evtVal ? parseInt(evtVal,10) : null,
+    show_in_coupon_holder: document.getElementById('show-holder').checked,
+    is_shared_alliances: document.getElementById('share').checked
+    // status y max_uses eliminados
   };
 }
 function validatePayload(p){
@@ -353,8 +536,14 @@ function validatePayload(p){
   if(!p.discount_type_id) return "Selecciona el tipo de descuento.";
   if(!(p.value >= 0)) return "Ingresa un valor de descuento válido.";
   if(!p.start_date || !p.end_date) return "Completa el rango de vigencia.";
+
+  // Validación de aplicación en creación
+  const ids = Array.from(AP_SELECTED);
+  const code = (document.getElementById('ap-code-create').value || '').trim();
+  if (ids.length > 0 && !code) return "Ingresa un código de asignación para los items seleccionados.";
   return null;
 }
+
 async function createCoupon(){
   const payload = readPayload();
   const err = validatePayload(payload);
@@ -364,44 +553,81 @@ async function createCoupon(){
     const r=await fetch(EP_COUPONS,{method:'POST',headers:headersJSON(),body:JSON.stringify(payload)});
     const body=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(body.error||'Error creando cupón');
-    // limpiar campos principales (dejo ct/dt/alianzas como están)
-    ['name','code','desc','val','maxd','uses','event'].forEach(id=>document.getElementById(id).value='');
+
+    const stockRaw = (document.getElementById('ap-stock-create')?.value || '').trim();
+    const stock = stockRaw ? parseInt(stockRaw, 10) : null; // opcional
+    const status = (document.getElementById('ap-status-create')?.value || 'ACTIVE'); // ACTIVE|INACTIVE
+
+    const createdId = body.id || (body.coupon && body.coupon.id);
+    if (!createdId) {
+      console.warn('No se recibió ID de cupón en la respuesta. No se puede asignar items automáticamente.');
+    } else {
+      // Si el usuario seleccionó items, asignarlos ahora
+      const ids = Array.from(AP_SELECTED);
+      const code = (document.getElementById('ap-code-create').value || '').trim();
+      if (ids.length){
+        const rr = await fetch(`${EP_APPLIES}/bulk`, {
+          method:'POST', headers:headersJSON(),
+          body: JSON.stringify({
+            coupon_id: createdId,
+            product_ids: ids,      // variantes si PRODUCT, ids de servicio si SERVICE
+            product_type: AP_TYPE, // PRODUCT | SERVICE
+            code,                  // requerido si agregas items
+            stock,                 // opcional (null = sin control)
+            status                 // 'ACTIVE' o 'INACTIVE'
+          })
+        });
+        if(!rr.ok){
+          const b = await rr.json().catch(()=>({}));
+          alert(b.error || 'Cupón creado, pero no se pudo guardar la asignación de items.');
+        }
+      }
+    }
+
+    // limpiar form + selección
+    ['name','desc','val','maxd'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('show-holder').checked=false;
+    document.getElementById('ap-code-create').value='';
+    AP_SELECTED = new Set();
+    renderApCreateBadges();
+
     alert('¡Cupón creado!');
     await loadMyCoupons();
   }catch(e){ console.error(e); alert(e.message); }
 }
+
 function fillDefaults(){
   const dtSel=document.getElementById('dt'); const ctSel=document.getElementById('ct');
   const percentOpt=[...dtSel.options].find(o=>o.text==='PERCENTAGE'); if(percentOpt) dtSel.value=percentOpt.value;
   else if(dtSel.options.length>0) dtSel.selectedIndex=0;
-
   const simpleOpt=[...ctSel.options].find(o=>o.text.toUpperCase().includes('SIMPLE')); if(simpleOpt) ctSel.value=simpleOpt.value;
 
   document.getElementById('name').value='WELCOME10';
-  document.getElementById('code').value='WELCOME10';
   document.getElementById('desc').value='10% hasta S/50';
   document.getElementById('val').value='10';
   document.getElementById('maxd').value='50';
-  document.getElementById('uses').value='1000';
   document.getElementById('share').checked=false;
-  document.getElementById('status').value='ACTIVE';
+  document.getElementById('show-holder').checked=false;
 
   const now=new Date(); const in30=new Date(now.getTime()+30*24*60*60*1000);
   document.getElementById('start').value=toDateTimeLocalValue(now);
   document.getElementById('end').value=toDateTimeLocalValue(in30);
-
   refreshValSuffix();
+
+  // Sugerir código si el nombre está definido
+  const name = (document.getElementById('name').value||'').trim();
+  if (name) document.getElementById('ap-code-create').value = `${name}-AP`;
 }
 
-// ======= LIST =======
+// ======= LIST MY COUPONS =======
 async function loadMyCoupons(){
   const tbody=document.getElementById('coupons-tbody');
-  tbody.innerHTML=`<tr><td colspan="10">Cargando…</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="12">Cargando…</td></tr>`;
   try{
     const r=await fetch(`${EP_COUPONS}?business_id=${BUSINESS_ID}`,{headers:headersJSON()});
     const rows=await r.json();
     if(!Array.isArray(rows)||!rows.length){
-      tbody.innerHTML=`<tr><td colspan="10" class="text-center text-muted">Sin cupones</td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="12" class="text-center text-muted">Sin cupones</td></tr>`;
       return;
     }
     tbody.innerHTML = rows.map(c=>{
@@ -413,6 +639,9 @@ async function loadMyCoupons(){
       const maxd = c.max_discount!=null ? `S/${Number(c.max_discount).toFixed(2)}` : '—';
       const start = c.start_date ? c.start_date.slice(0,16).replace('T',' ') : '';
       const end   = c.end_date ? c.end_date.slice(0,16).replace('T',' ') : '';
+      const catName = c.category_id ? (MAP_CAT[c.category_id] || `#${c.category_id}`) : '—';
+      const evtName = c.event_id ? (MAP_EVT[c.event_id] || `#${c.event_id}`) : '—';
+      const holder = c.show_in_coupon_holder ? 'Sí' : 'No';
 
       return `
         <tr>
@@ -423,7 +652,9 @@ async function loadMyCoupons(){
           <td>${valFmt}</td>
           <td>${maxd}</td>
           <td><div>${start}</div><div>${end}</div></td>
-          <td>${c.code || ''}</td>
+          <td>${catName}</td>
+          <td>${evtName}</td>
+          <td>${holder}</td>
           <td>${c.is_shared_alliances ? 'Sí' : 'No'}</td>
           <td>
             <div class="btn-group btn-group-sm">
@@ -435,9 +666,95 @@ async function loadMyCoupons(){
     }).join('');
   }catch(e){
     console.error(e);
-    tbody.innerHTML=`<tr><td colspan="10" class="text-danger">Error cargando cupones</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="12" class="text-danger">Error cargando cupones</td></tr>`;
   }
 }
+
+// ======= ALLY COUPONS =======
+async function loadAllyCoupons(){
+  const tbody = document.getElementById('ally-coupons-tbody');
+  const empty = document.getElementById('ally-empty');
+  if (!tbody || !empty) return; // por si no existe la sección en esta plantilla
+
+  tbody.innerHTML = `<tr><td colspan="11">Cargando…</td></tr>`;
+  empty.classList.add('d-none');
+
+  ALLY_COUPONS = [];
+  const onlyActive = document.getElementById('ally-active-only')?.checked;
+  const allyIds = await getActiveAllies();
+
+  if (!allyIds.length){
+    tbody.innerHTML = '';
+    empty.classList.remove('d-none');
+    return;
+  }
+
+  const reqs = allyIds.map(id =>
+    fetch(`${EP_COUPONS}?business_id=${id}${onlyActive?'&active_only=true':''}`, { headers: headersJSON() })
+      .then(r => r.ok ? r.json() : [])
+      .catch(()=>[])
+      .then(rows => rows
+        .filter(c => c.is_shared_alliances)
+        .map(c => ({...c, ally_business_id: id}))
+      )
+  );
+  const lists = await Promise.all(reqs);
+  ALLY_COUPONS = lists.flat();
+
+  renderAllyCoupons();
+}
+function renderAllyCoupons(){
+  const tbody = document.getElementById('ally-coupons-tbody');
+  const empty = document.getElementById('ally-empty');
+  if (!tbody || !empty) return;
+
+  let rows = ALLY_COUPONS;
+  const term = (document.getElementById('ally-search')?.value || '').trim().toLowerCase();
+  if (term) rows = rows.filter(c => (c.name || '').toLowerCase().includes(term));
+
+  if (!rows.length){
+    tbody.innerHTML = '';
+    empty.classList.remove('d-none');
+    return;
+  }
+  empty.classList.add('d-none');
+
+  tbody.innerHTML = rows.map(c=>{
+    const ctName = c.coupon_type_id ? (MAP_CT[c.coupon_type_id] || `#${c.coupon_type_id}`) : '—';
+    const dtName = c.discount_type_id ? (MAP_DT[c.discount_type_id] || `#${c.discount_type_id}`) : '—';
+    let valFmt = c.value ?? '';
+    if (dtName==='PERCENTAGE' && c.value!=null) valFmt = `${Number(c.value).toFixed(2)}%`;
+    if (dtName==='AMOUNT'    && c.value!=null) valFmt = `S/${Number(c.value).toFixed(2)}`;
+
+    const start = c.start_date ? c.start_date.slice(0,16).replace('T',' ') : '';
+    const end   = c.end_date   ? c.end_date.slice(0,16).replace('T',' ')   : '';
+    const ally  = bizName(c.ally_business_id);
+    const catName = c.category_id ? (MAP_CAT[c.category_id] || `#${c.category_id}`) : '—';
+    const evtName = c.event_id ? (MAP_EVT[c.event_id] || `#${c.event_id}`) : '—';
+    const holder = c.show_in_coupon_holder ? 'Sí' : 'No';
+
+    return `
+      <tr>
+        <td>${ally} (#${c.ally_business_id})</td>
+        <td>${c.id}</td>
+        <td>${c.name || ''}</td>
+        <td>${ctName}</td>
+        <td>${dtName}</td>
+        <td>${valFmt}</td>
+        <td><div>${start}</div><div>${end}</div></td>
+        <td>${catName}</td>
+        <td>${evtName}</td>
+        <td>${holder}</td>
+        <td>
+          <button class="btn btn-outline-info btn-sm" onclick="openTriggers(${c.id})">
+            Usar en mis items
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
 async function deleteCoupon(id){
   if(!confirm('¿Eliminar este cupón?')) return;
   try{
@@ -451,47 +768,72 @@ async function deleteCoupon(id){
 function resetTriggersModal(){
   TR_SELECTED = new Set();
   document.getElementById('tr-selected').innerHTML='';
-  fillProductsSelect(document.getElementById('tr-prod'));
-  document.getElementById('tr-var').innerHTML=`<option value="">— Selecciona un producto —</option>`;
+  const typeSel = document.getElementById('tr-type');
+  TR_TYPE = typeSel.value;
+  if (TR_TYPE === 'PRODUCT') {
+    document.getElementById('tr-variant-col').classList.remove('d-none');
+    fillProductsSelect(document.getElementById('tr-prod'));
+  } else {
+    document.getElementById('tr-variant-col').classList.add('d-none');
+    document.getElementById('tr-var').innerHTML=`<option value="">— No aplica —</option>`;
+    fillServicesSelect(document.getElementById('tr-prod'));
+  }
+  document.getElementById('tr-type-label').textContent = (TR_TYPE === 'PRODUCT') ? 'productos' : 'servicios';
 }
 function renderTrBadges(){
   const box=document.getElementById('tr-selected');
   const ids=Array.from(TR_SELECTED);
   if(!ids.length){ box.innerHTML=`<span class="text-muted">Sin selección.</span>`; return; }
-  box.innerHTML = ids.map(pid=>badgeHtml(pid, findProductName(pid), `trRemove(${pid})`)).join(' ');
+
+  const nameFn = (TR_TYPE === 'PRODUCT')
+    ? (vid)=>findVariantLabel(vid)   // 👈 variante / detalle
+    : (sid)=>findServiceName(sid);   // servicio
+
+  box.innerHTML = ids.map(id=>badgeHtml(id, nameFn(id), `trRemove(${id})`)).join(' ');
 }
+
 function trRemove(pid){ TR_SELECTED.delete(pid); renderTrBadges(); }
 
 async function openTriggers(couponId){
   document.getElementById('trigger-coupon-id').textContent = `#${couponId}`;
   resetTriggersModal();
 
-  // Guía visual: carga lo existente
   try{
     const r=await fetch(`${EP_TRIGGERS}/by-coupon/${couponId}`);
     if(r.ok){
       const rows=await r.json();
-      (rows||[]).forEach(x=>TR_SELECTED.add(x.product_trigger_id));
-      renderTrBadges();
+      if (Array.isArray(rows)) {
+        rows.forEach(x=>TR_SELECTED.add(x.product_trigger_id || x));
+        renderTrBadges();
+      }
     }
   }catch{}
 
+  document.getElementById('tr-type').onchange = () => resetTriggersModal();
+
   document.getElementById('tr-prod').onchange = async (ev)=>{
+    if (TR_TYPE !== 'PRODUCT') return;
     const pid=parseInt(ev.target.value||'0',10);
     const vsel=document.getElementById('tr-var');
     if(!pid){ vsel.innerHTML=`<option value="">— Selecciona un producto —</option>`; return; }
     await fillVariantsSelect(vsel, pid);
   };
   document.getElementById('tr-add-btn').onclick = ()=>{
-    const pid=parseInt(document.getElementById('tr-prod').value||'0',10);
-    if(!pid){ alert('Selecciona un producto'); return; }
-    TR_SELECTED.add(pid);
+    if (TR_TYPE === 'PRODUCT'){
+      const vid = parseInt(document.getElementById('tr-var').value || '0', 10);
+      if(!vid){ alert('Selecciona una variante'); return; }
+      TR_SELECTED.add(vid);            // 👈 guarda id_detalle (variante)
+    } else {
+      const sid = parseInt(document.getElementById('tr-prod').value || '0', 10);
+      if(!sid){ alert('Selecciona un servicio'); return; }
+      TR_SELECTED.add(sid);
+    }
     renderTrBadges();
   };
 
   document.getElementById('btn-save-triggers').onclick = async ()=>{
     const product_trigger_ids=Array.from(TR_SELECTED);
-    if(!product_trigger_ids.length){ alert('Sin productos seleccionados'); return; }
+    if(!product_trigger_ids.length){ alert('Sin items seleccionados'); return; }
     const min_quantity=parseInt(document.getElementById('trigger-min-qty').value||'1',10);
     const min_amount_raw=document.getElementById('trigger-min-amount').value;
     const min_amount=min_amount_raw? parseFloat(min_amount_raw) : null;
@@ -501,7 +843,8 @@ async function openTriggers(couponId){
         method:'POST',headers:headersJSON(),
         body:JSON.stringify({
           coupon_id: parseInt(document.getElementById('trigger-coupon-id').textContent.replace('#','')),
-          product_trigger_ids, min_quantity, min_amount
+          product_trigger_ids, min_quantity, min_amount,
+          product_type: TR_TYPE
         })
       });
       if(!rr.ok){ const b=await rr.json().catch(()=>({})); alert(b.error||'No se pudo guardar'); return; }
@@ -513,15 +856,55 @@ async function openTriggers(couponId){
   triggersModal.show();
 }
 
+// ======= Asignación en creación (UI) =======
+function resetApCreateSection(){
+  AP_SELECTED = new Set();
+  document.getElementById('ap-selected-create').innerHTML='';
+  const typeSel = document.getElementById('ap-type-create');
+  AP_TYPE = typeSel.value;
+  if (AP_TYPE === 'PRODUCT') {
+    document.getElementById('ap-variant-col-create').classList.remove('d-none');
+    fillProductsSelect(document.getElementById('ap-item-create'));
+    document.getElementById('ap-var-create').innerHTML = `<option value="">— Selecciona un producto —</option>`;
+    document.getElementById('ap-type-label-create').textContent = 'productos';
+  } else {
+    document.getElementById('ap-variant-col-create').classList.add('d-none');
+    document.getElementById('ap-var-create').innerHTML = `<option value="">— No aplica —</option>`;
+    fillServicesSelect(document.getElementById('ap-item-create'));
+    document.getElementById('ap-type-label-create').textContent = 'servicios';
+  }
+}
+function renderApCreateBadges(){
+  const box=document.getElementById('ap-selected-create');
+  const ids=Array.from(AP_SELECTED);
+  if(!ids.length){ box.innerHTML=`<span class="text-muted">Sin selección.</span>`; return; }
+  const nameFn = (AP_TYPE === 'PRODUCT')
+    ? (vid)=>findVariantLabel(vid)
+    : (sid)=>findServiceName(sid);
+  box.innerHTML = ids.map(id=>badgeHtml(id, nameFn(id), `apCreateRemove(${id})`)).join(' ');
+}
+function apCreateRemove(id){ AP_SELECTED.delete(id); renderApCreateBadges(); }
+
 // ======= INIT & CHEVRON =======
-document.addEventListener('DOMContentLoaded', ()=>{
+document.addEventListener('DOMContentLoaded', async ()=>{
+  // Modal de triggers
   triggersModal = new bootstrap.Modal(document.getElementById('modal-triggers'));
+
+  // Listeners generales
   document.getElementById('dt').addEventListener('change', refreshValSuffix);
   document.getElementById('btn-fill-defaults').addEventListener('click', fillDefaults);
   document.getElementById('btn-create').addEventListener('click', createCoupon);
   document.getElementById('btn-reload').addEventListener('click', loadMyCoupons);
 
-  // Chevron toggle visual
+  // Listeners sección aliados (solo si existen en el DOM)
+  const btnAlly = document.getElementById('btn-ally-reload');
+  const chkAlly = document.getElementById('ally-active-only');
+  const qAlly   = document.getElementById('ally-search');
+  if (btnAlly) btnAlly.addEventListener('click', loadAllyCoupons);
+  if (chkAlly) chkAlly.addEventListener('change', loadAllyCoupons);
+  if (qAlly)   qAlly.addEventListener('input', renderAllyCoupons);
+
+  // Chevron
   const collapseEl = document.getElementById('create-coupon-panel');
   const chevron = document.getElementById('create-coupon-chevron');
   const setChevron = (open) => {
@@ -531,12 +914,45 @@ document.addEventListener('DOMContentLoaded', ()=>{
   setChevron(true);
   collapseEl.addEventListener('shown.bs.collapse', () => setChevron(true));
   collapseEl.addEventListener('hidden.bs.collapse', () => setChevron(false));
-});
 
-(async function init(){
-  await Promise.all([loadCouponTypes(), loadDiscountTypes(), loadProductsByBusiness()]);
+  // Boot
+  await Promise.all([
+    loadCouponTypes(),
+    loadDiscountTypes(),
+    loadCategories(),
+    loadEvents(),
+    loadProductsByBusiness(),
+    loadServicesByBusiness(),
+    loadBizCatalog()
+  ]);
   refreshValSuffix();
+
+  // Setup asignación en creación
+  document.getElementById('ap-type-create').addEventListener('change', resetApCreateSection);
+  document.getElementById('ap-item-create').addEventListener('change', async (ev)=>{
+    if (AP_TYPE !== 'PRODUCT') return;
+    const pid=parseInt(ev.target.value||'0',10);
+    const vsel=document.getElementById('ap-var-create');
+    if(!pid){ vsel.innerHTML=`<option value="">— Selecciona un producto —</option>`; return; }
+    await fillVariantsSelect(vsel, pid);
+  });
+  document.getElementById('ap-add-btn-create').addEventListener('click', ()=>{
+    if (AP_TYPE === 'PRODUCT'){
+      const vid=parseInt(document.getElementById('ap-var-create').value||'0',10);
+      if(!vid){ alert('Selecciona una variante de producto'); return; }
+      AP_SELECTED.add(vid);
+    } else {
+      const sid=parseInt(document.getElementById('ap-item-create').value||'0',10);
+      if(!sid){ alert('Selecciona un servicio'); return; }
+      AP_SELECTED.add(sid);
+    }
+    renderApCreateBadges();
+  });
+  resetApCreateSection();
+  renderApCreateBadges();
+
   await loadMyCoupons();
-})();
+  await loadAllyCoupons();
+});
 </script>
 {% endblock %}
